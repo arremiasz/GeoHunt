@@ -41,14 +41,12 @@ import android.animation.ArgbEvaluator;
 
 public class MainActivity extends AppCompatActivity {
 
-    private LinearLayout textContainer;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        textContainer = findViewById(R.id.text_container);
+        LinearLayout textContainer = findViewById(R.id.text_container);
 
         String message = "THIS IS DEMO 1";
 
