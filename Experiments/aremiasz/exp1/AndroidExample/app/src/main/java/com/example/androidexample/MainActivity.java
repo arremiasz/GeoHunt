@@ -2,6 +2,7 @@ package com.example.androidexample;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.widget.TextView;
 import android.animation.ValueAnimator;
@@ -44,60 +45,89 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Set the layout for the activity
         setContentView(R.layout.activity_main);
 
-        LinearLayout textContainer = findViewById(R.id.text_container);
+        // Reference the container LinearLayout that will hold the text letters
+        LinearLayout sinTextContainer = findViewById(R.id.sin_text_container);
+        LinearLayout cosTextContainer = findViewById(R.id.cos_text_container);
 
-        String message = "THIS IS DEMO 1";
+        String sinMessage = "THIS IS DEMO 1"; // sinMessage to display
+        String cosMessage = "WAVE IN COSINE"; // cosMessage to display
 
-        final TextView[] letters = new TextView[message.length()];
+        // Dynamically create TextViews for each character in the message
+        final TextView[] sinLetters = new TextView[sinMessage.length()];
+        final TextView[] cosLetters = new TextView[cosMessage.length()];
 
-        for (int i = 0; i < message.length(); i++) {
+        // Create TextViews for sinMessage
+        for (int i = 0; i < sinMessage.length(); i++) {
             final TextView letterView = new TextView(this);
-            letterView.setText(String.valueOf(message.charAt(i)));
+            letterView.setText(String.valueOf(sinMessage.charAt(i)));
             letterView.setTextSize(55);
-            textContainer.addView(letterView);
-            letters[i] = letterView;
+            letterView.setTypeface(Typeface.DEFAULT, Typeface.ITALIC);
+            sinTextContainer.addView(letterView);
+            sinLetters[i] = letterView;
+        }
+        // Create TextViews for cosMessage
+        for (int i = 0; i < cosMessage.length(); i++) {
+            final TextView letterView = new TextView(this);
+            letterView.setText(String.valueOf(cosMessage.charAt(i)));
+            letterView.setTextSize(45);
+            letterView.setTypeface(Typeface.MONOSPACE);
+            cosTextContainer.addView(letterView);
+            cosLetters[i] = letterView;
         }
 
-        // Animate using sine wave
+        // Animate the letters in a sine wave pattern
         ValueAnimator waveAnimator = ValueAnimator.ofFloat(0, (float)(2 * Math.PI));
         waveAnimator.setDuration(2000); // wave speed
         waveAnimator.setRepeatCount(ValueAnimator.INFINITE);
-        waveAnimator.setInterpolator(new LinearInterpolator());
+        waveAnimator.setInterpolator(new LinearInterpolator()); // smooth animation
 
         waveAnimator.addUpdateListener(animation -> {
             float value = (float) animation.getAnimatedValue();
             float amplitude = 50f;
             float wavelength = (float) (Math.PI / 4);
 
-            for (int i = 0; i < letters.length; i++) {
+            for (int i = 0; i < sinLetters.length; i++) {
                 float y = (float) (amplitude * Math.sin(value + i * wavelength));
-                letters[i].setTranslationY(y);
+                sinLetters[i].setTranslationY(y);
+            }
+            for (int i = 0; i < cosLetters.length; i++) {
+                float y = (float) (amplitude * Math.cos(value + i * wavelength));
+                cosLetters[i].setTranslationY(y);
             }
         });
 
         waveAnimator.start();
 
+        // Reference the root RelativeLayout for background color animation
         RelativeLayout rootLayout = findViewById(R.id.root_layout);
 
+        // Animate the background hue and adjust text color for visibility
         ValueAnimator colorAnimator = ValueAnimator.ofFloat(0, 360);
         colorAnimator.setRepeatMode(ValueAnimator.RESTART);
         colorAnimator.setDuration(20000); // speed of color change
         colorAnimator.setRepeatCount(ValueAnimator.INFINITE);
         colorAnimator.setInterpolator(new LinearInterpolator());
 
-        // contrast text color based on background color
+        // Contrast text color based on background color
         colorAnimator.addUpdateListener(anim -> {
             float hue = (float) anim.getAnimatedValue();
             int color = Color.HSVToColor(new float[]{hue, 1f, 1f});
             rootLayout.setBackgroundColor(color);
 
-            // calculate luminance for contrast
+            // Calculate luminance for contrast
             double luminance = (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255;
             int targetColor = (luminance > 0.5) ? Color.BLACK : Color.WHITE;
 
-            for (TextView letter : letters) {
+            for (TextView letter : sinLetters) {
+                int currentColor = letter.getCurrentTextColor();
+                int blendedColor = (int) new ArgbEvaluator().evaluate(0.1f, currentColor, targetColor);
+                letter.setTextColor(blendedColor);
+            }
+            for (TextView letter : cosLetters) {
                 int currentColor = letter.getCurrentTextColor();
                 int blendedColor = (int) new ArgbEvaluator().evaluate(0.1f, currentColor, targetColor);
                 letter.setTextColor(blendedColor);
