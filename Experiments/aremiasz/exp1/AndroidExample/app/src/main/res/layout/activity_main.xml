@@ -8,11 +8,28 @@
     android:id="@+id/root_layout">
 
     <LinearLayout
-        android:id="@+id/text_container"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:id="@+id/sin_text_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
-        android:layout_centerInParent="true"/>
+        android:layout_centerHorizontal="true"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:paddingTop="300dp"
+        android:paddingBottom="50dp"/>
+
+    <LinearLayout
+        android:id="@+id/cos_text_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/sin_text_container"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:paddingTop="50dp"
+        android:paddingBottom="50dp"/>
 
 </RelativeLayout>

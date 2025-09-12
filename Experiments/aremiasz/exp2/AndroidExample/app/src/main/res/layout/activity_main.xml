@@ -26,7 +26,29 @@
         android:layout_gravity="center"
         android:text="To the Counter Activity"
         android:textSize="20sp"
-        android:textColor="#ffffff">
+        android:textColor="#FFFFFF">
+    </Button>
+
+    <Button
+        android:id="@+id/main_user_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_gravity="center"
+        android:text="To the User Activity"
+        android:textSize="20sp"
+        android:textColor="#FFFFFF">
+    </Button>
+
+    <Button
+        android:id="@+id/main_map_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_gravity="center"
+        android:text="To the Map Activity"
+        android:textSize="20sp"
+        android:textColor="#FFFFFF">
     </Button>
 
 </androidx.appcompat.widget.LinearLayoutCompat>

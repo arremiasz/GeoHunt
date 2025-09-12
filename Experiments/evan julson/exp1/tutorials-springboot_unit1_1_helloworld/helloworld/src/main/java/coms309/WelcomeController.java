@@ -4,6 +4,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.util.Date;
+
 @RestController
 class WelcomeController {
 
@@ -15,6 +17,17 @@ class WelcomeController {
     @GetMapping("/Postman")
     public String welcomePostman(){
         return "Hello Postman API";
+    }
+
+    @GetMapping("/HelloWorld")
+    public String helloWorld() {
+        return "Hello World!";
+    }
+
+    @GetMapping("/now")
+    public String todaysDate(){
+        Date currentDate = new Date();
+        return "The current Date + Time is: " + currentDate.toString();
     }
 
     @GetMapping("/Class/{number}")
