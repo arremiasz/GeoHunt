@@ -108,6 +108,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        /* listener for bottom navigation bar item selected */
         botNav.setOnItemSelectedListener(item -> {
             Fragment selectedFragment = null;
             int id = item.getItemId();
