@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.*;
 
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
@@ -32,6 +33,21 @@ public class PeopleController {
     @GetMapping("/people")
     public  HashMap<String,Person> getAllPersons() {
         return peopleList;
+    }
+
+    // LIST Operation with sorting infor
+    @GetMapping("/people")
+    public Person[] getAllPersonsSorted(@RequestParam("sortByValue") String sortByValue) {
+        if(sortByValue.equals("firstName")) {
+            Comparator<Person> comparator = new PersonByFirstnameComparator();
+            return sortPeople(peopleList, comparator);
+        } else if (sortByValue.equals("lastName")) {
+            Comparator<Person> comparator = new PersonByLastnameComparator();
+            return sortPeople(peopleList, comparator);
+        }
+        else {
+            return peopleList.values().toArray(new Person[0]);
+        }
     }
 
     // THIS IS THE CREATE OPERATION
@@ -98,6 +114,26 @@ public class PeopleController {
     public HashMap<String, Person> deletePerson(@PathVariable String firstName) {
         peopleList.remove(firstName);
         return peopleList;
+    }
+
+    private Person[] sortPeople(HashMap<String, Person> peopleList, Comparator<Person> comparator) {
+        Person[] arr =  new Person[peopleList.size()];
+        for (int i = 0; i < peopleList.size(); i++) {
+            arr[i] = peopleList.get(i);
+        }
+
+        //sort arr
+        for(int i = 0; i < arr.length; i++){
+            for(int j = i; j <  arr.length; j++) {
+                if (comparator.compare(arr[i], arr[i + 1]) == 1) {
+                    Person temp = arr[i];
+                    arr[i] = arr[i+1];
+                    arr[i+1] = temp;
+                }
+            }
+        }
+
+        return arr;
     }
 } // end of people controller
 
