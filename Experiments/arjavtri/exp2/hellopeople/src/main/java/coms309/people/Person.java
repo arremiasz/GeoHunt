@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
+
 /**
  * Provides the Definition/Structure for the people row
  *
@@ -23,16 +25,41 @@ public class Person {
 
     private String telephone;
 
+    private ArrayList<String> chores =  new ArrayList<>();
+
+    private int numChoresFinished;
+
 //    public Person(){
 //
 //    }
 
-    public Person(String firstName, String lastName, String address, String telephone){
+    public Person(String firstName, String lastName, String address, String telephone, String chores, int numChoresFinished){
         this.firstName = firstName;
         this.lastName = lastName;
         this.address = address;
         this.telephone = telephone;
     }
+
+
+    public void addChore(String chores){
+        this.chores.add(chores);
+    }
+
+    public void incrementChoreCounter(){
+        this.numChoresFinished++;
+    }
+
+    public boolean deleteChore(String chore){
+        for(int i = 0 ; i < chores.size() ; i++){
+            if(chores.get(i).equals(chore)){
+                chores.remove(i);
+                incrementChoreCounter();
+                return true;
+            }
+        }
+        return false;
+    }
+
 
 
     /**
@@ -72,11 +99,16 @@ public class Person {
         this.telephone = telephone;
     }
 
+    public ArrayList<String> getChores(){
+        return this.chores;
+        }
+
     @Override
     public String toString() {
         return firstName + " " 
                + lastName + " "
                + address + " "
-               + telephone;
+               + telephone
+                + numChoresFinished + " chores finished " + chores.size() + " chores left " ;
     }
 }

@@ -76,6 +76,29 @@ public class PeopleController {
         return res;
     }
 
+    @GetMapping("/people/chores")
+    public List<String> getChoresOfPerson(@RequestParam("name") String name){
+        List<String> res = new ArrayList<>();
+        for (Person p : peopleList.values()) {
+            if(p.getFirstName().contains(name) || p.getLastName().contains(name)){
+                return p.getChores();
+
+            }
+        }
+        res.add("not found");
+        return res;
+    }
+
+    @GetMapping("/people/completedNumber")
+    public int getNumberOfChoresFinished(@RequestParam("name") String name){
+        for (Person p : peopleList.values()) {
+            if(p.getFirstName().contains(name) || p.getLastName().contains(name)){
+                return p.getNumChoresFinished();
+            }
+        }
+        return -1;
+    }
+
     // THIS IS THE UPDATE OPERATION
     // We extract the person from the HashMap and modify it.
     // Springboot automatically converts the Person to JSON format
@@ -88,6 +111,34 @@ public class PeopleController {
         return peopleList.get(firstName);
     }
 
+    @PutMapping("/people/{firstName}/addChore") //works
+    public Person updateChore(@PathVariable String firstName, @RequestBody String chore) {
+        if(peopleList.containsKey(firstName)){
+            Person p = peopleList.get(firstName);
+            p.addChore(chore);
+            return p;
+        }
+        return null;
+    }
+
+    @PutMapping("/people/{firstName}/deleteChore")
+    public Person deleteChore(@PathVariable String firstName, @RequestBody String chore) {
+        if(peopleList.containsKey(firstName)){
+            Person p = peopleList.get(firstName);
+            p.deleteChore(chore);
+            return p;
+        }
+        return null;
+    }
+
+    @GetMapping("/people/{firstName}/finishedChores")
+    public int getNumberOfFinishedChores(@PathVariable String firstName) {
+        if(peopleList.containsKey(firstName)){
+            Person p = peopleList.get(firstName);
+            return p.getNumChoresFinished();
+        }
+        return -1;
+    }
 
     // THIS IS THE DELETE OPERATION
     // Springboot gets the PATHVARIABLE from the URL
