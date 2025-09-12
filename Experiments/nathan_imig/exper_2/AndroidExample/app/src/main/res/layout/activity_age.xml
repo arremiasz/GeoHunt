@@ -8,41 +8,46 @@
     android:orientation="vertical">
 
     <TextView
-        android:id="@+id/number"
+        android:id="@+id/age"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="100dp"
         android:layout_gravity="center"
-        android:textSize="150sp"
-        android:textColor="#E91E63"
-        android:text="0" >
+        android:textSize="25sp"
+        android:textColor="#9D09DE"
+        android:text="What is your age?" >
     </TextView>
 
+    <EditText
+        android:id="@+id/inputField"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="100dp"
+        android:layout_gravity="center"
+        android:textSize="25sp"
+        android:textColor="#000000"
+        android:hint="Enter"
+        android:inputType="textPersonName">
+    </EditText>
+
     <Button
-        android:id="@+id/counter_increase_btn"
+        android:id="@+id/submit_age_btn"
         android:layout_width="250dp"
         android:layout_height="80dp"
         android:layout_gravity="center"
         android:layout_marginTop="100dp"
-        android:text="Increase">
+        android:text="Submit"
+        android:textSize="25dp">
     </Button>
 
-    <Button
-        android:id="@+id/counter_decrease_btn"
-        android:layout_width="250dp"
-        android:layout_height="80dp"
-        android:layout_gravity="center"
-        android:layout_marginTop="10dp"
-        android:text="Decrease">
-    </Button>
 
     <Button
-        android:id="@+id/counter_back_btn"
+        android:id="@+id/menu_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginTop="50dp"
-        android:text="Back to Main" >
+        android:text="Finish at menu" >
 
     </Button>
 
