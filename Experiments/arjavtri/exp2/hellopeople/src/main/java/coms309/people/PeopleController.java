@@ -18,7 +18,7 @@ public class PeopleController {
 
     // Note that there is only ONE instance of PeopleController in 
     // Springboot system.
-    HashMap<String, Person> peopleList = new  HashMap<>();
+    HashMap<String, People> peopleList = new  HashMap<>();
 
     //CRUDL (create/read/update/delete/list)
     // use POST, GET, PUT, DELETE, GET methods for CRUDL
@@ -30,7 +30,7 @@ public class PeopleController {
     // in this case because of @ResponseBody
     // Note: To LIST, we use the GET method
     @GetMapping("/people")
-    public  HashMap<String,Person> getAllPersons() {
+    public  HashMap<String,People> getAllPersons() {
         return peopleList;
     }
 
@@ -40,7 +40,7 @@ public class PeopleController {
     // It returns a string message in THIS example.
     // Note: To CREATE we use POST method
     @PostMapping("/people")
-    public  String createPerson(@RequestBody Person person) {
+    public  String createPerson(@RequestBody People person) {
         System.out.println(person);
         peopleList.put(person.getFirstName(), person);
         String s = "New person "+ person.getFirstName() + " Saved";
@@ -58,8 +58,8 @@ public class PeopleController {
     // springboot automatically converts Person to JSON format when we return it
     // Note: To READ we use GET method
     @GetMapping("/people/{firstName}")
-    public Person getPerson(@PathVariable String firstName) {
-        Person p = peopleList.get(firstName);
+    public People getPerson(@PathVariable String firstName) {
+        People p = peopleList.get(firstName);
         return p;
     }
 
@@ -67,9 +67,9 @@ public class PeopleController {
     // RequestParam is expected from the request under the key "name"
     // returns all names that contains value passed to the key "name"
     @GetMapping("/people/contains")
-    public List<Person> getPersonByParam(@RequestParam("name") String name) {
-        List<Person> res = new ArrayList<>(); 
-        for (Person p : peopleList.values()) {
+    public List<People> getPersonByParam(@RequestParam("name") String name) {
+        List<People> res = new ArrayList<>();
+        for (People p : peopleList.values()) {
             if (p.getFirstName().contains(name) || p.getLastName().contains(name))
                 res.add(p);
         }
@@ -79,7 +79,7 @@ public class PeopleController {
     @GetMapping("/people/chores")
     public List<String> getChoresOfPerson(@RequestParam("name") String name){
         List<String> res = new ArrayList<>();
-        for (Person p : peopleList.values()) {
+        for (People p : peopleList.values()) {
             if(p.getFirstName().contains(name) || p.getLastName().contains(name)){
                 return p.getChores();
 
@@ -91,7 +91,7 @@ public class PeopleController {
 
     @GetMapping("/people/completedNumber")
     public int getNumberOfChoresFinished(@RequestParam("name") String name){
-        for (Person p : peopleList.values()) {
+        for (People p : peopleList.values()) {
             if(p.getFirstName().contains(name) || p.getLastName().contains(name)){
                 return p.getNumChoresFinished();
             }
@@ -106,15 +106,15 @@ public class PeopleController {
     // Here we are returning what we sent to the method
     // Note: To UPDATE we use PUT method
     @PutMapping("/people/{firstName}")
-    public Person updatePerson(@PathVariable String firstName, @RequestBody Person p) {
+    public People updatePerson(@PathVariable String firstName, @RequestBody People p) {
         peopleList.replace(firstName, p);
         return peopleList.get(firstName);
     }
 
     @PutMapping("/people/{firstName}/addChore") //works
-    public Person updateChore(@PathVariable String firstName, @RequestBody String chore) {
+    public People updateChore(@PathVariable String firstName, @RequestBody String chore) {
         if(peopleList.containsKey(firstName)){
-            Person p = peopleList.get(firstName);
+            People p = peopleList.get(firstName);
             p.addChore(chore);
             return p;
         }
@@ -122,9 +122,9 @@ public class PeopleController {
     }
 
     @PutMapping("/people/{firstName}/deleteChore")
-    public Person deleteChore(@PathVariable String firstName, @RequestBody String chore) {
+    public People deleteChore(@PathVariable String firstName, @RequestBody String chore) {
         if(peopleList.containsKey(firstName)){
-            Person p = peopleList.get(firstName);
+            People p = peopleList.get(firstName);
             p.deleteChore(chore);
             return p;
         }
@@ -134,7 +134,7 @@ public class PeopleController {
     @GetMapping("/people/{firstName}/finishedChores")
     public int getNumberOfFinishedChores(@PathVariable String firstName) {
         if(peopleList.containsKey(firstName)){
-            Person p = peopleList.get(firstName);
+            People p = peopleList.get(firstName);
             return p.getNumChoresFinished();
         }
         return -1;
@@ -146,7 +146,7 @@ public class PeopleController {
     // Note: To DELETE we use delete method
     
     @DeleteMapping("/people/{firstName}")
-    public HashMap<String, Person> deletePerson(@PathVariable String firstName) {
+    public HashMap<String, People> deletePerson(@PathVariable String firstName) {
         peopleList.remove(firstName);
         return peopleList;
     }

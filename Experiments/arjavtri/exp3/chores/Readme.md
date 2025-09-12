@@ -16,7 +16,7 @@
 ### Available End points from POSTMAN: CRUDL
 1. CREATE a new Person
 POST request: 
-    /people - Create a new person. The request has to be of type application/JSON input format 
+    /people - Create a new chore. The request has to be of type application/JSON input format 
     {
         "firstName" : "tom",
         "lastName"  : "hanks",
@@ -24,16 +24,16 @@ POST request:
         "telephone" : "999"
     }
 
-2. READ info on a person
+2. READ info on a chore
 GET request:
-    /people/{firstName} - Get all person whose name is the same as the parameter {firstName} (Example: /people/tom )
+    /people/{firstName} - Get all chore whose name is the same as the parameter {firstName} (Example: /people/tom )
 
 GET request:
     /people/contains?name={....} - Get all names who contains {name} in either firstName or lastName (Example: /people/contains?name=Bob)
 
-3. UPDATE info on a person
+3. UPDATE info on a chore
 PUT request : 
-    /people/{firstname} - Update info on a person whose firstname is sent on the URL. The modified info is sent in the body of the message
+    /people/{firstname} - Update info on a chore whose firstname is sent on the URL. The modified info is sent in the body of the message
     {
         "firstName" : "tom",
         "lastName"  : "hanks",
@@ -42,7 +42,7 @@ PUT request :
     }
 
 PUT request :
-    /people?firstName={....} - Update info on a person whose firstName matches the request parameter. The modified info is sent in the body of the message
+    /people?firstName={....} - Update info on a chore whose firstName matches the request parameter. The modified info is sent in the body of the message
     {
         "firstName" : "tom",
         "lastName"  : "hanks",
@@ -50,7 +50,7 @@ PUT request :
         "telephone" : "888"
     }
     
-4. DELETE person record
+4. DELETE chore record
  DELETE request:
     /people/{firstName} - Delete the entry in the hashmap with key {firstName}. (Example: /people/tom)
 

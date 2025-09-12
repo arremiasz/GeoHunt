@@ -15,7 +15,7 @@ import java.util.ArrayList;
 @Getter // Lombok Shortcut for generating getter methods (Matches variable names set ie firstName -> getFirstName)
 @Setter // Similarly for setters as well
 @NoArgsConstructor // Default constructor
-public class Person {
+public class People {
 
     private String firstName;
 
@@ -33,7 +33,7 @@ public class Person {
 //
 //    }
 
-    public Person(String firstName, String lastName, String address, String telephone, String chores, int numChoresFinished){
+    public People(String firstName, String lastName, String address, String telephone, String chores, int numChoresFinished){
         this.firstName = firstName;
         this.lastName = lastName;
         this.address = address;
