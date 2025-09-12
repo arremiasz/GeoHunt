@@ -8,47 +8,61 @@
     tools:context=".MainActivity">
 
     <TextView
-        android:id="@+id/main_msg_txt"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginTop="100dp"
-        android:layout_marginBottom="50dp"
-        android:text="Home Page"
+        android:layout_marginBottom="150dp"
+        android:text="Profile Settings"
         android:textColor="#fc0303"
-        android:textSize="30dp"></TextView>
+        android:textSize="30dp">
+    </TextView>
 
     <TextView
-        android:id="@+id/main_username_txt"
+        android:id="@+id/profile_username"
+
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:layout_marginTop="10dp"
-        android:layout_marginBottom="100dp"
-        android:text="{{username}}"
+
+        android:text="username: "
         android:textColor="#000000"
-        android:textSize="30dp"></TextView>
+        android:textSize="20dp">
+
+    </TextView>
+
+
+
+    <TextView
+        android:id="@+id/profile_password"
+
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+
+        android:text="password: "
+        android:textColor="#000000"
+        android:textSize="20dp">
+
+    </TextView>
+
+
 
 
     <Button
-        android:id="@+id/main_login_btn"
-        android:layout_width="150dp"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:backgroundTint="#925C25"
-        android:text="Login"
-        android:textColor="#ffffff"
-        android:textSize="20sp"></Button>
+        android:id="@+id/profile_logout_btn"
 
-    <Button
-        android:id="@+id/main_signup_btn"
-        android:layout_width="150dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
+        android:layout_marginTop="100dp"
+
         android:backgroundTint="#925C25"
-        android:text="Sign up"
+        android:text="Logout"
         android:textColor="#ffffff"
-        android:textSize="20sp"></Button>
+        android:textSize="10sp">
+
+    </Button>
 
 
 </androidx.appcompat.widget.LinearLayoutCompat>
