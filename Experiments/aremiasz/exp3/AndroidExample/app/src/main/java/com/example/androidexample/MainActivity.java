@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
         /* extract data passed into this activity from another activity */
         Bundle extras = getIntent().getExtras();
         if(extras == null) {
-            messageText.setText("Home Page");
+            messageText.setText("Map and Profile Experiment");
             usernameText.setVisibility(View.INVISIBLE);             // set username text invisible initially
             botNav.setVisibility(View.INVISIBLE);                  // set bottom navigation bar invisible initially
         } else {
@@ -77,8 +77,7 @@ public class MainActivity extends AppCompatActivity {
                     .beginTransaction()
                     .replace(R.id.fragment_container, home)
                     .commit();
-            //messageText.setText("Welcome");
-            //usernameText.setText(extras.getString("USERNAME")); // this will come from LoginActivity
+
             usernameText.setVisibility(View.INVISIBLE);             // set username text invisible
             messageText.setVisibility(View.INVISIBLE);
             loginButton.setVisibility(View.INVISIBLE);              // set login button invisible
@@ -112,15 +111,15 @@ public class MainActivity extends AppCompatActivity {
         botNav.setOnItemSelectedListener(item -> {
             Fragment selectedFragment = null;
             int id = item.getItemId();
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
 
             if (id == R.id.nav_home) {
                 selectedFragment = new HomeFragment(extras.getString("USERNAME"));
             } else if (id == R.id.nav_map) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
                 selectedFragment = new MapFragment();
             } else if (id == R.id.nav_profile) {
-                selectedFragment = new ProfileFragment();
+                selectedFragment = new ProfileFragment(extras.getString("USERNAME"));
             }
 
             if (selectedFragment != null) {
