@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
         /* extract data passed into this activity from another activity */
         Bundle extras = getIntent().getExtras();
         if(extras == null) {
-            messageText.setText("Home Page");
+            messageText.setText("Welcome: Sign up or Login");
             usernameText.setVisibility(View.INVISIBLE);             // set username text invisible initially
         } else {
             messageText.setText("Welcome");
@@ -76,7 +76,9 @@ public class MainActivity extends AppCompatActivity {
 
                 /* when login button is pressed, use intent to switch to Login Activity */
                 Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-                startActivity(intent);
+                intent.putExtra("USERNAME", "");  // key-value to pass to the MainActivity
+                intent.putExtra("PASSWORD", "");  // key-value to pass to the MainActivity
+                startActivity(intent);  // go to MainActivity with the key-value data
             }
         });
 

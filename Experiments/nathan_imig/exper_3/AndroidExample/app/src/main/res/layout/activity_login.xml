@@ -10,7 +10,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Login Example"
+        android:text="Welcome Back"
         android:layout_gravity="center"
         android:layout_marginTop="100dp"
         android:layout_marginBottom="150dp"
@@ -66,34 +66,32 @@
 
     </LinearLayout>
 
-    <LinearLayout
+    <Button
+        android:id="@+id/login_submit_btn"
+
+        android:layout_marginTop="50dp"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+
+        android:text="Submit"
+        android:textSize="20sp"
+        android:textColor="#ffffff">
+    </Button>
+
+    <Button
+        android:id="@+id/login_signup_btn"
+
+        android:layout_marginTop="100dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:layout_marginTop="100dp"
-        android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/login_login_btn"
-            android:layout_width="150dp"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="10dp"
-            android:text="Login"
-            android:textSize="20sp"
-            android:textColor="#ffffff">
-        </Button>
+        android:text="No account\nSign Up"
+        android:textSize="10sp"
+        android:textColor="#ffffff">
+    </Button>
 
-        <Button
-            android:id="@+id/login_signup_btn"
-            android:layout_width="150dp"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="10dp"
-            android:text="Signup"
-            android:textSize="20sp"
-            android:textColor="#ffffff">
-        </Button>
-
-    </LinearLayout>
 
 
 </androidx.appcompat.widget.LinearLayoutCompat>

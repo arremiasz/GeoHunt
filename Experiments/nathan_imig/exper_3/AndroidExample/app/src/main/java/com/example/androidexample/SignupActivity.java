@@ -26,8 +26,9 @@ public class SignupActivity extends AppCompatActivity {
         usernameEditText = findViewById(R.id.signup_username_edt);  // link to username edtext in the Signup activity XML
         passwordEditText = findViewById(R.id.signup_password_edt);  // link to password edtext in the Signup activity XML
         confirmEditText = findViewById(R.id.signup_confirm_edt);    // link to confirm edtext in the Signup activity XML
+        signupButton = findViewById(R.id.signup_submit_btn);  // link to signup button in the Login activity XML
         loginButton = findViewById(R.id.signup_login_btn);    // link to login button in the Signup activity XML
-        signupButton = findViewById(R.id.signup_signup_btn);  // link to signup button in the Signup activity XML
+
 
         /* click listener on login button pressed */
         loginButton.setOnClickListener(new View.OnClickListener() {
@@ -52,10 +53,20 @@ public class SignupActivity extends AppCompatActivity {
 
                 if (password.equals(confirm)){
                     Toast.makeText(getApplicationContext(), "Signing up", Toast.LENGTH_LONG).show();
+
+                    /* when sign up passes, use intent to switch to Login Activity */
+                    Intent intent = new Intent(SignupActivity.this, LoginActivity.class);
+                    intent.putExtra("USERNAME", username);  // key-value to pass to the MainActivity
+                    intent.putExtra("PASSWORD", password);  // key-value to pass to the MainActivity
+                    startActivity(intent);  // go to MainActivity with the key-value data
                 }
+                // Fails and does nothing
                 else {
                     Toast.makeText(getApplicationContext(), "Password don't match", Toast.LENGTH_LONG).show();
                 }
+
+
+
             }
         });
     }
