@@ -8,8 +8,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
-
 /*
 
 1. To run this project, open the directory "Android Example", otherwise it may not recognize the file structure properly
@@ -41,6 +39,7 @@ import org.w3c.dom.Text;
 
 public class MainActivity extends AppCompatActivity {
 
+
     private TextView messageText;     // define message textview variable
     private Button counterButton;     // define counter button variable
 
@@ -56,10 +55,12 @@ public class MainActivity extends AppCompatActivity {
         /* extract data passed into this activity from another activity */
         Bundle extras = getIntent().getExtras();
         if(extras == null) {
-            messageText.setText("Intent Example");
+            messageText.setText("Continue to Enter Your Information");
         } else {
-            String number = extras.getString("NUM");  // this will come from LoginActivity
-            messageText.setText("The number was " + number);
+            String name = extras.getString("NAME");  // this will come from LoginActivity
+            int age = extras.getInt("AGE");
+            messageText.setText("Your name is " + name + "\n" +
+                    "Your age is: " + age);
         }
 
         /* click listener on counter button pressed */
@@ -68,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
 
                 /* when counter button is pressed, use intent to switch to Counter Activity */
-                Intent intent = new Intent(MainActivity.this, CounterActivity.class);
+                Intent intent = new Intent(MainActivity.this, NameActivity.class);
                 startActivity(intent);
             }
         });

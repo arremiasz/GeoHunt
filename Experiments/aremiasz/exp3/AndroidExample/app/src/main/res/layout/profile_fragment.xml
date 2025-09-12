@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:layout_editor_absoluteX="1dp"
+        tools:layout_editor_absoluteY="1dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/profile_header"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="User Profile"
+                android:textSize="30sp"
+                android:textStyle="bold"
+                android:layout_gravity="center"
+                android:layout_marginTop="50dp"
+                android:layout_marginBottom="20dp"
+                android:textColor="#000000"/>
+
+            <ImageView
+                android:id="@+id/profile_icon"
+                android:layout_width="150dp"
+                android:layout_height="150dp"
+                android:src="@android:drawable/ic_menu_gallery"
+                android:layout_gravity="center"
+                android:contentDescription="Profile Icon"
+                android:layout_marginBottom="20dp"/>
+
+            <TextView
+                android:id="@+id/username_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Username"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_gravity="center"
+                android:layout_marginTop="-10dp"
+                android:layout_marginBottom="30dp"/>
+
+            <!-- Favorite color label -->
+            <TextView
+                android:id="@+id/favorite_color_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Favorite Color:"
+                android:textSize="18sp"
+                android:layout_gravity="center"
+                android:layout_marginBottom="10dp"/>
+
+            <LinearLayout
+                android:id="@+id/color_picker_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginBottom="20dp">
+
+                <Button
+                    android:id="@+id/color_red"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:backgroundTint="#FF0000" />
+
+                <Button
+                    android:id="@+id/color_blue"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:backgroundTint="#0000FF" />
+
+                <Button
+                    android:id="@+id/color_green"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:backgroundTint="#00FF00" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/stats_header"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Your Statistics"
+                android:fontFamily="monospace"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:layout_gravity="center"
+                android:layout_marginBottom="50dp"/>
+            <TextView
+                android:id="@+id/distance_travelled"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Distance Travelled: 120 km"
+                android:fontFamily="monospace"
+                android:textSize="18sp"
+                android:layout_marginBottom="100dp"
+                android:layout_marginStart="20dp"/>
+            <TextView
+                android:id="@+id/accuracy"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Accuracy: 95%"
+                android:fontFamily="monospace"
+                android:textSize="18sp"
+                android:layout_marginBottom="100dp"
+                android:layout_marginStart="20dp"/>
+            <TextView
+                android:id="@+id/average_completion_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Average Completion Time: 15 min"
+                android:fontFamily="monospace"
+                android:textSize="18sp"
+                android:layout_marginBottom="100dp"
+                android:layout_marginStart="20dp"/>
+            <TextView
+                android:id="@+id/steaks"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Streak: 10"
+                android:fontFamily="monospace"
+                android:textSize="18sp"
+                android:layout_marginBottom="100dp"
+                android:layout_marginStart="20dp"/>
+
+            <TextView
+                android:id="@+id/account_creation_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Account Created On: Jan 1, 2023"
+                android:fontFamily="monospace"
+                android:textSize="18sp"
+                android:layout_marginBottom="100dp"
+                android:layout_marginStart="20dp"/>
+
+            <Button
+                android:id="@+id/delete_account_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Delete Account"
+                android:backgroundTint="#FF0000"
+                android:textColor="#FFFFFF"
+                android:layout_gravity="center"
+                android:layout_marginBottom="50dp"/>
+        </LinearLayout>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>
