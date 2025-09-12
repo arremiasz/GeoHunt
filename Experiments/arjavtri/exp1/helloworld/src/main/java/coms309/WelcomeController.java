@@ -34,4 +34,15 @@ class WelcomeController {
 
     @GetMapping("/search")
     public String search(@RequestParam String name) {return "Searching for " + name;}
+
+    @GetMapping("/roll")
+    public String roll(@RequestParam(defaultValue = "6") int sides) {
+        int result = new Random().nextInt(sides) + 1;
+        return "Rolled a " + sides + "-sided dice: " + result;
+    }
+
+    @GetMapping("/reverse")
+    public String reverse(@RequestParam String word) {
+        return new StringBuilder(word).reverse().toString();
+    }
 }
