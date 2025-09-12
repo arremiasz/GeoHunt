@@ -15,13 +15,19 @@ import java.util.ArrayList;
 @Getter // Lombok Shortcut for generating getter methods (Matches variable names set ie firstName -> getFirstName)
 @Setter // Similarly for setters as well
 @NoArgsConstructor // Default constructor
-public class Chore {
+public class Person {
 
-    private String name;
+    private String firstName;
 
-    private int difficulty;
+    private String lastName;
 
-    private int timeInMin;
+    private String address;
+
+    private String telephone;
+
+    private ArrayList<String> chores =  new ArrayList<>();
+
+    private int numChoresFinished;
 
 //    public Person(){
 //
