@@ -2,6 +2,7 @@
 # Gradle files
 .gradle/
 build/
+secrets.txt
 
 # Local configuration file (sdk path, etc)
 local.properties

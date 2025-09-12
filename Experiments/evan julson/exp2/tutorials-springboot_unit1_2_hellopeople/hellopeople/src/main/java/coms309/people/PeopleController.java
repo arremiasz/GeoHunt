@@ -42,8 +42,8 @@ public class PeopleController {
     @PostMapping("/people")
     public  String createPerson(@RequestBody Person person) {
         System.out.println(person);
-        peopleList.put(person.getFirstName(), person);
-        String s = "New person "+ person.getFirstName() + " Saved";
+        peopleList.put(person.getUserName(), person);
+        String s = "New person "+ person.getUserName() + " Saved";
         return s;
         //public  ResponseEntity<Map<String, String>>  //unused
         // createPerson(@RequestBody Person person) { // unused
@@ -51,6 +51,14 @@ public class PeopleController {
         //body.put("message", s); // unused
         //ResponseEntity<>(body, HttpStatus.OK); // unused
     }
+
+    // POST task
+
+    // GET task
+
+    // PUT task
+
+
 
     // THIS IS THE READ OPERATION
     // Springboot gets the PATHVARIABLE from the URL
@@ -82,10 +90,10 @@ public class PeopleController {
     // Springboot gets the PATHVARIABLE from the URL
     // Here we are returning what we sent to the method
     // Note: To UPDATE we use PUT method
-    @PutMapping("/people/{firstName}")
-    public Person updatePerson(@PathVariable String firstName, @RequestBody Person p) {
-        peopleList.replace(firstName, p);
-        return peopleList.get(firstName);
+    @PutMapping("/people/{userName}")
+    public Person updatePerson(@PathVariable String userName, @RequestBody Person p) {
+        peopleList.replace(userName, p);
+        return peopleList.get(userName);
     }
 
 
@@ -94,9 +102,9 @@ public class PeopleController {
     // We return the entire list -- converted to JSON
     // Note: To DELETE we use delete method
     
-    @DeleteMapping("/people/{firstName}")
-    public HashMap<String, Person> deletePerson(@PathVariable String firstName) {
-        peopleList.remove(firstName);
+    @DeleteMapping("/people/{userName}")
+    public HashMap<String, Person> deletePerson(@PathVariable String userName) {
+        peopleList.remove(userName);
         return peopleList;
     }
 } // end of people controller
