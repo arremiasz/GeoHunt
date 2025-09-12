@@ -18,7 +18,7 @@ public class PeopleController {
 
     // Note that there is only ONE instance of PeopleController in 
     // Springboot system.
-    HashMap<String, Chore> choreList = new  HashMap<>();
+    HashMap<String, Person> peopleList = new  HashMap<>();
 
     //CRUDL (create/read/update/delete/list)
     // use POST, GET, PUT, DELETE, GET methods for CRUDL
