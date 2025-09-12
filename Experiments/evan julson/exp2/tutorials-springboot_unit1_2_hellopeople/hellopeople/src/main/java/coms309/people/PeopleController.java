@@ -53,11 +53,50 @@ public class PeopleController {
     }
 
     // POST task
+    @PostMapping("/people/{userName}/tasks")
+    public String createTask(@RequestBody Task task, @PathVariable String userName) {
+        Person p =  peopleList.get(userName);
+        String s;
+        if(p.addTask(task)){
+            s = "New Task " + task.getName() + " Saved under user " + p.getUserName();
+        }
+        else {
+            s = "Failed to create task.";
+        }
+        return s;
+    }
 
     // GET task
+    @GetMapping("/people/{username}/tasks/{taskname}")
+    public Task getTask(@PathVariable String username, @PathVariable String taskname) {
+        Person p = peopleList.get(username);
+        Task task = p.getTask(taskname);
+        return task;
+    }
 
     // PUT task
+    @PutMapping("/people/{username}/tasks/{taskname}")
+    public Task  updateTask(@PathVariable String username, @PathVariable String taskname, @RequestBody Task newTask) {
+        Person p = peopleList.get(username);
+        p.removeTask(taskname);
+        p.addTask(newTask);
+        return newTask;
+    }
 
+    // DELETE task
+    @DeleteMapping("/people/{username}/tasks/{taskname}")
+    public HashMap<String, Task> deleteTask(@PathVariable String username, @PathVariable String taskname) {
+        Person p = peopleList.get(username);
+        p.removeTask(taskname);
+        return p.getTaskList();
+    }
+
+    // LIST task
+    @GetMapping("people/{username}/tasks")
+    public HashMap<String, Task> getTasks(@PathVariable String username) {
+        Person p = peopleList.get(username);
+        return p.getTaskList();
+    }
 
 
     // THIS IS THE READ OPERATION
@@ -65,9 +104,9 @@ public class PeopleController {
     // We extract the person from the HashMap.
     // springboot automatically converts Person to JSON format when we return it
     // Note: To READ we use GET method
-    @GetMapping("/people/{firstName}")
-    public Person getPerson(@PathVariable String firstName) {
-        Person p = peopleList.get(firstName);
+    @GetMapping("/people/{userName}")
+    public Person getPerson(@PathVariable String userName) {
+        Person p = peopleList.get(userName);
         return p;
     }
 

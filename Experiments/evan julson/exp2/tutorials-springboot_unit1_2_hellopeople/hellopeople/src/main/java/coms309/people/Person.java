@@ -61,6 +61,15 @@ public class Person {
         return true;
     }
 
+    public boolean addTask(Task task){
+        if(taskList.containsKey(task.getName())){
+            return false;
+            // Task with given name already exists
+        }
+        taskList.put(task.getName(), task);
+        return true;
+    }
+
     // Gets tasks
     public Task getTask(String name){
         return taskList.get(name);
