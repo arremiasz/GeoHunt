@@ -12,12 +12,16 @@ import android.widget.TextView;
 public class NameActivity extends AppCompatActivity {
 
     private TextView nameTxt; // define name textview variable
+    private TextView ageTxt; // define name textview variable
     private Button submitBtn; // define button variable to submit name
     private Button continBtn; // define button variable to continue
     private Button backBtn;   // define back button variable
-    private EditText input;  // define text to input name
+    private EditText inputName;  // define text to input name
+    private EditText inputAge;  // define text to input age
 
     String name = "";
+
+    int age = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,17 +30,20 @@ public class NameActivity extends AppCompatActivity {
 
         /* initialize UI elements */
         nameTxt = findViewById(R.id.name);
+        ageTxt = findViewById(R.id.age);
         submitBtn = findViewById(R.id.submit_name_btn);
         continBtn = findViewById(R.id.continue_btn);
-        backBtn = findViewById(R.id.back_btn);
-        input = findViewById(R.id.inputField);
+        inputName = findViewById(R.id.inputNameField);
+        inputAge = findViewById(R.id.inputAgeField);
 
         /* when increase btn is pressed, counter++, reset number textview */
         submitBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                name = input.getText().toString();
+                name = inputName.getText().toString();
                 nameTxt.setText("Name is: " + name);
+                age = Integer.parseInt(inputAge.getText().toString());
+                ageTxt.setText("Age is: " + age);
             }
         });
 
@@ -44,16 +51,9 @@ public class NameActivity extends AppCompatActivity {
         continBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                nameTxt.setText("Name is: " + input.getText());
-            }
-        });
-
-        /* when back btn is pressed, switch back to MainActivity */
-        backBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
                 Intent intent = new Intent(NameActivity.this, MainActivity.class);
                 intent.putExtra("NAME", name);  // key-value to pass to the MainActivity
+                intent.putExtra("AGE", age);
                 startActivity(intent);
             }
         });

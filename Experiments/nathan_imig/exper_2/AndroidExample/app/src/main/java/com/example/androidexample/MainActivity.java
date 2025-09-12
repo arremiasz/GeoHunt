@@ -39,6 +39,7 @@ import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
 
+
     private TextView messageText;     // define message textview variable
     private Button counterButton;     // define counter button variable
 
@@ -57,7 +58,9 @@ public class MainActivity extends AppCompatActivity {
             messageText.setText("Continue to Enter Your Information");
         } else {
             String name = extras.getString("NAME");  // this will come from LoginActivity
-            messageText.setText("Your name is " + name);
+            int age = extras.getInt("AGE");
+            messageText.setText("Your name is " + name + "\n" +
+                    "Your age is: " + age);
         }
 
         /* click listener on counter button pressed */
