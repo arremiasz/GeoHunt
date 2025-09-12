@@ -45,7 +45,7 @@ public class LoginActivity extends AppCompatActivity {
                 String usernameEntered = usernameEditText.getText().toString();
                 String passwordEntered = passwordEditText.getText().toString();
 
-                if (password.equals(passwordEntered) && username.equals(usernameEntered)){
+                if (password.equals(passwordEntered) && username.equals(usernameEntered) && !(username.isEmpty())){
                     Toast.makeText(getApplicationContext(), "Logging In", Toast.LENGTH_LONG).show();
 
                     /* when sign up passes, use intent to switch to Login Activity */

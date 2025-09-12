@@ -4,6 +4,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     tools:context=".MainActivity"
     android:layout_height="match_parent"
+    android:background="#984359"
     android:layout_width="match_parent"
     android:orientation="vertical">
 
@@ -34,9 +35,10 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginTop="150dp"
-        android:text="Enter"
+        android:backgroundTint="#117C5A"
         android:onClick="updateText"
-        />
+        android:text="Enter"
+        android:textSize="60sp" />
 
 
 

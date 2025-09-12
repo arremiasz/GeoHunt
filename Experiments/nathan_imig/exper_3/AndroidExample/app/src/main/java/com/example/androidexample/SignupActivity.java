@@ -51,7 +51,25 @@ public class SignupActivity extends AppCompatActivity {
                 String password = passwordEditText.getText().toString();
                 String confirm = confirmEditText.getText().toString();
 
-                if (password.equals(confirm)){
+                // If password does not match
+                if (!(password.equals(confirm))){
+                    Toast.makeText(getApplicationContext(), "Password don't match", Toast.LENGTH_LONG).show();
+                }
+                // If password does not have a number
+                else if (!(password.contains("1") ||
+                        password.contains("2") ||
+                        password.contains("3") ||
+                        password.contains("4") ||
+                        password.contains("5") ||
+                        password.contains("6") ||
+                        password.contains("7") ||
+                        password.contains("8") ||
+                        password.contains("9") ||
+                        password.contains("0"))) {
+                    Toast.makeText(getApplicationContext(), "Password must have a number", Toast.LENGTH_LONG).show();
+                }
+                // Sends to longin with account information
+                else {
                     Toast.makeText(getApplicationContext(), "Signing up", Toast.LENGTH_LONG).show();
 
                     /* when sign up passes, use intent to switch to Login Activity */
@@ -59,10 +77,6 @@ public class SignupActivity extends AppCompatActivity {
                     intent.putExtra("USERNAME", username);  // key-value to pass to the MainActivity
                     intent.putExtra("PASSWORD", password);  // key-value to pass to the MainActivity
                     startActivity(intent);  // go to MainActivity with the key-value data
-                }
-                // Fails and does nothing
-                else {
-                    Toast.makeText(getApplicationContext(), "Password don't match", Toast.LENGTH_LONG).show();
                 }
 
 
