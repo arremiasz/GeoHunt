@@ -56,13 +56,22 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginTop="100dp"
+        android:layout_marginBottom="100dp"
 
         android:backgroundTint="#925C25"
         android:text="Logout"
         android:textColor="#ffffff"
         android:textSize="10sp">
-
     </Button>
+
+    <Switch
+        android:ems="9"
+        android:id="@+id/switch1"
+        android:layout_width="wrap_content"
+        android:layout_gravity="center"
+        android:layout_height="wrap_content"
+        android:text="Switch"
+        </Switch>
 
 
 </androidx.appcompat.widget.LinearLayoutCompat>
