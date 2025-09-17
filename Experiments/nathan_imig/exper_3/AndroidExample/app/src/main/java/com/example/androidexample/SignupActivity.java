@@ -56,6 +56,7 @@ public class SignupActivity extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(), "Password don't match", Toast.LENGTH_LONG).show();
                 }
                 // If password does not have a number
+                // RegEx
                 else if (!(password.contains("1") ||
                         password.contains("2") ||
                         password.contains("3") ||
