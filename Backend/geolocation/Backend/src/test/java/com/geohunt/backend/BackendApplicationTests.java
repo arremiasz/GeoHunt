@@ -1,13 +1,13 @@
-package com.speedy.geolocation;
+package com.geohunt.backend;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class GeolocationApplicationTests {
+class BackendApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
+    @Test
+    void contextLoads() {
+    }
 
 }
