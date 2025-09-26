@@ -2,8 +2,9 @@ package onetoone.Persons;
 
 import java.util.List;
 
+import onetoone.Phones.Phone;
+import onetoone.Phones.PhoneRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,6 +30,9 @@ public class PersonController {
 
     @Autowired
     LaptopRepository laptopRepository;
+
+    @Autowired
+    PhoneRepository phoneRepository;
 
     private String success = "{\"message\":\"success\"}";
     private String failure = "{\"message\":\"failure\"}";
@@ -84,6 +88,18 @@ public class PersonController {
             return failure;
         laptop.setPerson(Person);
         Person.setLaptop(laptop);
+        PersonRepository.save(Person);
+        return success;
+    }
+
+    @PutMapping("/Persons/{PersonId}/Phones/{phoneId}")
+    String assignPhoneToPerson(@PathVariable int PersonId,@PathVariable int phoneId){
+        Person Person = PersonRepository.findById(PersonId);
+        Phone phone = phoneRepository.findById(phoneId);
+        if(Person == null || phone == null)
+            return failure;
+        phone.setPerson(Person);
+        Person.setPhone(phone);
         PersonRepository.save(Person);
         return success;
     }
