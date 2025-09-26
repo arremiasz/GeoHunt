@@ -56,7 +56,7 @@ public class ImageReqActivity extends AppCompatActivity {
                         // Called when the image is successfully fetched
                         // Set the fetched image (Bitmap) to the ImageView
                         imageView.setImageBitmap(response);
-                        // Log a success message
+                        // Log a success messages
                         Log.d("Image Request", "Image loaded successfully.");
                     }
                 },
