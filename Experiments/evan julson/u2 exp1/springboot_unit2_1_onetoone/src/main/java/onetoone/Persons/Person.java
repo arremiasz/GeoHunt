@@ -13,6 +13,7 @@ import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.Setter;
 import onetoone.Laptops.Laptop;
+import onetoone.Phones.Phone;
 
 /**
  * 
@@ -52,6 +53,10 @@ public class Person {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "laptop_id")
     private Laptop laptop;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "phone_id")
+    private Phone phone;
 
     public Person(String name, String emailId) {
         this.name = name;
@@ -103,5 +108,9 @@ public class Person {
     public void setLaptop(Laptop laptop){
         this.laptop = laptop;
     }
+
+    public Phone getPhone(){return phone;}
+
+    public void setPhone(Phone phone){this.phone = phone;}
     
 }
