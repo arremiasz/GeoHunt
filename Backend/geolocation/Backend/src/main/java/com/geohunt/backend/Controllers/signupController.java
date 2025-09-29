@@ -28,7 +28,7 @@ public class signupController {
             Account acc = accountService.getAccountByUsername(name);
             return ResponseEntity.ok(acc);
         } catch(IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(null);
+            return ResponseEntity.status(404).build();
         }
     }
 }
