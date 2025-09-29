@@ -19,6 +19,6 @@ public class AccountService {
         if(accountRepository.findByUsername(username).isPresent()) {
             return accountRepository.findByUsername(username).get();
         }
-        throw new IllegalArgumentException("Account does not exist");
+        throw new IllegalArgumentException("Account does not exist.");
     }
 }
