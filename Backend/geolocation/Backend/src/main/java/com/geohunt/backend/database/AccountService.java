@@ -9,9 +9,16 @@ public class AccountService {
     private AccountRepository accountRepository;
 
     public void createAccount(Account account) {
-        if(accountRepository.findbyUsername(account.getUsername()).isPresent()) {
+        if(accountRepository.findByUsername(account.getUsername()).isPresent()) {
             throw new IllegalArgumentException("Account already exists");
         }
         accountRepository.save(account);
+    }
+
+    public Account getAccountByUsername(String username) {
+        if(accountRepository.findByUsername(username).isPresent()) {
+            return accountRepository.findByUsername(username).get();
+        }
+        throw new IllegalArgumentException("Account does not exist");
     }
 }
