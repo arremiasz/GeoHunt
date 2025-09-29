@@ -21,4 +21,40 @@ public class AccountService {
         }
         throw new IllegalArgumentException("Account does not exist.");
     }
+
+    public Account getAccountById(Long id) {
+        if(accountRepository.findById(id).isPresent()) {
+            return accountRepository.findById(id).get();
+        }
+        throw new IllegalArgumentException("Account does not exist.");
+    }
+
+    public boolean deleteAccountByID(Long id) {
+        if(accountRepository.findById(id).isPresent()) {
+            accountRepository.deleteById(id);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean deleteAccountByUsername(String username) {
+        if(accountRepository.findByUsername(username).isPresent()) {
+            accountRepository.deleteById(accountRepository.findByUsername(username).get().getId());
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean updatedAccount(Long id, Account account) {
+        try{
+            Account acc = getAccountById(id);
+            if(account.getUsername().isEmpty()) {}
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Account does not exist.");
+        }
+
+    }
+
 }

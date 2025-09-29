@@ -22,11 +22,50 @@ public class signupController {
         }
     }
 
-    @GetMapping("/{name}")
-    public ResponseEntity<Account> getAccount(@PathVariable String name) {
+    @GetMapping("/account/byName")
+    public ResponseEntity<Account> getAccount(@RequestParam String name) {
         try{
             Account acc = accountService.getAccountByUsername(name);
             return ResponseEntity.ok(acc);
+        } catch(IllegalArgumentException e) {
+            return ResponseEntity.status(404).build();
+        }
+    }
+
+    @GetMapping("/account/byId")
+    public ResponseEntity<Account> getAccount(@RequestParam Long id) {
+        try{
+            Account acc = accountService.getAccountById(id);
+            return ResponseEntity.ok(acc);
+        } catch(IllegalArgumentException e) {
+            return ResponseEntity.status(404).build();
+        }
+    }
+
+    @DeleteMapping("/account/byName")
+    public ResponseEntity<String> deleteAccount(@RequestParam String name) {
+        boolean resp = accountService.deleteAccountByUsername(name);
+        if(resp){
+            return ResponseEntity.ok("Account deleted successfully");
+        } else {
+            return ResponseEntity.status(404).build();
+        }
+    }
+
+    @DeleteMapping("/account/byId")
+    public ResponseEntity<String> deleteAccount(@RequestParam Long id) {
+        boolean resp = accountService.deleteAccountByID(id);
+        if(resp){
+            return ResponseEntity.ok("Account deleted successfully");
+        } else {
+            return ResponseEntity.status(404).build();
+        }
+    }
+
+    @PutMapping("/account/update")
+    public ResponseEntity<String> updateName(@RequestParam Long id, @RequestBody Account account) {
+        try{
+            accountService.updatedAccount(id, account);
         } catch(IllegalArgumentException e) {
             return ResponseEntity.status(404).build();
         }
