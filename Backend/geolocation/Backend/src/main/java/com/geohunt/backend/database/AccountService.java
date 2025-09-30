@@ -50,7 +50,20 @@ public class AccountService {
     public boolean updatedAccount(Long id, Account account) {
         try{
             Account acc = getAccountById(id);
-            if(account.getUsername().isEmpty()) {}
+            if(!account.getUsername().isBlank()) {
+                acc.setUsername(account.getUsername());
+            }
+            if(!account.getPassword().isEmpty()) {
+                acc.setPassword(account.getPassword());
+            }
+            if(!(account.getEmail().isEmpty()) && !(accountRepository.findByEmail(account.getEmail()).isPresent())) {
+                acc.setEmail(account.getEmail());
+            }
+            if(!account.getPfp().isEmpty()) {
+                acc.setPfp(account.getPfp());
+            }
+            accountRepository.save(acc);
+            return true;
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Account does not exist.");
         }

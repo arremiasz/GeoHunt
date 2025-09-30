@@ -65,7 +65,12 @@ public class signupController {
     @PutMapping("/account/update")
     public ResponseEntity<String> updateName(@RequestParam Long id, @RequestBody Account account) {
         try{
-            accountService.updatedAccount(id, account);
+            if(accountService.updatedAccount(id, account)){
+                return ResponseEntity.ok("Account updated successfully");
+            } else {
+                return ResponseEntity.status(404).build();
+            }
+
         } catch(IllegalArgumentException e) {
             return ResponseEntity.status(404).build();
         }
