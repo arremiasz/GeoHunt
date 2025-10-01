@@ -1,6 +1,7 @@
 package com.geohunt.database;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Controls what Sessions are active, and removes expired Sessions
@@ -9,10 +10,26 @@ public class SessionController {
     private static HashMap<Long,Session> sessionMap = new HashMap<>();
 
     // Create and add Session
+    public Session createNewSession(Account account){
+        Session newSession = new Session(account);
+        sessionMap.put(newSession.getId(),newSession);
+        return newSession;
+    }
 
     // Delete Session
+    public void deleteSession(Long id){
+        sessionMap.remove(id);
+    }
 
-    // Verify Session Id
+    // Get Session by Id
+    public Session getSessionById(Long id){
+        Session session = sessionMap.get(id);
+        return session;
+    }
 
-    // Clear sessionMap
+    // Reset sessionMap
+    public void resetSessionMap(){
+        sessionMap = new HashMap<>();
+    }
+
 }

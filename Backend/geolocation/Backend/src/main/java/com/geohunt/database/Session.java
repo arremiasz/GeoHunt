@@ -21,4 +21,14 @@ public class Session {
     private Account account;
     private LocalDateTime creationTime;
     private LocalDateTime lastUse;
+
+    public Session(Account user){
+        this.account = user;
+        creationTime = LocalDateTime.now();
+        lastUse = LocalDateTime.now();
+    }
+
+    public void updateLastUse(){
+        lastUse = LocalDateTime.now();
+    }
 }
