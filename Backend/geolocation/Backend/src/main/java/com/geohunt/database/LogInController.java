@@ -16,16 +16,16 @@ public class LogInController {
 
     // Log-in (POST)
     @PostMapping(path = "/login")
-    ResponseEntity<String> logIn(@RequestBody AccountLogInInfo logInRequest){
+    ResponseEntity<Long> logIn(@RequestBody AccountLogInInfo logInRequest){
         // Verify login request
         // Create and store session ID
-        // Return session ID (String?)
-        return ResponseEntity.ok("login placeholder"); // temp
+        // Return session ID (Long?)
+        return ResponseEntity.ok(null); // temp
     }
 
     // Log-out (POST)
     @PostMapping(path = "/logout")
-    ResponseEntity<String> logOut(@RequestBody String sessionId){
+    ResponseEntity<String> logOut(@RequestBody Long sessionId){
         // Verify sessionId
         // Close related session
         return ResponseEntity.ok("logout placeholder"); // temp
