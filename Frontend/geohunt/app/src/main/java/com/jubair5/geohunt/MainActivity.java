@@ -47,7 +47,7 @@ public class LogninFragment extends Fragment {
     //private static final String BASE_URL = "http://coms-3090-030.class.las.iastate.edu:3306";
     private static final String BASE_URL = "https://137a4fb6-e022-436d-adbe-33d46869fef9.mock.pstmn.io";
     private static final String LOGIN_ENDPOINT = "/login";
-    private static final String SIGNUP_URL = BASE_URL + LOGIN_ENDPOINT;
+    private static final String LOGIN_URL = BASE_URL + LOGIN_ENDPOINT;
 
     private static final String SHARED_PREFS_NAME = "GeoHuntPrefs";
     private static final String KEY_SESSION_TOKEN = "sessionToken";
@@ -55,7 +55,6 @@ public class LogninFragment extends Fragment {
     private TextInputLayout usernameLoginLayout;
     private TextInputLayout emailSignupLayout;
     private TextInputLayout passwordSignupLayout;
-    private TextInputLayout confirmPasswordSignupLayout;
     private EditText usernameEditText;
     private EditText emailEditText;
     private EditText passwordEditText;
@@ -76,7 +75,6 @@ public class LogninFragment extends Fragment {
         usernameLoginLayout = view.findViewById(R.id.usernameSignupLayout);
         emailSignupLayout = view.findViewById(R.id.emailSignupLayout);
         passwordSignupLayout = view.findViewById(R.id.passwordSignupLayout);
-        confirmPasswordSignupLayout = view.findViewById(R.id.confirmPasswordSignupLayout);
 
         usernameEditText = view.findViewById(R.id.usernameSignup);
         emailEditText = view.findViewById(R.id.emailSignup);
@@ -102,7 +100,6 @@ public class LogninFragment extends Fragment {
         usernameLoginLayout.setError(null);
         emailSignupLayout.setError(null);
         passwordSignupLayout.setError(null);
-        confirmPasswordSignupLayout.setError(null);
 
         String username = usernameEditText.getText().toString().trim();
         String email = emailEditText.getText().toString().trim();
@@ -128,11 +125,11 @@ public class LogninFragment extends Fragment {
         }
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
-                Request.Method.POST, SIGNUP_URL, requestBody,
+                Request.Method.POST, LOGIN_URL, requestBody,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        Log.d(TAG, "Signup successful: " + response.toString());
+                        Log.d(TAG, "Login successful: " + response.toString());
                         try {
                             String token = response.getString("token");
                             saveSessionToken(token);
@@ -144,7 +141,7 @@ public class LogninFragment extends Fragment {
                             }
                         } catch (JSONException e) {
                             Log.e(TAG, "Error parsing token from response", e);
-                            Toast.makeText(getContext(), "Signup successful, but failed to process session.", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getContext(), "Login successful, but failed to process session.", Toast.LENGTH_LONG).show();
                         }
                     }
                 },
@@ -235,21 +232,6 @@ public class LogninFragment extends Fragment {
             return false;
         }
         passwordSignupLayout.setError(null);
-        return true;
-    }
-
-    private boolean validateConfirmPassword(String password, String confirmPassword) {
-        if (TextUtils.isEmpty(confirmPassword)) {
-            confirmPasswordSignupLayout.setError("Confirm password cannot be empty");
-            confirmPasswordEditText.requestFocus();
-            return false;
-        }
-        if (!password.equals(confirmPassword)) {
-            confirmPasswordSignupLayout.setError("Passwords do not match");
-            confirmPasswordEditText.requestFocus();
-            return false;
-        }
-        confirmPasswordSignupLayout.setError(null);
         return true;
     }
 }
