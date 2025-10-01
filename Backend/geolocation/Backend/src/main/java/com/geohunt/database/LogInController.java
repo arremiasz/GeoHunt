@@ -16,21 +16,19 @@ public class LogInController {
 
     // Log-in (POST)
     @PostMapping(path = "/login")
-    ResponseEntity<Account> logIn(@RequestBody Account logInRequest){
-        try{
-            Account account = accountRepository.findbyusername(logInRequest.getUsername());
-            if(logInRequest.password.equals(account.password)){
-                //Needs to implement security?
-                return ResponseEntity.ok(account);
-            }
-            else{
-                return ResponseEntity.badRequest().build();
-            }
-        }
-        catch(IllegalArgumentException e){
-            return ResponseEntity.status(404).build();
-        }
+    ResponseEntity<String> logIn(@RequestBody AccountLogInInfo logInRequest){
+        // Verify login request
+        // Create and store session ID
+        // Return session ID (String?)
+        return ResponseEntity.ok("login placeholder"); // temp
+    }
 
+    // Log-out (POST)
+    @PostMapping(path = "/logout")
+    ResponseEntity<String> logOut(@RequestBody String sessionId){
+        // Verify sessionId
+        // Close related session
+        return ResponseEntity.ok("logout placeholder"); // temp
     }
 
     // Update Username (PUT)
