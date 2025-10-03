@@ -21,7 +21,7 @@ public class ImageReqActivity extends AppCompatActivity {
     private ImageView imageView;
 
     // Define the URL of the image to be requested
-    public static final String URL_IMAGE = "http://sharding.org/outgoing/temp/testimg3.jpg";
+    public static final String URL_IMAGE = "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Wikipedia-logo-v2-en.svg/1045px-Wikipedia-logo-v2-en.svg.png";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

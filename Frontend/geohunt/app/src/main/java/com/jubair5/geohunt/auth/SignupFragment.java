@@ -1,0 +1,310 @@
+/**
+ * Signup page
+ * @author Alex Remiasz
+ */
+package com.jubair5.geohunt.auth;
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Log;
+import android.util.Patterns;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.google.android.material.textfield.TextInputLayout;
+import com.jubair5.geohunt.R;
+import com.jubair5.geohunt.network.VolleySingleton;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Pattern;
+
+public class SignupFragment extends Fragment {
+
+    private static final String TAG = "SignupFragment";
+    private static final int MIN_PASSWORD_LENGTH = 6;
+    private static final Pattern PASSWORD_HAS_UPPERCASE = Pattern.compile(".*[A-Z].*");
+    private static final Pattern PASSWORD_HAS_DIGIT = Pattern.compile(".*\\d.*");
+    private static final Pattern PASSWORD_HAS_SPECIAL_CHAR = Pattern.compile(".*[^a-zA-Z0-9].*");
+
+    //private static final String BASE_URL = "http://coms-3090-030.class.las.iastate.edu:3306";
+    private static final String BASE_URL = "https://6bfe1ae1-ae39-462f-910e-7d53b5da9867.mock.pstmn.io";
+    private static final String SIGNUP_ENDPOINT = "/signup";
+    private static final String SIGNUP_URL = BASE_URL + SIGNUP_ENDPOINT;
+
+    private static final String SHARED_PREFS_NAME = "GeoHuntPrefs";
+    private static final String KEY_USER_LOGGED_IN = "isUserLoggedIn";
+    private static final String KEY_LOGIN_TIMESTAMP = "loginTimestamp";
+
+    private TextInputLayout usernameSignupLayout;
+    private TextInputLayout emailSignupLayout;
+    private TextInputLayout passwordSignupLayout;
+    private TextInputLayout confirmPasswordSignupLayout;
+    private EditText usernameEditText;
+    private EditText emailEditText;
+    private EditText passwordEditText;
+    private EditText confirmPasswordEditText;
+    private Button signupButton;
+    private TextView goToLoginTextView;
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.signup_fragment, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        usernameSignupLayout = view.findViewById(R.id.usernameSignupLayout);
+        emailSignupLayout = view.findViewById(R.id.emailSignupLayout);
+        passwordSignupLayout = view.findViewById(R.id.passwordSignupLayout);
+        confirmPasswordSignupLayout = view.findViewById(R.id.confirmPasswordSignupLayout);
+
+        usernameEditText = view.findViewById(R.id.usernameSignup);
+        emailEditText = view.findViewById(R.id.emailSignup);
+        passwordEditText = view.findViewById(R.id.passwordSignup);
+        confirmPasswordEditText = view.findViewById(R.id.confirmPasswordSignup);
+
+        signupButton = view.findViewById(R.id.signup);
+        goToLoginTextView = view.findViewById(R.id.goToLogin);
+
+        goToLoginTextView.setOnClickListener(v -> {
+            if (getActivity() != null) {
+                FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+                fragmentManager.popBackStack(); // Login page will be default and this will send it back to it
+            }
+        });
+
+        signupButton.setOnClickListener(v -> {
+            performSignup();
+        });
+    }
+
+    /**
+     * Validates the signup form inputs and initiates the signup network request if all inputs are valid.
+     * Handles UI updates for errors and successful signup, including saving session data.
+     */
+    private void performSignup() {
+        usernameSignupLayout.setError(null);
+        emailSignupLayout.setError(null);
+        passwordSignupLayout.setError(null);
+        confirmPasswordSignupLayout.setError(null);
+
+        String username = usernameEditText.getText().toString().trim();
+        String email = emailEditText.getText().toString().trim();
+        String password = passwordEditText.getText().toString().trim();
+        String confirmPassword = confirmPasswordEditText.getText().toString().trim();
+
+        if (!validateUsername(username) || !validateEmail(email) || !validatePassword(password) || !validateConfirmPassword(password, confirmPassword)) {
+            return;
+        }
+
+        Log.d(TAG, "All validations passed. Proceeding with signup.");
+
+        final JSONObject requestBody = new JSONObject();
+        try {
+            requestBody.put("username", username);
+            requestBody.put("pfp", ""); // TODO: Implement profile pictures
+            requestBody.put("email", email);
+            requestBody.put("password", password);
+        } catch (JSONException e) {
+            Log.e(TAG, "Error creating JSON request body", e);
+            Toast.makeText(getContext(), "An unexpected error occurred.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        StringRequest stringRequest = new StringRequest(
+                Request.Method.POST, SIGNUP_URL,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        Log.d(TAG, "Signup successful: " + response);
+                        Toast.makeText(getContext(), "Account created successfully!", Toast.LENGTH_LONG).show();
+
+                        if (getContext() != null) {
+                            SharedPreferences sharedPreferences = getContext().getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
+                            SharedPreferences.Editor editor = sharedPreferences.edit();
+                            editor.putBoolean(KEY_USER_LOGGED_IN, true);
+                            editor.putLong(KEY_LOGIN_TIMESTAMP, System.currentTimeMillis());
+                            editor.apply();
+                            Log.d(TAG, "Login status and timestamp saved.");
+                        }
+
+                        if (getActivity() != null) {
+                            getActivity().setResult(Activity.RESULT_OK);
+                            getActivity().finish(); // Finish AuthenticationActivity
+                        }
+                    }
+                },
+                new Response.ErrorListener() { // TODO: More specific error codes
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e(TAG, "Signup error: " + error.toString());
+                        if (error.networkResponse != null) {
+                            Log.e(TAG, "Signup error status code: " + error.networkResponse.statusCode);
+                            String responseBody = "";
+                            if(error.networkResponse.data != null) {
+                                responseBody = new String(error.networkResponse.data, StandardCharsets.UTF_8);
+                            }
+                            Log.e(TAG, "Signup error response body: " + responseBody);
+
+                            if (error.networkResponse.statusCode == 400) {
+                                Toast.makeText(getContext(), "Account already exists or invalid input.", Toast.LENGTH_LONG).show();
+                                emailSignupLayout.setError("This email or username might already be taken.");
+                                emailEditText.requestFocus();
+                            } else {
+                                Toast.makeText(getContext(), "Signup failed. Server error: " + error.networkResponse.statusCode, Toast.LENGTH_LONG).show();
+                            }
+                        } else {
+                            Toast.makeText(getContext(), "Signup failed. Check network connection.", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                }
+        ) {
+            @Override
+            public byte[] getBody() throws AuthFailureError {
+                return requestBody.toString().getBytes(StandardCharsets.UTF_8);
+            }
+
+            @Override
+            public String getBodyContentType() {
+                return "application/json; charset=utf-8";
+            }
+
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                return super.getHeaders() != null ? super.getHeaders() : new HashMap<>();
+            }
+        };
+
+        if (getContext() != null) {
+            VolleySingleton.getInstance(getContext()).addToRequestQueue(stringRequest);
+        }
+    }
+
+    /**
+     * Validates the provided username.
+     * A valid username must not be empty.
+     *
+     * @param username The username string to validate.
+     * @return {@code true} if the username is valid, {@code false} otherwise.
+     */
+    private boolean validateUsername(String username) {
+        if (TextUtils.isEmpty(username)) {
+            usernameSignupLayout.setError("Username cannot be empty");
+            usernameEditText.requestFocus();
+            return false;
+        }
+        usernameSignupLayout.setError(null);
+        return true;
+    }
+
+    /**
+     * Validates the provided email address.
+     * A valid email must not be empty and must match the standard email pattern.
+     *
+     * @param email The email string to validate.
+     * @return {@code true} if the email is valid, {@code false} otherwise.
+     */
+    private boolean validateEmail(String email) {
+        if (TextUtils.isEmpty(email)) {
+            emailSignupLayout.setError("Email cannot be empty");
+            emailEditText.requestFocus();
+            return false;
+        }
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            emailSignupLayout.setError("Enter a valid email address");
+            emailEditText.requestFocus();
+            return false;
+        }
+        emailSignupLayout.setError(null);
+        return true;
+    }
+
+    /**
+     * Validates the provided password based on defined criteria:
+     * - Not empty
+     * - Minimum 6 character length
+     * - Contains at least one uppercase letter
+     * - Contains at least one digit
+     * - Contains at least one special character
+     *
+     * @param password The password string to validate.
+     * @return {@code true} if the password meets all criteria, {@code false} otherwise.
+     */
+    private boolean validatePassword(String password) {
+        if (TextUtils.isEmpty(password)) {
+            passwordSignupLayout.setError("Password cannot be empty");
+            passwordEditText.requestFocus();
+            return false;
+        }
+        if (password.length() < MIN_PASSWORD_LENGTH) {
+            passwordSignupLayout.setError("Password must be at least " + MIN_PASSWORD_LENGTH + " characters");
+            passwordEditText.requestFocus();
+            return false;
+        }
+        if (!PASSWORD_HAS_UPPERCASE.matcher(password).matches()) {
+            passwordSignupLayout.setError("Password must contain at least one uppercase letter");
+            passwordEditText.requestFocus();
+            return false;
+        }
+        if (!PASSWORD_HAS_DIGIT.matcher(password).matches()) {
+            passwordSignupLayout.setError("Password must contain at least one digit");
+            passwordEditText.requestFocus();
+            return false;
+        }
+        if (!PASSWORD_HAS_SPECIAL_CHAR.matcher(password).matches()) {
+            passwordSignupLayout.setError("Password must contain at least one special character");
+            passwordEditText.requestFocus();
+            return false;
+        }
+        passwordSignupLayout.setError(null);
+        return true;
+    }
+
+    /**
+     * Validates that the confirm password field is not empty and matches the original password.
+     *
+     * @param password        The original password string.
+     * @param confirmPassword The confirmation password string.
+     * @return {@code true} if the confirm password is valid and matches, {@code false} otherwise.
+     */
+    private boolean validateConfirmPassword(String password, String confirmPassword) {
+        if (TextUtils.isEmpty(confirmPassword)) {
+            confirmPasswordSignupLayout.setError("Confirm password cannot be empty");
+            confirmPasswordEditText.requestFocus();
+            return false;
+        }
+        if (!password.equals(confirmPassword)) {
+            confirmPasswordSignupLayout.setError("Passwords do not match");
+            confirmPasswordEditText.requestFocus();
+            return false;
+        }
+        confirmPasswordSignupLayout.setError(null);
+        return true;
+    }
+}
