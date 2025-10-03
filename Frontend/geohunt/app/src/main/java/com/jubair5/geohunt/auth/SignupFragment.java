@@ -21,6 +21,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
@@ -79,6 +80,11 @@ public class SignupFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        // Set the ActionBar title for this fragment
+        if (((AppCompatActivity) getActivity()).getSupportActionBar() != null) {
+            ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("Sign Up");
+        }
+
         usernameSignupLayout = view.findViewById(R.id.usernameSignupLayout);
         emailSignupLayout = view.findViewById(R.id.emailSignupLayout);
         passwordSignupLayout = view.findViewById(R.id.passwordSignupLayout);
@@ -93,15 +99,26 @@ public class SignupFragment extends Fragment {
         goToLoginTextView = view.findViewById(R.id.goToLogin);
 
         goToLoginTextView.setOnClickListener(v -> {
-            if (getActivity() != null) {
-                FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
-                fragmentManager.popBackStack(); // Login page will be default and this will send it back to it
-            }
+            gotoLogin();
         });
 
         signupButton.setOnClickListener(v -> {
             performSignup();
         });
+    }
+
+    /**
+     * Navigates back to the login fragment by popping the back stack.
+     * Updates the ActionBar title to "Log In".
+     */
+    private void gotoLogin() { // TODO: Implement in LoginFragment
+        if (getActivity() != null) {
+            if (((AppCompatActivity) getActivity()).getSupportActionBar() != null) {
+                ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("Log In");
+            }
+            FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+            fragmentManager.popBackStack();
+        }
     }
 
     /**
@@ -248,7 +265,7 @@ public class SignupFragment extends Fragment {
     /**
      * Validates the provided password based on defined criteria:
      * - Not empty
-     * - Minimum 6 character length
+     * - Minimum length
      * - Contains at least one uppercase letter
      * - Contains at least one digit
      * - Contains at least one special character
