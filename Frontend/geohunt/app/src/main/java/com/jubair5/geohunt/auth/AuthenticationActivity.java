@@ -20,7 +20,7 @@ public class AuthenticationActivity extends AppCompatActivity {
         if (savedInstanceState == null) {
             // TODO: Replace SignupFragment with LoginFragment
             getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container_view, new SignupFragment())
+                    .replace(R.id.fragment_container_view, new LoginFragment())
                     .commit();
         }
     }

@@ -5,5 +5,7 @@
     <string name="hint_password">Password</string>
     <string name="hint_confirm_password">Confirm Password</string>
     <string name="button_sign_up">Sign Up</string>
+    <string name="button_log_in">Log In</string>
     <string name="text_go_to_login">Already have an account? Log in</string>
+    <string name="text_go_to_signup">Don\'t have an account? Sign Up</string>
 </resources>
