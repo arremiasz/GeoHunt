@@ -17,7 +17,6 @@ public class AuthenticationActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.authentication_activity);
 
-        // Set the default title for the ActionBar
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle("Sign Up");
         }
