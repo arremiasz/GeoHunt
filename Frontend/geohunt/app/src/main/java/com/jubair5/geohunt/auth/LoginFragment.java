@@ -39,14 +39,13 @@ import org.json.JSONObject;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 public class LoginFragment extends Fragment {
 
     private static final String TAG = "LoginFragment";
 
     //private static final String BASE_URL = "http://coms-3090-030.class.las.iastate.edu:3306";
-    private static final String BASE_URL = "https://137a4fb6-e022-436d-adbe-33d46869fef9.mock.pstmn.io";
+    private static final String BASE_URL = "https://8ce22578-237f-43d8-bd05-9a8c9cc7d1db.mock.pstmn.io";
     private static final String LOGIN_ENDPOINT = "/login";
     private static final String LOGIN_URL = BASE_URL + LOGIN_ENDPOINT;
 
@@ -55,9 +54,9 @@ public class LoginFragment extends Fragment {
     private static final String KEY_LOGIN_TIMESTAMP = "loginTimestamp";
 
 
-    private TextInputLayout emailLoginLayout;
+    private TextInputLayout usernameLoginLayout;
     private TextInputLayout passwordLoginLayout;
-    private EditText emailEditText;
+    private EditText usernameEditText;
     private EditText passwordEditText;
     private Button loginButton;
     private TextView goToSignUpTextView;
@@ -72,19 +71,23 @@ public class LoginFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        emailLoginLayout = view.findViewById(R.id.emailLoginLayout);
+        // Layout
+        usernameLoginLayout = view.findViewById(R.id.usernameLoginLayout);
         passwordLoginLayout = view.findViewById(R.id.passwordLoginLayout);
 
-        emailEditText = view.findViewById(R.id.emailLogin);
+        // Textfields
+        usernameEditText = view.findViewById(R.id.usernameLogin);
         passwordEditText = view.findViewById(R.id.passwordLogin);
 
+        // Buttons
         loginButton = view.findViewById(R.id.login);
         goToSignUpTextView = view.findViewById(R.id.goToSignup);
 
         goToSignUpTextView.setOnClickListener(v -> {
             if (getActivity() != null) {
-                FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
-                fragmentManager.popBackStack(); // Login page will be default and this will send it back to it
+                getFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container_view, new SignupFragment())
+                        .commit();
             }
         });
 
@@ -94,17 +97,17 @@ public class LoginFragment extends Fragment {
     }
 
     /**
-     * Validates the login form inputs and initiates the signup network request if all inputs are valid.
-     * Handles UI updates for errors and successful signup, including saving session data.
+     * Validates the login form inputs and initiates the login network request if all inputs are valid.
+     * Handles UI updates for errors and successful login, including saving session data.
      */
     private void performLogin() {
-        emailLoginLayout.setError(null);
+        usernameLoginLayout.setError(null);
         passwordLoginLayout.setError(null);
 
-        String email = emailEditText.getText().toString().trim();
+        String username = usernameEditText.getText().toString().trim();
         String password = passwordEditText.getText().toString().trim();
 
-        if (!validateEmail(email) || !validatePassword(password)) {
+        if (!validateUsername(username) || !validatePassword(password)) {
             return;
         }
 
@@ -112,7 +115,7 @@ public class LoginFragment extends Fragment {
 
         final JSONObject requestBody = new JSONObject();
         try {
-            requestBody.put("email", email);
+            requestBody.put("username", username);
             requestBody.put("password", password);
         } catch (JSONException e) {
             Log.e(TAG, "Error creating JSON request body", e);
@@ -121,7 +124,7 @@ public class LoginFragment extends Fragment {
         }
 
         StringRequest stringRequest = new StringRequest(
-                Request.Method.GET, LOGIN_URL,
+                Request.Method.POST, LOGIN_URL,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
@@ -155,10 +158,10 @@ public class LoginFragment extends Fragment {
                             }
                             Log.e(TAG, "Login error response body: " + responseBody);
 
-                            if (error.networkResponse.statusCode == 400) {
-                                Toast.makeText(getContext(), "Account already exists or invalid input.", Toast.LENGTH_LONG).show();
-                                emailLoginLayout.setError("This email or username might already be taken.");
-                                emailEditText.requestFocus();
+                            if (error.networkResponse.statusCode == 401) {
+                                Toast.makeText(getContext(), "Username and password doesn't match", Toast.LENGTH_LONG).show();
+                                usernameLoginLayout.setError("The username or password is incorrect");
+                                usernameEditText.requestFocus();
                             } else {
                                 Toast.makeText(getContext(), "Login failed. Server error: " + error.networkResponse.statusCode, Toast.LENGTH_LONG).show();
                             }
@@ -191,24 +194,19 @@ public class LoginFragment extends Fragment {
 
 
     /**
-     * Validates the provided email address.
-     * A valid email must not be empty and must match the standard email pattern.
+     * Validates the provided username.
+     * A valid username must not be empty.
      *
-     * @param email The email string to validate.
-     * @return {@code true} if the email is valid, {@code false} otherwise.
+     * @param username The username string to validate.
+     * @return {@code true} if the username is valid, {@code false} otherwise.
      */
-    private boolean validateEmail(String email) {
-        if (TextUtils.isEmpty(email)) {
-            emailLoginLayout.setError("Email cannot be empty");
-            emailEditText.requestFocus();
+    private boolean validateUsername(String username) {
+        if (TextUtils.isEmpty(username)) {
+            usernameLoginLayout.setError("Username cannot be empty");
+            usernameEditText.requestFocus();
             return false;
         }
-        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            emailLoginLayout.setError("Enter a valid email address");
-            emailEditText.requestFocus();
-            return false;
-        }
-        emailLoginLayout.setError(null);
+        usernameLoginLayout.setError(null);
         return true;
     }
 

@@ -19,18 +19,18 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/emailLoginLayout"
+            android:id="@+id/usernameLoginLayout"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:hint="@string/hint_email">
+            android:hint="@string/hint_username">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/emailLogin"
+                android:id="@+id/usernameLogin"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textEmailAddress" />
+                android:inputType="textPersonName" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
