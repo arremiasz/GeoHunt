@@ -10,14 +10,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class LogInController {
 
     @Autowired
-    AccountRepository accountRepository;
+    AccountService accountService;
 
 
     // Log-in (POST)
     @PostMapping(path = "/login")
     ResponseEntity<Long> logIn(@RequestBody Account login){
 
-        Account account = accountRepository.findbyusername(login.getUsername());
+        Account account = accountService.getAccountByUsername(login.getUsername());
         if(account == null){
             // account not found
             return ResponseEntity.badRequest().body(null);
