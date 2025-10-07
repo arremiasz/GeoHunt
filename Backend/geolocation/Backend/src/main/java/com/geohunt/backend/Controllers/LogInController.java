@@ -2,6 +2,7 @@ package com.geohunt.backend.Controllers;
 
 import com.geohunt.backend.database.Account;
 import com.geohunt.backend.database.AccountService;
+import com.geohunt.backend.database.LogInInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,8 +17,10 @@ public class LogInController {
 
 
     // Log-in (POST)
+    // Takes JSON in a request body with the format {"username":"username","password":"password"}
+    // Returns a Long for userId.
     @PostMapping(path = "/login")
-    ResponseEntity<Long> logIn(@RequestBody Account login){
+    ResponseEntity<Long> logIn(@RequestBody LogInInfo login){
 
         try{
             Account account = accountService.getAccountByUsername(login.getUsername());
