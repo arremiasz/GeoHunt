@@ -14,4 +14,5 @@ public final class ApiConstants {
     // Account Endpoints
     public static final String SIGNUP_ENDPOINT = "/signup";
     public static final String DELETE_ACCOUNT_ENDPOINT = "/account/byId";
+    public static final String UPDATE_ACCOUNT_ENDPOINT = "/account/update";
 }

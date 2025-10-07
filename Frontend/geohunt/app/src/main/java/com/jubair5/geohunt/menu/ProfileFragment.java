@@ -37,7 +37,9 @@ public class ProfileFragment extends Fragment {
     private static final String KEY_USER_ID = "userId";
 
     private TextView usernameLabel;
+    private Button editButton;
     private Button deleteButton;
+    private SharedPreferences prefs;
     private View root;
 
     @Nullable
@@ -45,22 +47,33 @@ public class ProfileFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         root = inflater.inflate(R.layout.profile_fragment, container, false);
 
-        SharedPreferences prefs = requireActivity().getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
+        prefs = requireActivity().getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
 
         usernameLabel = root.findViewById(R.id.username_label);
         usernameLabel.setText("@" + prefs.getString(KEY_USER_NAME, "User"));
 
+        editButton= root.findViewById(R.id.edit_account_button);
+        editButton.setOnClickListener(v -> showEditOptions());
+
         deleteButton = root.findViewById(R.id.delete_account_button);
-        deleteButton.setOnClickListener(v -> showDeleteConfirmationDialog(prefs));
+        deleteButton.setOnClickListener(v -> showDeleteConfirmationDialog());
 
         return root;
     }
 
+    private void showEditOptions() {
+        int userId = prefs.getInt(KEY_USER_ID, -1);
+        if (userId != -1) {
+            String url = ApiConstants.BASE_URL + ApiConstants.UPDATE_ACCOUNT_ENDPOINT + "?id=" + userId;
+            // TODO: Implement account editing functionality
+        } else {
+            Toast.makeText(getContext(), "Error: Could not find user ID.", Toast.LENGTH_SHORT).show();
+        }
+    }
     /**
      * Displays a confirmation dialog before deleting the account.
-     * @param prefs SharedPreferences instance to retrieve user ID.
      */
-    private void showDeleteConfirmationDialog(SharedPreferences prefs) {
+    private void showDeleteConfirmationDialog() {
         new AlertDialog.Builder(getContext())
                 .setTitle("Account Deletion Confirmation")
                 .setMessage("Are you sure you want to PERMANENTLY delete your account? This action cannot be undone.")
@@ -68,7 +81,7 @@ public class ProfileFragment extends Fragment {
                 .setPositiveButton("Yes", (dialog, which) -> {
                     int userId = prefs.getInt(KEY_USER_ID, -1);
                     if (userId != -1) {
-                        deleteAccount(userId, prefs);
+                        deleteAccount(userId);
                     } else {
                         Toast.makeText(getContext(), "Error: Could not find user ID.", Toast.LENGTH_SHORT).show();
                     }
@@ -80,9 +93,8 @@ public class ProfileFragment extends Fragment {
      * Sends a DELETE request to the server to delete the user account.
      * On success, clears SharedPreferences and navigates to LauncherActivity.
      * @param userId The ID of the user to delete.
-     * @param prefs SharedPreferences instance for clearing user data.
      */
-    private void deleteAccount(int userId, SharedPreferences prefs) {
+    private void deleteAccount(int userId) {
         String url = ApiConstants.BASE_URL + ApiConstants.DELETE_ACCOUNT_ENDPOINT + "?id=" + userId;
 
         StringRequest deleteRequest = new StringRequest(Request.Method.DELETE, url,
