@@ -17,18 +17,20 @@ public class LogInController {
     @PostMapping(path = "/login")
     ResponseEntity<Long> logIn(@RequestBody Account login){
 
-        Account account = accountService.getAccountByUsername(login.getUsername());
-        if(account == null){
-            // account not found
+        try{
+            Account account = accountService.getAccountByUsername(login.getUsername());
+            if(account.getPassword().equals(login.getPassword())){
+                // password is identical
+                return ResponseEntity.ok(account.getId());
+            }
+            else {
+                return ResponseEntity.badRequest().body(null);
+            }
+        }
+        catch (IllegalArgumentException e){
             return ResponseEntity.badRequest().body(null);
         }
-        if(account.getPassword().equals(login.getPassword())){
-            // password is identical
-            return ResponseEntity.ok(account.getId());
-        }
-        else {
-            return ResponseEntity.badRequest().body(null);
-        }
+
     }
 
     // Log-out (POST)
