@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">GeoHunt</string>
+    <string name="hint_username">Username</string>
+    <string name="hint_email">Email</string>
+    <string name="hint_password">Password</string>
+    <string name="hint_confirm_password">Confirm Password</string>
+    <string name="button_sign_up">Sign Up</string>
+    <string name="text_go_to_login">Already have an account? Log in</string>
 </resources>

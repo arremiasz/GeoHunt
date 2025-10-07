@@ -26,7 +26,8 @@ public class JsonArrReqActivity extends AppCompatActivity {
     private TextView msgResponse;
 
     // API URL for fetching JSON data
-    private static final String URL_JSON_ARRAY = "https://jsonplaceholder.typicode.com/users";
+    //private static final String URL_JSON_ARRAY = "https://jsonplaceholder.typicode.com/users";
+    private static final String URL_JSON_ARRAY = "https://137a4fb6-e022-436d-adbe-33d46869fef9.mock.pstmn.io/users/2";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
