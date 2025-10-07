@@ -106,15 +106,13 @@ public class SignupFragment extends Fragment {
 
     /**
      * Navigates back to the login fragment by popping the back stack.
-     * Updates the ActionBar title to "Log In".
      */
-    private void gotoLogin() { // TODO: Implement in LoginFragment
+    private void gotoLogin() {
         if (getActivity() != null) {
-            if (((AppCompatActivity) getActivity()).getSupportActionBar() != null) {
-                ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("Log In");
-            }
             FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
-            fragmentManager.popBackStack();
+            fragmentManager.beginTransaction()
+                    .replace(R.id.fragment_container_view, new LoginFragment())
+                    .commit();
         }
     }
 
