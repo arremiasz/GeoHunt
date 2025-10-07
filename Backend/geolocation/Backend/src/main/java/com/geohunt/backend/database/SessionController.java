@@ -1,7 +1,6 @@
-package com.geohunt.database;
+package com.geohunt.backend.database;
 
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Controls what Sessions are active, and removes expired Sessions

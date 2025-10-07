@@ -1,4 +1,4 @@
-package com.geohunt.database;
+package com.geohunt.backend.database;
 
 import jakarta.persistence.Id;
 import jakarta.persistence.Entity;
