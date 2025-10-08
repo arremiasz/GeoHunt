@@ -21,10 +21,13 @@ import androidx.fragment.app.FragmentManager;
 
 import com.jubair5.geohunt.R;
 
-public class HomeFragment extends Fragment {
+public class LocationsFragment extends Fragment {
 
-    private static final String TAG = "HomeFragment";
+    private static final String TAG = "LocationsFragment";
     private static final String SHARED_PREFS_NAME = "GeoHuntPrefs";
+    private static final String KEY_USER_NAME = "userName";
+    private static final String KEY_USER_ID = "userId";
+
     private Button location_button;
     private SharedPreferences prefs;
     private View root;
@@ -32,20 +35,20 @@ public class HomeFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        root = inflater.inflate(R.layout.home_fragment, container, false);
+        root = inflater.inflate(R.layout.location_fragment, container, false);
 
         prefs = requireActivity().getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
 
 
         location_button= root.findViewById(R.id.location_button);
-        location_button.setOnClickListener(v -> showLocationMenu());
+        location_button.setOnClickListener(v -> showLoactionMenu());
 
 
 
         return root;
     }
 
-    private void showLocationMenu() {
+    private void showLoactionMenu() {
         if (getActivity() != null) {
             FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
             fragmentManager.beginTransaction()
