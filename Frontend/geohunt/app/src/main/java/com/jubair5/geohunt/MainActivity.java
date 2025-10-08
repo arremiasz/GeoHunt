@@ -1,9 +1,14 @@
+/**
+ * Activity that hosts the main navigation and fragments
+ * @author Alex Remiasz
+ */
 package com.jubair5.geohunt;
 
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.jubair5.geohunt.menu.HomeFragment;
@@ -13,64 +18,62 @@ import com.jubair5.geohunt.menu.ProfileFragment;
 public class MainActivity extends AppCompatActivity {
 
     private BottomNavigationView botNav;
+    private final FragmentManager fm = getSupportFragmentManager();
+    private final Fragment homeFragment = new HomeFragment();
+    private final Fragment mapFragment = new MapFragment();
+    private final Fragment profileFragment = new ProfileFragment();
+    private Fragment active;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
 
+        active = homeFragment;
         botNav = findViewById(R.id.bottom_navigation);
-        onNavItemSelected();
 
         if (savedInstanceState == null) {
-            loadFragment(new HomeFragment());
+            fm.beginTransaction().add(R.id.fragment_container, profileFragment, "3").hide(profileFragment).commit();
+            fm.beginTransaction().add(R.id.fragment_container, mapFragment, "2").hide(mapFragment).commit();
+            fm.beginTransaction().add(R.id.fragment_container, homeFragment, "1").commit();
+
             if (getSupportActionBar() != null) {
                 getSupportActionBar().setTitle("Home");
             }
         }
+
+        onNavItemSelected();
     }
 
     /**
-     * Sets up the listener for bottom navigation item selection
+     * Sets up the listener for bottom navigation item selection.
      */
     public void onNavItemSelected() {
         botNav.setOnItemSelectedListener(item -> {
-            Fragment fragment = null;
+            Fragment selectedFragment = null;
             String title = "";
 
             int itemId = item.getItemId();
             if (itemId == R.id.nav_home) {
-                fragment = new HomeFragment();
+                selectedFragment = homeFragment;
                 title = "Home";
             } else if (itemId == R.id.nav_map) {
-                fragment = new MapFragment();
+                selectedFragment = mapFragment;
                 title = "Map";
             } else if (itemId == R.id.nav_profile) {
-                fragment = new ProfileFragment();
+                selectedFragment = profileFragment;
                 title = "Profile";
             }
 
-            if (getSupportActionBar() != null) {
-                getSupportActionBar().setTitle(title);
+            if (selectedFragment != null) {
+                if (getSupportActionBar() != null) {
+                    getSupportActionBar().setTitle(title);
+                }
+                fm.beginTransaction().hide(active).show(selectedFragment).commit();
+                active = selectedFragment;
+                return true;
             }
-
-            return loadFragment(fragment);
+            return false;
         });
-    }
-
-    /**
-     * Loads the specified fragment into the fragment container
-     * @param fragment The fragment to load
-     * @return true if the fragment was loaded successfully, false otherwise
-     */
-    private boolean loadFragment(Fragment fragment) {
-        if (fragment != null) {
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.fragment_container, fragment)
-                    .commit();
-            return true;
-        }
-        return false;
     }
 }

@@ -57,14 +57,8 @@ public class SignupFragment extends Fragment {
     private static final String KEY_USER_EMAIL = "userEmail";
     private static final String KEY_USER_PFP = "userPfp";
 
-    private TextInputLayout usernameSignupLayout;
-    private TextInputLayout emailSignupLayout;
-    private TextInputLayout passwordSignupLayout;
-    private TextInputLayout confirmPasswordSignupLayout;
-    private EditText usernameEditText;
-    private EditText emailEditText;
-    private EditText passwordEditText;
-    private EditText confirmPasswordEditText;
+    private TextInputLayout usernameSignupLayout, emailSignupLayout, passwordSignupLayout, confirmPasswordSignupLayout;
+    private EditText usernameEditText, emailEditText, passwordEditText, confirmPasswordEditText;
     private Button signupButton;
     private TextView goToLoginTextView;
 
@@ -140,7 +134,7 @@ public class SignupFragment extends Fragment {
         final JSONObject requestBody = new JSONObject();
         try {
             requestBody.put("username", username);
-            requestBody.put("pfp", "");
+            requestBody.put("pfp", ""); // TODO: implement profile picture upload
             requestBody.put("email", email);
             requestBody.put("password", password);
         } catch (JSONException e) {
@@ -208,7 +202,7 @@ public class SignupFragment extends Fragment {
                 }
         ) {
             @Override
-            public byte[] getBody() throws AuthFailureError {
+            public byte[] getBody() {
                 return requestBody.toString().getBytes(StandardCharsets.UTF_8);
             }
 
