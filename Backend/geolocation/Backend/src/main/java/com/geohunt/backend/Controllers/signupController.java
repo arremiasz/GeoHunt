@@ -13,12 +13,12 @@ public class signupController {
     private AccountService accountService;
 
     @PostMapping(value = "/signup", consumes = "application/json")
-    public ResponseEntity<String> signup(@RequestBody Account account) {
+    public ResponseEntity<Long> signup(@RequestBody Account account) {
         try {
-            accountService.createAccount(account);
-            return ResponseEntity.ok("Account created");
+            long id = accountService.createAccount(account);
+            return ResponseEntity.ok(id);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Username Already Exists");
+            return ResponseEntity.badRequest().body((long)0);
         }
     }
 

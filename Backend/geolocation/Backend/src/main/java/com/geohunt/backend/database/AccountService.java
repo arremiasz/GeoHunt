@@ -8,11 +8,12 @@ public class AccountService {
     @Autowired
     private AccountRepository accountRepository;
 
-    public void createAccount(Account account) {
+    public long createAccount(Account account) {
         if(accountRepository.findByUsername(account.getUsername()).isPresent() || accountRepository.findByEmail(account.getEmail()).isPresent()) {
             throw new IllegalArgumentException("Account already exists. Username or Email found in database.");
         }
         accountRepository.save(account);
+        return account.getId();
     }
 
     public Account getAccountByUsername(String username) {
