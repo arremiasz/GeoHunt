@@ -1,12 +1,13 @@
-package com.geohunt.database;
+package com.geohunt.backend.database;
 
-import jakarta.persistence.Id;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -19,5 +20,9 @@ public class Account {
     public String pfp;
     public String password;
     public String email;
+
+    @OneToMany(mappedBy = "creator")
+    @JsonManagedReference
+    private List<Challenges> challenges;
 
 }
