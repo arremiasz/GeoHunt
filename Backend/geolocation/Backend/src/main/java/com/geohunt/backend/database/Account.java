@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
+
 import java.util.List;
 import java.util.Set;
 
@@ -37,5 +37,10 @@ public class Account {
 
     @OneToMany(mappedBy = "target")
     private Set<Friends> receivedFriendRequests;
+
+    public Account(String username, String password){
+        this.username = username;
+        this.password = password;
+    }
 
 }
