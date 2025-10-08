@@ -8,6 +8,7 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -25,4 +26,15 @@ public class Account {
     @JsonManagedReference
     private List<Challenges> challenges;
 
+    @OneToMany(mappedBy="submitter")
+    @JsonManagedReference
+    private List<Submissions> submissions;
+
+
+    @OneToMany(mappedBy = "primary")
+    private Set<Friends> sentFriendRequests;
+
+
+    @OneToMany(mappedBy = "target")
+    private Set<Friends> receivedFriendRequests;
 }

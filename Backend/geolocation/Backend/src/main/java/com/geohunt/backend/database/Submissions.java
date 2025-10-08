@@ -7,23 +7,24 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
-public class Challenges {
+public class Submissions {
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private @Id long id;
-    int latitude;
-    int longitude;
-    String streetviewurl;
+    @ManyToOne
+    @JoinColumn(name="challenges_id")
+    @JsonManagedReference
+    private Challenges challenge;
+    private int latitude;
+    private int longtitude;
     @ManyToOne
     @JoinColumn(name="account_id")
-    @JsonManagedReference
-    private Account creator;
-    LocalDate creationdate;
-    @OneToMany(mappedBy="challenge")
-    private List<Submissions> submissions;
+    private Account submitter;
+    private String photourl;
+    private LocalDate submissionTime;
+    private int reports;
 }
