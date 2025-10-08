@@ -12,7 +12,7 @@ public class signupController {
     @Autowired
     private AccountService accountService;
 
-    @PostMapping("/signup")
+    @PostMapping(value = "/signup", consumes = "application/json")
     public ResponseEntity<String> signup(@RequestBody Account account) {
         try {
             accountService.createAccount(account);

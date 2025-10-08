@@ -1,5 +1,6 @@
 package com.geohunt.backend.database;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -13,18 +14,25 @@ import java.time.LocalDate;
 @Setter
 @NoArgsConstructor
 public class Submissions {
+    @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
-    private @Id long id;
+    private long id;
+
     @ManyToOne
     @JoinColumn(name="challenges_id")
-    @JsonManagedReference
+    @JsonBackReference("challenge-submissions")
     private Challenges challenge;
-    private int latitude;
-    private int longtitude;
+
+    private long latitude;
+    private long longtitude;
+
     @ManyToOne
     @JoinColumn(name="account_id")
+    @JsonBackReference("account-submissions")
     private Account submitter;
+
     private String photourl;
     private LocalDate submissionTime;
     private int reports;
 }
+

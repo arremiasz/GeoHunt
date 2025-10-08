@@ -9,8 +9,8 @@ public class AccountService {
     private AccountRepository accountRepository;
 
     public void createAccount(Account account) {
-        if(accountRepository.findByUsername(account.getUsername()).isPresent()) {
-            throw new IllegalArgumentException("Account already exists. Username found in database.");
+        if(accountRepository.findByUsername(account.getUsername()).isPresent() || accountRepository.findByEmail(account.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Account already exists. Username or Email found in database.");
         }
         accountRepository.save(account);
     }
@@ -50,7 +50,7 @@ public class AccountService {
     public boolean updatedAccount(Long id, Account account) {
         try{
             Account acc = getAccountById(id);
-            if(!account.getUsername().isBlank()) {
+            if(!account.getUsername().isBlank() && !(accountRepository.findByUsername(account.getUsername()).isPresent())) {
                 acc.setUsername(account.getUsername());
             }
             if(!account.getPassword().isEmpty()) {
