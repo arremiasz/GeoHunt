@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -32,7 +33,17 @@ public class Submissions {
     private Account submitter;
 
     private String photourl;
-    private LocalDate submissionTime;
+    private LocalDateTime submissionTime;
     private int reports;
+
+    public boolean verifySubmission(){
+        if(challenge == null){
+            return false;
+        }
+        if(submitter == null){
+            return false;
+        }
+        return true;
+    }
 }
 
