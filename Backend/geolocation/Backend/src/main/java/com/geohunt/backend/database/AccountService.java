@@ -10,7 +10,7 @@ public class AccountService {
 
     public void createAccount(Account account) {
         if(accountRepository.findByUsername(account.getUsername()).isPresent()) {
-            throw new IllegalArgumentException("Account already exists");
+            throw new IllegalArgumentException("Account already exists. Username found in database.");
         }
         accountRepository.save(account);
     }
@@ -19,7 +19,7 @@ public class AccountService {
         if(accountRepository.findByUsername(username).isPresent()) {
             return accountRepository.findByUsername(username).get();
         }
-        throw new IllegalArgumentException("Account does not exist.");
+        throw new IllegalArgumentException("Username Incorrect");
     }
 
     public Account getAccountById(Long id) {
