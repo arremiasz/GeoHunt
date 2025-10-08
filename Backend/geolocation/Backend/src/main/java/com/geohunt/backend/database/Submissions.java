@@ -25,7 +25,7 @@ public class Submissions {
     private Challenges challenge;
 
     private long latitude;
-    private long longtitude;
+    private long longitude;
 
     @ManyToOne
     @JoinColumn(name="account_id")
@@ -38,7 +38,7 @@ public class Submissions {
 
     public boolean verifySubmission(){
         if(challenge == null){
-            return false;
+            //return false;
         }
         if(submitter == null){
             return false;

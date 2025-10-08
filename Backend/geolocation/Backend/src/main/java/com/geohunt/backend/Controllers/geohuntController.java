@@ -17,16 +17,16 @@ public class geohuntController {
 
     // Receive Submission
     @PostMapping("/geohunt/submission")
-    public ResponseEntity<String> receiveSubmission(@RequestBody Submissions submission){
+    public ResponseEntity<Submissions> receiveSubmission(@RequestBody Submissions submission){
         // Verify Submission
-        if(!submission.verifySubmission()){
-            return ResponseEntity.status(400).body("Submission does not have required information");
-        }
+//        if(!submission.verifySubmission()){
+//            return ResponseEntity.status(400).body("Submission does not have required information");
+//        }
 
         // Add Submission to Database
-        submissionsRepository.save(submission);
+//        submissionsRepository.save(submission);
 
-        return ResponseEntity.status(200).body("Submission accepted");
+        return ResponseEntity.status(200).body(submission);
     }
 
     // Get Submission Info
