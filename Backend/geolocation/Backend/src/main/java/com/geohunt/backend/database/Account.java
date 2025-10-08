@@ -37,4 +37,5 @@ public class Account {
 
     @OneToMany(mappedBy = "target")
     private Set<Friends> receivedFriendRequests;
+
 }

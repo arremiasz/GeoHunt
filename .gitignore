@@ -45,6 +45,8 @@ gen-external-apklibs
 *.class
 
 # Log file
+application.log
+application.log.*
 
 # BlueJ files
 *.ctxt
