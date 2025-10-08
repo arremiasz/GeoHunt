@@ -28,7 +28,7 @@ public class signupController {
             Account acc = accountService.getAccountByUsername(name);
             return ResponseEntity.ok(acc);
         } catch(IllegalArgumentException e) {
-            return ResponseEntity.status(404).build();
+            return ResponseEntity.notFound().build();
         }
     }
 
@@ -38,7 +38,7 @@ public class signupController {
             Account acc = accountService.getAccountById(id);
             return ResponseEntity.ok(acc);
         } catch(IllegalArgumentException e) {
-            return ResponseEntity.status(404).build();
+            return ResponseEntity.notFound().build();
         }
     }
 
@@ -48,7 +48,7 @@ public class signupController {
         if(resp){
             return ResponseEntity.ok("Account deleted successfully");
         } else {
-            return ResponseEntity.status(404).build();
+            return ResponseEntity.notFound().build();
         }
     }
 
@@ -58,7 +58,7 @@ public class signupController {
         if(resp){
             return ResponseEntity.ok("Account deleted successfully");
         } else {
-            return ResponseEntity.status(404).build();
+            return ResponseEntity.notFound().build();
         }
     }
 
@@ -72,7 +72,7 @@ public class signupController {
             }
 
         } catch(IllegalArgumentException e) {
-            return ResponseEntity.status(404).build();
+            return ResponseEntity.notFound().build();
         }
     }
 }
