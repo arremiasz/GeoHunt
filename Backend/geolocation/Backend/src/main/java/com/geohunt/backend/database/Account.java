@@ -1,4 +1,4 @@
-package com.geohunt.database;
+package com.geohunt.backend.database;
 
 import jakarta.persistence.Id;
 import jakarta.persistence.Entity;
@@ -19,5 +19,10 @@ public class Account {
     public String pfp;
     public String password;
     public String email;
+
+    public Account(String username, String password){
+        this.username = username;
+        this.password = password;
+    }
 
 }
