@@ -9,8 +9,10 @@ public class AccountService {
     private AccountRepository accountRepository;
 
     public long createAccount(Account account) {
-        if(accountRepository.findByUsername(account.getUsername()).isPresent() || accountRepository.findByEmail(account.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("Account already exists. Username or Email found in database.");
+        if(accountRepository.findByUsername(account.getUsername()).isPresent()){
+            return -1;
+        } else if(accountRepository.findByEmail(account.getEmail()).isPresent()) {
+           return -2;
         }
         accountRepository.save(account);
         return account.getId();
