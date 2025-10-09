@@ -205,7 +205,7 @@ public class LoginFragment extends Fragment {
                 }
         ) {
             @Override
-            public byte[] getBody() throws AuthFailureError {
+            public byte[] getBody() {
                 return requestBody.toString().getBytes(StandardCharsets.UTF_8);
             }
 
