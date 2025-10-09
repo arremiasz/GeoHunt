@@ -5,21 +5,17 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 
-import com.google.android.material.textfield.TextInputLayout;
 import com.jubair5.geohunt.R;
 
-public class LocationsFragment extends Fragment {
+public class SingleLocationFragment extends Fragment {
 
     private static final String TAG = "LocationFragment";
     private static final String SHARED_PREFS_NAME = "GeoHuntPrefs";
