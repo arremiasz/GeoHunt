@@ -26,22 +26,17 @@ public class FriendsService {
         key.setTargetId(targetId);
 
         if (friendsRepository.existsById(key)) {
-            throw new IllegalArgumentException("Friend request already exists.");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Friend already exists.");
         }
         Optional<Account> acc = accountRepository.findById(senderId);
         Optional<Account> target = accountRepository.findById(targetId);
 
         if(acc.isEmpty()) {
-            ResponseEntity.status(HttpStatus.NOT_FOUND).body("Sender not found.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Sender not found.");
         } else if(target.isEmpty()) {
-            ResponseEntity.status(HttpStatus.NOT_FOUND).body("Target not found.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Target not found.");
         }
 
-        boolean alreadyExists = friendsRepository.existsByPrimaryAndTarget(acc.get(), target.get());
-
-        if(alreadyExists) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Friend already exists.");
-        }
 
         Friends friendship = new Friends();
         friendship.setId(key);
