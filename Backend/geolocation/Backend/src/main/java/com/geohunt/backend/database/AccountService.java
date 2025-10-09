@@ -1,7 +1,11 @@
 package com.geohunt.backend.database;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 public class AccountService {
@@ -50,27 +54,47 @@ public class AccountService {
         }
     }
 
-    public boolean updatedAccount(Long id, Account account) {
-        try{
-            Account acc = getAccountById(id);
-            if(!account.getUsername().isBlank() && !(accountRepository.findByUsername(account.getUsername()).isPresent())) {
-                acc.setUsername(account.getUsername());
-            }
-            if(!account.getPassword().isEmpty()) {
-                acc.setPassword(account.getPassword());
-            }
-            if(!(account.getEmail().isEmpty()) && !(accountRepository.findByEmail(account.getEmail()).isPresent())) {
-                acc.setEmail(account.getEmail());
-            }
-            if(!account.getPfp().isEmpty()) {
-                acc.setPfp(account.getPfp());
-            }
-            accountRepository.save(acc);
-            return true;
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Account does not exist.");
+    public ResponseEntity<String> updatedAccount(Long id, Account account) {
+        Account acc = getAccountById(id);
+        if (acc == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Account not found with id: " + id);
         }
 
+
+        if (account.getUsername() != null && !account.getUsername().isBlank()) {
+            Optional<Account> existingUsername = accountRepository.findByUsername(account.getUsername());
+            if (existingUsername.isPresent() && existingUsername.get().getId() != id) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body("Username already taken: " + account.getUsername());
+            } else {
+                acc.setUsername(account.getUsername());
+            }
+        }
+
+
+        if (account.getPassword() != null && !account.getPassword().isEmpty()) {
+            acc.setPassword(account.getPassword());
+        }
+
+
+        if (account.getEmail() != null && !account.getEmail().isEmpty()) {
+            Optional<Account> existingEmail = accountRepository.findByEmail(account.getEmail());
+            if (existingEmail.isPresent() && existingEmail.get().getId() != id) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already in use: " + account.getEmail());
+            } else {
+                acc.setEmail(account.getEmail());
+            }
+        }
+
+
+        if (account.getPfp() != null && !account.getPfp().isEmpty()) {
+            acc.setPfp(account.getPfp());
+        }
+
+        accountRepository.save(acc);
+
+        return ResponseEntity.ok("Account updated successfully!");
     }
 
 }
