@@ -35,12 +35,12 @@ public class geohuntController {
 
     // Get Submission
     @GetMapping("/geohunt/submission/{id}")
-    public ResponseEntity<Submissions> getSubmission(@PathVariable int id){
-        if(submissionsRepository.findById((long)id).isEmpty()){
+    public ResponseEntity<Submissions> getSubmission(@PathVariable long id){
+        if(submissionsRepository.findById(id).isEmpty()){
             // No submission with given id exists.
             return ResponseEntity.status(404).body(null);
         }
-        Submissions submission = submissionsRepository.findById((long)id).get();
+        Submissions submission = submissionsRepository.findById(id).get();
         return ResponseEntity.status(200).body(submission);
     }
 
