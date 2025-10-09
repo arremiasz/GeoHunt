@@ -8,4 +8,6 @@ public interface FriendsRepository extends JpaRepository<Friends, FriendKey> {
     List<Friends> findByPrimary(Account primary);
 
     List<Friends> findByTargetAndIsAcceptedTrue(Account target);
+
+    boolean existsByPrimaryAndTarget(Account primary, Account target);
 }

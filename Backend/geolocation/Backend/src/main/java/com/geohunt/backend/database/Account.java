@@ -32,10 +32,12 @@ public class Account {
 
 
     @OneToMany(mappedBy = "primary")
+    @JsonManagedReference("primary-friends")
     private Set<Friends> sentFriendRequests;
 
 
     @OneToMany(mappedBy = "target")
+    @JsonManagedReference("target-friends")
     private Set<Friends> receivedFriendRequests;
 
     public Account(String username, String password){
