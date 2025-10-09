@@ -17,6 +17,8 @@
     <string name="hint_localLat">Latitude</string>
     <string name="hint_localLong">Longitude</string>
     <string name="hint_localRadius">Radius</string>
+    <string name="delete_location">Delete Location</string>
+    <string name="edit_location">Edit Location</string>
     <string name="profile">Profile</string>
     <string name="new_password_optional">New Password (optional)</string>
     <string name="current_password">Current Password</string>

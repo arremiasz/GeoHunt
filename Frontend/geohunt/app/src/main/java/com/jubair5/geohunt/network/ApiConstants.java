@@ -20,4 +20,6 @@ public final class ApiConstants {
     public static final String DELETE_ACCOUNT_ENDPOINT = "/account/byId";
     public static final String UPDATE_ACCOUNT_ENDPOINT = "/account/update";
     public static final String ADD_LOCAL_ENDPOINT = "/addLocal";
+    public static final String LOCATIONS_ENDPOINT = "/locations";
+
 }
