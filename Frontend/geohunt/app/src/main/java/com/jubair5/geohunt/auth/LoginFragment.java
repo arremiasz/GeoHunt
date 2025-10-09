@@ -89,6 +89,16 @@ public class LoginFragment extends Fragment {
         loginButton.setOnClickListener(v -> {
             performLogin();
         });
+
+        usernameEditText.setOnKeyListener((v, keyCode, event) -> {
+            usernameLoginLayout.setError(null);
+            return false;
+        });
+
+        passwordEditText.setOnKeyListener((v, keyCode, event) -> {
+            passwordLoginLayout.setError(null);
+            return false;
+        });
     }
 
     /**

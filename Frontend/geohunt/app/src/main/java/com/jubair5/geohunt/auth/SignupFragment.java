@@ -96,6 +96,23 @@ public class SignupFragment extends Fragment {
         signupButton.setOnClickListener(v -> {
             performSignup();
         });
+
+        usernameEditText.setOnKeyListener((v, keyCode, event) -> {
+            usernameSignupLayout.setError(null);
+            return false;
+        });
+        emailEditText.setOnKeyListener((v, keyCode, event) -> {
+            emailSignupLayout.setError(null);
+            return false;
+        });
+        passwordEditText.setOnKeyListener((v, keyCode, event) -> {
+            passwordSignupLayout.setError(null);
+            return false;
+        });
+        confirmPasswordEditText.setOnKeyListener((v, keyCode, event) -> {
+            confirmPasswordSignupLayout.setError(null);
+            return false;
+        });
     }
 
     /**

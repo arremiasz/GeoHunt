@@ -51,7 +51,7 @@ public class ProfileFragment extends Fragment {
     private TextView usernameLabel;
     private TextInputLayout editUsernameLayout, editEmailLayout, editNewPasswordLayout, editCurrentPasswordLayout;
     private EditText editUsername, editEmail, editNewPassword, editCurrentPassword;
-    private Button editButton, deleteButton, saveChangesButton, cancelButton;
+    private Button editButton, deleteButton, saveChangesButton, cancelButton, logoutButton;
 
     private SharedPreferences prefs;
     private View root;
@@ -77,6 +77,7 @@ public class ProfileFragment extends Fragment {
         deleteButton = root.findViewById(R.id.delete_account_button);
         saveChangesButton = root.findViewById(R.id.save_changes_button);
         cancelButton = root.findViewById(R.id.cancel_button);
+        logoutButton = root.findViewById(R.id.logout_button);
 
         String username = prefs.getString(KEY_USER_NAME, "User");
         usernameLabel.setText("@" + username);
@@ -85,6 +86,7 @@ public class ProfileFragment extends Fragment {
         deleteButton.setOnClickListener(v -> showDeleteConfirmationDialog());
         saveChangesButton.setOnClickListener(v -> updatePreface());
         cancelButton.setOnClickListener(v -> showDisplayOptions());
+        logoutButton.setOnClickListener(v -> logout());
 
         editCurrentPassword.setOnKeyListener((v, keyCode, event) -> {
             editCurrentPasswordLayout.setError(null);
@@ -315,5 +317,21 @@ public class ProfileFragment extends Fragment {
                 });
 
         VolleySingleton.getInstance(requireContext()).addToRequestQueue(deleteRequest);
+    }
+
+    /**
+     * Logs out the user by clearing SharedPreferences and navigating to LauncherActivity.
+     */
+    private void logout() {
+        prefs.edit().clear().apply();
+
+        if (getActivity() != null) {
+            Intent intent = new Intent(getActivity(), LauncherActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            Log.d(TAG, "Logging out of " + prefs.getString(KEY_USER_NAME, "account"));
+            Toast.makeText(getContext(), "Logging out", Toast.LENGTH_SHORT).show();
+            startActivity(intent);
+            getActivity().finish();
+        }
     }
 }
