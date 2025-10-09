@@ -9,9 +9,13 @@
         <item name="colorSecondary">@color/teal_200</item>
         <item name="colorSecondaryVariant">@color/teal_700</item>
         <item name="colorOnSecondary">@color/black</item>
-        <item name="title">Sign Up</item>
+
         <!-- Status bar color. -->
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+
+        <!-- Make status bar icons dark -->
+        <item name="android:windowLightStatusBar" >true</item>
+
         <!-- Customize your theme here. -->
     </style>
 </resources>

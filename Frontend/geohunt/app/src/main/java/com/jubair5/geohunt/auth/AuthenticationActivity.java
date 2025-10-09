@@ -17,6 +17,10 @@ public class AuthenticationActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.authentication_activity);
 
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle("Sign Up");
+        }
+
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container_view, new LoginFragment())
