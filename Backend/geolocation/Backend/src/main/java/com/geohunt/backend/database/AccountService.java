@@ -8,11 +8,14 @@ public class AccountService {
     @Autowired
     private AccountRepository accountRepository;
 
-    public void createAccount(Account account) {
-        if(accountRepository.findByUsername(account.getUsername()).isPresent()) {
-            throw new IllegalArgumentException("Account already exists. Username found in database.");
+    public long createAccount(Account account) {
+        if(accountRepository.findByUsername(account.getUsername()).isPresent()){
+            return -1;
+        } else if(accountRepository.findByEmail(account.getEmail()).isPresent()) {
+           return -2;
         }
         accountRepository.save(account);
+        return account.getId();
     }
 
     public Account getAccountByUsername(String username) {
@@ -50,7 +53,7 @@ public class AccountService {
     public boolean updatedAccount(Long id, Account account) {
         try{
             Account acc = getAccountById(id);
-            if(!account.getUsername().isBlank()) {
+            if(!account.getUsername().isBlank() && !(accountRepository.findByUsername(account.getUsername()).isPresent())) {
                 acc.setUsername(account.getUsername());
             }
             if(!account.getPassword().isEmpty()) {

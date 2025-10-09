@@ -12,14 +12,16 @@ public class signupController {
     @Autowired
     private AccountService accountService;
 
-    @PostMapping("/signup")
+    @PostMapping(value = "/signup", consumes = "application/json")
     public ResponseEntity<String> signup(@RequestBody Account account) {
-        try {
-            accountService.createAccount(account);
-            return ResponseEntity.ok("Account created");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Username Already Exists");
+        long id = accountService.createAccount(account);
+        if(id == -1){
+            return ResponseEntity.badRequest().body("username exists");
+        } else if(id == -2){
+            return ResponseEntity.badRequest().body("email exists");
         }
+
+        return ResponseEntity.ok(String.format("{\"id\":%d}", id));
     }
 
     @GetMapping("/account/byName")

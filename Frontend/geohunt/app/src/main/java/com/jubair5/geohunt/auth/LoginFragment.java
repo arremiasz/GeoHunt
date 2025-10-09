@@ -10,7 +10,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
-import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,8 +26,6 @@ import androidx.fragment.app.FragmentManager;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.google.android.material.textfield.TextInputLayout;
 import com.jubair5.geohunt.R;
@@ -54,10 +51,8 @@ public class LoginFragment extends Fragment {
     private static final String KEY_USER_PFP = "userPfp";
 
 
-    private TextInputLayout usernameLoginLayout;
-    private TextInputLayout passwordLoginLayout;
-    private EditText usernameEditText;
-    private EditText passwordEditText;
+    private TextInputLayout usernameLoginLayout, passwordLoginLayout;
+    private EditText usernameEditText, passwordEditText;
     private Button loginButton;
     private TextView goToSignUpTextView;
 
@@ -93,6 +88,16 @@ public class LoginFragment extends Fragment {
 
         loginButton.setOnClickListener(v -> {
             performLogin();
+        });
+
+        usernameEditText.setOnKeyListener((v, keyCode, event) -> {
+            usernameLoginLayout.setError(null);
+            return false;
+        });
+
+        passwordEditText.setOnKeyListener((v, keyCode, event) -> {
+            passwordLoginLayout.setError(null);
+            return false;
         });
     }
 
