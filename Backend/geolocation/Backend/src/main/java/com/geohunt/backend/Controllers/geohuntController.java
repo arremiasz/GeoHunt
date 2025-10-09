@@ -1,13 +1,16 @@
 package com.geohunt.backend.Controllers;
 
+import com.geohunt.backend.database.Account;
 import com.geohunt.backend.database.Submissions;
 import com.geohunt.backend.database.SubmissionsRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class geohuntController {
 
+    @Autowired
     SubmissionsRepository submissionsRepository;
 
     @GetMapping("/geohunt/getLocation")
@@ -20,23 +23,24 @@ public class geohuntController {
     public ResponseEntity<Submissions> receiveSubmission(@RequestBody Submissions submission){
         // Verify Submission
 //        if(!submission.verifySubmission()){
-//            return ResponseEntity.status(400).body("Submission does not have required information");
+//            return ResponseEntity.status(400).body(null);
 //        }
 
         // Add Submission to Database
-//        submissionsRepository.save(submission);
+        submissionsRepository.save(submission);
+
 
         return ResponseEntity.status(200).body(submission);
     }
 
     // Get Submission
-    @GetMapping("/geohunt/submission/{Id}")
-    public ResponseEntity<Submissions> getSubmission(@PathVariable long id){
-        if(!submissionsRepository.findById(id).isPresent()){
+    @GetMapping("/geohunt/submission/{id}")
+    public ResponseEntity<Submissions> getSubmission(@PathVariable int id){
+        if(submissionsRepository.findById((long)id).isEmpty()){
             // No submission with given id exists.
             return ResponseEntity.status(404).body(null);
         }
-        Submissions submission = submissionsRepository.findById(id).get();
+        Submissions submission = submissionsRepository.findById((long)id).get();
         return ResponseEntity.status(200).body(submission);
     }
 
@@ -48,6 +52,7 @@ public class geohuntController {
         // Update Submission values
 
         // Return updated Submission
+        return null;
     }
 
     // Delete Submission
@@ -58,5 +63,6 @@ public class geohuntController {
         // Remove Submission
 
         // Need to check what should be returned
+        return null;
     }
 }

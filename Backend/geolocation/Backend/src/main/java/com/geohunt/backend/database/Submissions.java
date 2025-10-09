@@ -24,8 +24,8 @@ public class Submissions {
     @JsonBackReference("challenge-submissions")
     private Challenges challenge;
 
-    private long latitude;
-    private long longitude;
+    private double latitude;
+    private double longitude;
 
     @ManyToOne
     @JoinColumn(name="account_id")
@@ -37,12 +37,12 @@ public class Submissions {
     private int reports;
 
     public boolean verifySubmission(){
-        if(challenge == null){
-            //return false;
-        }
-        if(submitter == null){
-            return false;
-        }
+//        if(challenge == null){
+//            //return false;
+//        }
+//        if(submitter == null){
+//            return false;
+//        }
         return true;
     }
 }
