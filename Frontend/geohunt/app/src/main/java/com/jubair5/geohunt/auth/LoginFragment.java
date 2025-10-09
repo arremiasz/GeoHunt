@@ -92,10 +92,12 @@ public class LoginFragment extends Fragment {
 
         usernameEditText.setOnKeyListener((v, keyCode, event) -> {
             usernameLoginLayout.setError(null);
+            passwordLoginLayout.setError(null);
             return false;
         });
 
         passwordEditText.setOnKeyListener((v, keyCode, event) -> {
+            usernameLoginLayout.setError(null);
             passwordLoginLayout.setError(null);
             return false;
         });
@@ -145,13 +147,13 @@ public class LoginFragment extends Fragment {
                 Request.Method.POST, loginUrl,
                 response -> {
                     Log.d(TAG, "Login successful: " + response);
+                    int userId = Integer.parseInt(response);
 
-                    String userDetailsUrl = ApiConstants.BASE_URL + ApiConstants.GET_ACCOUNT_BY_USERNAME_ENDPOINT + "?username=" + username;
+                    String userDetailsUrl = ApiConstants.BASE_URL + ApiConstants.GET_ACCOUNT_BY_ID_ENDPOINT + "?id=" + userId;
                     StringRequest userDetailsRequest = new StringRequest(Request.Method.GET, userDetailsUrl,
                             userDetailsResponse -> {
                                 try {
                                     JSONObject userJson = new JSONObject(userDetailsResponse);
-                                    int userId = userJson.getInt("id");
                                     String email = userJson.getString("email");
                                     String pfp = userJson.getString("pfp");
 
@@ -197,10 +199,12 @@ public class LoginFragment extends Fragment {
                         }
                         Log.e(TAG, "Login error response body: " + responseBody);
 
-                        if (error.networkResponse.statusCode == 401) {
+                        if (error.networkResponse.statusCode == 400) {
                             Toast.makeText(getContext(), "Username and password doesn't match", Toast.LENGTH_LONG).show();
                             usernameLoginLayout.setError("The username or password is incorrect");
-                            usernameEditText.requestFocus();
+                            passwordLoginLayout.setError("The username or password is incorrect");
+//                            usernameEditText.requestFocus();
+//                            passwordEditText.requestFocus();
                         } else {
                             Toast.makeText(getContext(), "Login failed. Server error: " + error.networkResponse.statusCode, Toast.LENGTH_LONG).show();
                         }

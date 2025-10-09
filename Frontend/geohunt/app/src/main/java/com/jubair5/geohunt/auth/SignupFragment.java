@@ -208,8 +208,8 @@ public class SignupFragment extends Fragment {
 
                         if (error.networkResponse.statusCode == 400) {
                             Toast.makeText(getContext(), "Account already exists or invalid input.", Toast.LENGTH_LONG).show();
-                            emailSignupLayout.setError("This email or username might already be taken.");
-                            emailEditText.requestFocus();
+                            usernameSignupLayout.setError("This email or username might already be taken.");
+//                            emailEditText.requestFocus()
                         } else {
                             Toast.makeText(getContext(), "Signup failed. Server error: " + error.networkResponse.statusCode, Toast.LENGTH_LONG).show();
                         }
