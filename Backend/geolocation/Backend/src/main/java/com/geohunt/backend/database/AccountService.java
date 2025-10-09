@@ -61,7 +61,7 @@ public class AccountService {
                     .body("Account not found with id: " + id);
         }
 
-        // ✅ Username
+
         if (account.getUsername() != null && !account.getUsername().isBlank()) {
             Optional<Account> existingUsername = accountRepository.findByUsername(account.getUsername());
             if (existingUsername.isPresent() && existingUsername.get().getId() != id) {
@@ -72,12 +72,12 @@ public class AccountService {
             }
         }
 
-        // ✅ Password
+
         if (account.getPassword() != null && !account.getPassword().isEmpty()) {
             acc.setPassword(account.getPassword());
         }
 
-        // ✅ Email
+
         if (account.getEmail() != null && !account.getEmail().isEmpty()) {
             Optional<Account> existingEmail = accountRepository.findByEmail(account.getEmail());
             if (existingEmail.isPresent() && existingEmail.get().getId() != id) {
