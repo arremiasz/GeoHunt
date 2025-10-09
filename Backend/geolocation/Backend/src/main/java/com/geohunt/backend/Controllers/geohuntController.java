@@ -15,7 +15,7 @@ public class geohuntController {
         return "No";
     }
 
-    // Receive Submission
+    // Post Submission
     @PostMapping("/geohunt/submission")
     public ResponseEntity<Submissions> receiveSubmission(@RequestBody Submissions submission){
         // Verify Submission
@@ -29,7 +29,7 @@ public class geohuntController {
         return ResponseEntity.status(200).body(submission);
     }
 
-    // Get Submission Info
+    // Get Submission
     @GetMapping("/geohunt/submission/{Id}")
     public ResponseEntity<Submissions> getSubmission(@PathVariable long id){
         if(!submissionsRepository.findById(id).isPresent()){
@@ -38,5 +38,25 @@ public class geohuntController {
         }
         Submissions submission = submissionsRepository.findById(id).get();
         return ResponseEntity.status(200).body(submission);
+    }
+
+    // Put / Update Submission
+    @PutMapping("/geohunt/submission/{id}")
+    public ResponseEntity<Submissions> updateSubmission(@RequestBody Submissions submission, @PathVariable long id){
+        // Get Submission with Id
+
+        // Update Submission values
+
+        // Return updated Submission
+    }
+
+    // Delete Submission
+    @DeleteMapping("/geohunt/submission/{id}")
+    public ResponseEntity<String> deleteSubmission(@PathVariable long id){
+        // Get Submission with Id
+
+        // Remove Submission
+
+        // Need to check what should be returned
     }
 }
