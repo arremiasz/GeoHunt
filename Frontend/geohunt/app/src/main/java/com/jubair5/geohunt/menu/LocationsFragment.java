@@ -23,13 +23,6 @@ public class LocationsFragment extends Fragment {
 
     private static final String TAG = "LocationFragment";
     private static final String SHARED_PREFS_NAME = "GeoHuntPrefs";
-    private static final String KEY_USER_LOGGED_IN = "isUserLoggedIn";
-    private static final String KEY_LOGIN_TIMESTAMP = "loginTimestamp";
-    private static final String KEY_USER_ID = "userId";
-    private static final String KEY_USER_NAME = "userName";
-    private static final String KEY_USER_EMAIL = "userEmail";
-    private static final String KEY_USER_PFP = "userPfp";
-
 
     private ListView locations;
     private ImageButton addLocalButton;
@@ -47,16 +40,16 @@ public class LocationsFragment extends Fragment {
         }
 
         // Layout
-        locations = root.findViewById(R.id.locations);
-        locations.setOnClickListener(v -> getLocations());
+        //locations = root.findViewById(R.id.locations);
+        //locations.setOnClickListener(v -> getLocations());
 
 
         // Buttons
         addLocalButton = root.findViewById(R.id.addLocal);
-        addLocalButton.setOnClickListener(v -> gotoAddLocal());
+        addLocalButton.setOnClickListener(v -> gotoAddLocal(new AddLocationFragment()));
 
         backButton = root.findViewById(R.id.backButton);
-        backButton.setOnClickListener(v -> goBack());
+        backButton.setOnClickListener(v -> goBack(new MapFragment()));
 
 
         return root;
@@ -66,21 +59,25 @@ public class LocationsFragment extends Fragment {
 
     }
 
-    private void goBack() {
-        if (getActivity() != null) {
-            FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
-            fragmentManager.beginTransaction()
-                    .replace(R.id.fragment_container_view, new LocationsFragment())
+    private boolean goBack(Fragment fragment) {
+        if (fragment != null) {
+            getFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, fragment)
                     .commit();
+            return true;
         }
+        return false;
     }
 
-    private void gotoAddLocal() {
-        if (getActivity() != null) {
-            FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
-            fragmentManager.beginTransaction()
-                    .replace(R.id.fragment_container_view, new AddLocationFragment())
+    private boolean gotoAddLocal(Fragment fragment) {
+        if (fragment != null) {
+            getFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, fragment)
                     .commit();
+            return true;
         }
+        return false;
     }
 }

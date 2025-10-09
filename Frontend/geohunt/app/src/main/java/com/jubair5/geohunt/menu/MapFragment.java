@@ -16,6 +16,7 @@ import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
@@ -38,20 +39,22 @@ public class MapFragment extends Fragment {
 
 
         location_button= root.findViewById(R.id.location_button);
-        location_button.setOnClickListener(v -> showLocationMenu());
+        location_button.setOnClickListener(v -> showLocationMenu(new LocationsFragment()));
 
 
 
         return root;
     }
 
-    private void showLocationMenu() {
-        if (getActivity() != null) {
-            FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
-            fragmentManager.beginTransaction()
-                    .replace(R.id.fragment_container_view, new LocationsFragment())
-                    .commit();
-        }
+    private boolean showLocationMenu(Fragment fragment) {
+            if (fragment != null) {
+                getFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.fragment_container, fragment)
+                        .commit();
+                return true;
+            }
+            return false;
     }
 
 }

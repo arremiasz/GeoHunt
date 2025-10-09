@@ -22,6 +22,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
@@ -55,7 +56,7 @@ public class AddLocationFragment extends Fragment {
     private EditText latEditText;
     private EditText longEditText;
     private EditText radiusEditText;
-    private ImageButton submitbutton;
+    private Button submitbutton;
     private ImageButton backButton;
     private SharedPreferences prefs;
     private View root;
@@ -66,6 +67,10 @@ public class AddLocationFragment extends Fragment {
         root = inflater.inflate(R.layout.add_location_fragment, container, false);
 
         prefs = requireActivity().getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
+
+        if (((AppCompatActivity) getActivity()).getSupportActionBar() != null) {
+            ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("Add a Locations");
+        }
 
         //Layouts
         localNameLayout = root.findViewById(R.id.localNameLayout);
@@ -84,18 +89,20 @@ public class AddLocationFragment extends Fragment {
         submitbutton.setOnClickListener(v -> submitLocation());
 
         backButton = root.findViewById(R.id.backButton);
-        backButton.setOnClickListener(v -> goBack());
+        backButton.setOnClickListener(v -> goBack(new LocationsFragment()));
 
         return root;
     }
 
-    private void goBack() {
-        if (getActivity() != null) {
-            FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
-            fragmentManager.beginTransaction()
-                    .replace(R.id.fragment_container_view, new LocationsFragment())
+    private boolean goBack(Fragment fragment) {
+        if (fragment != null) {
+            getFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, fragment)
                     .commit();
+            return true;
         }
+        return false;
     }
 
     private void submitLocation() {
@@ -113,7 +120,7 @@ public class AddLocationFragment extends Fragment {
             return;
         }
 
-        Log.d(TAG, "All validations passed. Proceeding with signup.");
+        Log.d(TAG, "All validations passed. Proceeding with uploading Location.");
 
         final JSONObject requestBody = new JSONObject();
         try {
@@ -137,10 +144,7 @@ public class AddLocationFragment extends Fragment {
 
                         Toast.makeText(getContext(), "Location Added created successfully!", Toast.LENGTH_LONG).show();
 
-                        if (getActivity() != null) {
-                            getActivity().setResult(Activity.RESULT_OK);
-                            getActivity().finish();
-                        }
+                        goBack(new LocationsFragment());
 
                     },
                 error -> {
@@ -212,7 +216,7 @@ public class AddLocationFragment extends Fragment {
      * @return {@code true} if the latitude meets all criteria, {@code false} otherwise.
      */
     private boolean validateLatitude(String latitude) {
-        if (Double.parseDouble(latitude) < -90 && Double.parseDouble(latitude) > 90) {
+        if (Double.parseDouble(latitude) < -90 || Double.parseDouble(latitude) > 90) {
             localLatLayout.setError("Latitude not in range");
             latEditText.requestFocus();
             return false;
@@ -230,7 +234,7 @@ public class AddLocationFragment extends Fragment {
      * @return {@code true} if the longitude meets all criteria, {@code false} otherwise.
      */
     private boolean validateLongitude(String longitude) {
-        if (Double.parseDouble(longitude) < -180 && Double.parseDouble(longitude) > 180) {
+        if (Double.parseDouble(longitude) < -180 || Double.parseDouble(longitude) > 180) {
             localLongLayout.setError("longitude not in range");
             longEditText.requestFocus();
             return false;
