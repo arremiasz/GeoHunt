@@ -1,6 +1,7 @@
 package com.geohunt.backend.Controllers;
 
 import com.geohunt.backend.database.Account;
+import com.geohunt.backend.database.AccountService;
 import com.geohunt.backend.database.Submissions;
 import com.geohunt.backend.database.SubmissionsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,9 @@ public class geohuntController {
     @Autowired
     SubmissionsRepository submissionsRepository;
 
+    @Autowired
+    AccountService accountService;
+
     @GetMapping("/geohunt/getLocation")
     public String getLocation(@RequestParam double lat, @RequestParam double lng, @RequestParam double radius) {
         return "No";
@@ -20,11 +24,10 @@ public class geohuntController {
 
     // Post Submission
     @PostMapping("/geohunt/submission")
-    public ResponseEntity<Submissions> receiveSubmission(@RequestBody Submissions submission){
-        // Verify Submission
-//        if(!submission.verifySubmission()){
-//            return ResponseEntity.status(400).body(null);
-//        }
+    public ResponseEntity<Submissions> receiveSubmission(@RequestBody Submissions submission, @RequestParam long uid, @RequestParam long cid){
+
+        submission.setSubmitter(accountService.getAccountById(uid));
+        submission.setChallenge(null);
 
         // Add Submission to Database
         submissionsRepository.save(submission);
@@ -48,6 +51,7 @@ public class geohuntController {
     @PutMapping("/geohunt/submission/{id}")
     public ResponseEntity<Submissions> updateSubmission(@RequestBody Submissions submission, @PathVariable long id){
         // Get Submission with Id
+        Submissions submissionToUpdate = submissionsRepository.findById(id).get();
 
         // Update Submission values
 
