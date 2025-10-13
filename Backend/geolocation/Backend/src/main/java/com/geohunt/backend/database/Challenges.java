@@ -15,7 +15,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 public class Challenges {
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private @Id long id;
     long latitude;
     long longitude;
