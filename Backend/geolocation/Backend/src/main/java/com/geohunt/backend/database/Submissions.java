@@ -36,6 +36,8 @@ public class Submissions {
     private LocalDateTime submissionTime;
     private int reports;
 
+    private long longtitude; // placeholder
+
     public boolean verifySubmission(){
 //        if(challenge == null){
 //            //return false;
