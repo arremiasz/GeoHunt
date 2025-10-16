@@ -147,23 +147,6 @@ public class SingleLocationFragment extends Fragment {
      * Initiates the update process by validating inputs and current password.
      */
     private void updatePreface() {
-        editNameLayout.setError(null);
-        editLatitudeLayout.setError(null);
-        editLongitudeLayout.setError(null);
-        editRadiusLayout.setError(null);
-
-        String newName = editName.getText().toString().trim();
-        String newLatitude = editLatitude.getText().toString().trim();
-        String newLongitude = editLongitude.getText().toString().trim();
-        String newRadius = editRadius.getText().toString().trim();
-
-        if (TextUtils.isEmpty(currentPassword)) {
-            editCurrentPasswordLayout.setError("Enter your current password to save changes");
-            editCurrentPassword.requestFocus();
-            return;
-        }
-
-        validatePasswordAndContinue(newUsername, newEmail, newPassword, currentPassword);
     }
 
     /**
@@ -192,9 +175,6 @@ public class SingleLocationFragment extends Fragment {
                     performUpdate(newUsername, newEmail, newPassword);
                 },
                 error -> {
-                    Log.e(TAG, "Password validation failed", error);
-                    editCurrentPasswordLayout.setError("Incorrect password");
-                    editCurrentPassword.requestFocus();
                 }
         ) {
             @Override
@@ -270,7 +250,7 @@ public class SingleLocationFragment extends Fragment {
                     SharedPreferences.Editor editor = prefs.edit();
                     if (!newUsername.isBlank()) {
                         editor.putString(KEY_USER_NAME, newUsername);
-                        usernameLabel.setText("@" + newUsername);
+                        nameLabel.setText("@" + newUsername);
                     }
                     if (!newEmail.isBlank()) {
                         editor.putString(KEY_USER_EMAIL, newEmail);
