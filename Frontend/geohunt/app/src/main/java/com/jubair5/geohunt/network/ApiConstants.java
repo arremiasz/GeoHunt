@@ -9,8 +9,8 @@ public final class ApiConstants {
     private ApiConstants() {}
 
     // Base URL for all API calls
-//    private static final String BASE_URL = "http://coms-3090-030.class.las.iastate.edu:3306";
-    public static final String BASE_URL = "https://8ce22578-237f-43d8-bd05-9a8c9cc7d1db.mock.pstmn.io";
+    public static final String BASE_URL = "http://coms-3090-030.class.las.iastate.edu:8080";
+//    public static final String BASE_URL = "https://6bfe1ae1-ae39-462f-910e-7d53b5da9867.mock.pstmn.io";
 
     // Account Endpoints
     public static final String SIGNUP_ENDPOINT = "/signup";
@@ -19,6 +19,10 @@ public final class ApiConstants {
     public static final String GET_ACCOUNT_BY_ID_ENDPOINT = "/account/byId";
     public static final String DELETE_ACCOUNT_ENDPOINT = "/account/byId";
     public static final String UPDATE_ACCOUNT_ENDPOINT = "/account/update";
+
+    // Location Endpoints
+    public static final String SUBMIT_LOCATIONS_ENDPOINT = "/";
+
     public static final String ADD_LOCAL_ENDPOINT = "/addLocal";
     public static final String LOCATIONS_ENDPOINT = "/locations";
 

@@ -223,7 +223,7 @@ public class ProfileFragment extends Fragment {
             return;
         }
 
-        StringRequest updateRequest = getUpdateRequest(newUsername, newEmail, requestBody);
+        StringRequest updateRequest = getUpdateRequest(newUsername, newEmail, requestBody, userId);
 
         VolleySingleton.getInstance(requireContext()).addToRequestQueue(updateRequest);
     }
@@ -235,8 +235,8 @@ public class ProfileFragment extends Fragment {
      * @param requestBody The JSON body containing update details.
      * @return The configured StringRequest.
      */
-    private StringRequest getUpdateRequest(String newUsername, String newEmail, JSONObject requestBody) {
-        String url = ApiConstants.BASE_URL + ApiConstants.UPDATE_ACCOUNT_ENDPOINT;
+    private StringRequest getUpdateRequest(String newUsername, String newEmail, JSONObject requestBody, int userId) {
+        String url = ApiConstants.BASE_URL + ApiConstants.UPDATE_ACCOUNT_ENDPOINT + "?id=" + userId;
         StringRequest updateRequest = new StringRequest(Request.Method.PUT, url,
                 response -> {
                     Log.d(TAG, "Account updated successfully");
@@ -257,6 +257,23 @@ public class ProfileFragment extends Fragment {
                 error -> {
                     Log.e(TAG, "Error updating account", error);
                     Toast.makeText(getContext(), "Failed to update profile.", Toast.LENGTH_LONG).show();
+                    if (error.networkResponse != null) {
+                        Log.e(TAG, "Update Profile Error code: " + error.networkResponse.statusCode);
+                        String responseBody = "";
+                        if(error.networkResponse.data != null) {
+                            responseBody = new String(error.networkResponse.data, StandardCharsets.UTF_8);
+                        }
+                        Log.e(TAG, "Signup error response body: " + responseBody);
+
+                        if (error.networkResponse.statusCode == 409) {
+                            Toast.makeText(getContext(), responseBody, Toast.LENGTH_LONG).show();
+                            editUsernameLayout.setError("This email or username might already be taken.");
+                            editEmailLayout.setError("This email or username might already be taken.");
+//                            emailEditText.requestFocus()
+                        } else {
+                            Toast.makeText(getContext(), "Signup failed. Server error: " + error.networkResponse.statusCode, Toast.LENGTH_LONG).show();
+                        }
+                    }
                 }) {
             @Override
             public byte[] getBody() {
