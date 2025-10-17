@@ -10,7 +10,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
-import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,16 +20,16 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.google.android.material.textfield.TextInputLayout;
 import com.jubair5.geohunt.R;
+import com.jubair5.geohunt.network.ApiConstants;
 import com.jubair5.geohunt.network.VolleySingleton;
 
 import org.json.JSONException;
@@ -43,21 +42,17 @@ import java.util.Map;
 public class LoginFragment extends Fragment {
 
     private static final String TAG = "LoginFragment";
-
-    //private static final String BASE_URL = "http://coms-3090-030.class.las.iastate.edu:3306";
-    private static final String BASE_URL = "https://8ce22578-237f-43d8-bd05-9a8c9cc7d1db.mock.pstmn.io";
-    private static final String LOGIN_ENDPOINT = "/login";
-    private static final String LOGIN_URL = BASE_URL + LOGIN_ENDPOINT;
-
     private static final String SHARED_PREFS_NAME = "GeoHuntPrefs";
     private static final String KEY_USER_LOGGED_IN = "isUserLoggedIn";
     private static final String KEY_LOGIN_TIMESTAMP = "loginTimestamp";
+    private static final String KEY_USER_ID = "userId";
+    private static final String KEY_USER_NAME = "userName";
+    private static final String KEY_USER_EMAIL = "userEmail";
+    private static final String KEY_USER_PFP = "userPfp";
 
 
-    private TextInputLayout usernameLoginLayout;
-    private TextInputLayout passwordLoginLayout;
-    private EditText usernameEditText;
-    private EditText passwordEditText;
+    private TextInputLayout usernameLoginLayout, passwordLoginLayout;
+    private EditText usernameEditText, passwordEditText;
     private Button loginButton;
     private TextView goToSignUpTextView;
 
@@ -70,6 +65,10 @@ public class LoginFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        if (((AppCompatActivity) getActivity()).getSupportActionBar() != null) {
+            ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("Log In");
+        }
 
         // Layout
         usernameLoginLayout = view.findViewById(R.id.usernameLoginLayout);
@@ -84,16 +83,36 @@ public class LoginFragment extends Fragment {
         goToSignUpTextView = view.findViewById(R.id.goToSignup);
 
         goToSignUpTextView.setOnClickListener(v -> {
-            if (getActivity() != null) {
-                getFragmentManager().beginTransaction()
-                        .replace(R.id.fragment_container_view, new SignupFragment())
-                        .commit();
-            }
+            gotoSignUp();
         });
 
         loginButton.setOnClickListener(v -> {
             performLogin();
         });
+
+        usernameEditText.setOnKeyListener((v, keyCode, event) -> {
+            usernameLoginLayout.setError(null);
+            passwordLoginLayout.setError(null);
+            return false;
+        });
+
+        passwordEditText.setOnKeyListener((v, keyCode, event) -> {
+            usernameLoginLayout.setError(null);
+            passwordLoginLayout.setError(null);
+            return false;
+        });
+    }
+
+    /**
+     * Navigates back to the signup fragment by popping the back stack.
+     */
+    private void gotoSignUp() {
+        if (getActivity() != null) {
+            FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+            fragmentManager.beginTransaction()
+                    .replace(R.id.fragment_container_view, new SignupFragment())
+                    .commit();
+        }
     }
 
     /**
@@ -123,56 +142,79 @@ public class LoginFragment extends Fragment {
             return;
         }
 
+        String loginUrl = ApiConstants.BASE_URL + ApiConstants.LOGIN_ENDPOINT;
         StringRequest stringRequest = new StringRequest(
-                Request.Method.POST, LOGIN_URL,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        Log.d(TAG, "Login successful: " + response);
-                        Toast.makeText(getContext(), "Account found successfully!", Toast.LENGTH_LONG).show();
+                Request.Method.POST, loginUrl,
+                response -> {
+                    Log.d(TAG, "Login successful: " + response);
+                    int userId = Integer.parseInt(response);
 
-                        if (getContext() != null) {
-                            SharedPreferences sharedPreferences = getContext().getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
-                            SharedPreferences.Editor editor = sharedPreferences.edit();
-                            editor.putBoolean(KEY_USER_LOGGED_IN, true);
-                            editor.putLong(KEY_LOGIN_TIMESTAMP, System.currentTimeMillis());
-                            editor.apply();
-                            Log.d(TAG, "Login status and timestamp saved.");
-                        }
+                    String userDetailsUrl = ApiConstants.BASE_URL + ApiConstants.GET_ACCOUNT_BY_ID_ENDPOINT + "?id=" + userId;
+                    StringRequest userDetailsRequest = new StringRequest(Request.Method.GET, userDetailsUrl,
+                            userDetailsResponse -> {
+                                try {
+                                    JSONObject userJson = new JSONObject(userDetailsResponse);
+                                    String email = userJson.getString("email");
+                                    String pfp = userJson.getString("pfp");
 
-                        if (getActivity() != null) {
-                            getActivity().setResult(Activity.RESULT_OK);
-                            getActivity().finish(); // Finish AuthenticationActivity
-                        }
+                                    if (getContext() != null) {
+                                        SharedPreferences sharedPreferences = getContext().getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
+                                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                                        editor.putBoolean(KEY_USER_LOGGED_IN, true);
+                                        editor.putLong(KEY_LOGIN_TIMESTAMP, System.currentTimeMillis());
+                                        editor.putInt(KEY_USER_ID, userId);
+                                        editor.putString(KEY_USER_NAME, username);
+                                        editor.putString(KEY_USER_EMAIL, email);
+                                        editor.putString(KEY_USER_PFP, pfp);
+                                        editor.apply();
+                                        Log.d(TAG, "User data and session timestamp saved.");
+                                        Toast.makeText(getContext(), "Login successful!", Toast.LENGTH_LONG).show();
+                                    }
+
+                                    if (getActivity() != null) {
+                                        getActivity().setResult(Activity.RESULT_OK);
+                                        getActivity().finish();
+                                    }
+                                } catch (JSONException e) {
+                                    Log.e(TAG, "Error parsing user details from GET request", e);
+                                    Toast.makeText(getContext(), "Login successful, but failed to parse user details.", Toast.LENGTH_LONG).show();
+                                }
+                            },
+                            error -> {
+                                Log.e(TAG, "Error fetching user details", error);
+                                Toast.makeText(getContext(), "Login successful, but failed to fetch user details.", Toast.LENGTH_LONG).show();
+                            });
+
+                    if (getContext() != null) {
+                        VolleySingleton.getInstance(getContext()).addToRequestQueue(userDetailsRequest);
                     }
                 },
-                new Response.ErrorListener() { // TODO: More specific error codes
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.e(TAG, "Login error: " + error.toString());
-                        if (error.networkResponse != null) {
-                            Log.e(TAG, "Login error status code: " + error.networkResponse.statusCode);
-                            String responseBody = "";
-                            if(error.networkResponse.data != null) {
-                                responseBody = new String(error.networkResponse.data, StandardCharsets.UTF_8);
-                            }
-                            Log.e(TAG, "Login error response body: " + responseBody);
-
-                            if (error.networkResponse.statusCode == 401) {
-                                Toast.makeText(getContext(), "Username and password doesn't match", Toast.LENGTH_LONG).show();
-                                usernameLoginLayout.setError("The username or password is incorrect");
-                                usernameEditText.requestFocus();
-                            } else {
-                                Toast.makeText(getContext(), "Login failed. Server error: " + error.networkResponse.statusCode, Toast.LENGTH_LONG).show();
-                            }
-                        } else {
-                            Toast.makeText(getContext(), "Login failed. Check network connection.", Toast.LENGTH_LONG).show();
+                error -> {
+                    Log.e(TAG, "Login error: " + error.toString());
+                    if (error.networkResponse != null) {
+                        Log.e(TAG, "Login error status code: " + error.networkResponse.statusCode);
+                        String responseBody = "";
+                        if(error.networkResponse.data != null) {
+                            responseBody = new String(error.networkResponse.data, StandardCharsets.UTF_8);
                         }
+                        Log.e(TAG, "Login error response body: " + responseBody);
+
+                        if (error.networkResponse.statusCode == 400) {
+                            Toast.makeText(getContext(), "Username and password doesn't match", Toast.LENGTH_LONG).show();
+                            usernameLoginLayout.setError("The username or password is incorrect");
+                            passwordLoginLayout.setError("The username or password is incorrect");
+//                            usernameEditText.requestFocus();
+//                            passwordEditText.requestFocus();
+                        } else {
+                            Toast.makeText(getContext(), "Login failed. Server error: " + error.networkResponse.statusCode, Toast.LENGTH_LONG).show();
+                        }
+                    } else {
+                        Toast.makeText(getContext(), "Login failed. Check network connection.", Toast.LENGTH_LONG).show();
                     }
                 }
         ) {
             @Override
-            public byte[] getBody() throws AuthFailureError {
+            public byte[] getBody() {
                 return requestBody.toString().getBytes(StandardCharsets.UTF_8);
             }
 
