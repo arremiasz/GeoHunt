@@ -22,17 +22,26 @@ public class geohuntController {
         return "No";
     }
 
+    /**
+     *
+     * @RequestBody Submissions submission
+     * @RequestParam long uid
+     * @RequestParam long cid
+     * @return Submissions as JSON
+     */
+
     // Post Submission
     @PostMapping("/geohunt/submission")
     public ResponseEntity<Submissions> receiveSubmission(@RequestBody Submissions submission, @RequestParam long uid, @RequestParam long cid){
 
+        // Set Challenge and Account that the submission is tied to.
         submission.setSubmitter(accountService.getAccountById(uid));
-        submission.setChallenge(null);
+        submission.setChallenge(null); // Challenges not implemented yet.
 
         // Add Submission to Database
         submissionsRepository.save(submission);
 
-
+        // Return a copy of the submission as JSON
         return ResponseEntity.status(200).body(submission);
     }
 
@@ -43,20 +52,25 @@ public class geohuntController {
             // No submission with given id exists.
             return ResponseEntity.status(404).body(null);
         }
+        // Return submission as JSON
         Submissions submission = submissionsRepository.findById(id).get();
         return ResponseEntity.status(200).body(submission);
     }
 
     // Put / Update Submission
     @PutMapping("/geohunt/submission/{id}")
-    public ResponseEntity<Submissions> updateSubmission(@RequestBody Submissions submission, @PathVariable long id){
+    public ResponseEntity<Submissions> updateSubmission(@RequestBody Submissions updatedValues, @PathVariable long id){
         // Get Submission with Id
+        if(submissionsRepository.findById(id).isEmpty()){
+            return ResponseEntity.status(404).body(null); // No submission exists.
+        }
         Submissions submissionToUpdate = submissionsRepository.findById(id).get();
 
         // Update Submission values
+        submissionToUpdate.updateValues(updatedValues);
 
         // Return updated Submission
-        return null;
+        return ResponseEntity.status(200).body(submissionToUpdate);
     }
 
     // Delete Submission

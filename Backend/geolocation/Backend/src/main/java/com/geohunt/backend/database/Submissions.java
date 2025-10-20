@@ -15,6 +15,9 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 public class Submissions {
+
+    public static final double DEFAULT_DOUBLE_VALUE = 0.0;
+
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private long id;
@@ -36,16 +39,33 @@ public class Submissions {
     private LocalDateTime submissionTime;
     private int reports;
 
-    private long longtitude; // placeholder
+    private long longtitude; // placeholder until fixed in main and mysql server
 
-    public boolean verifySubmission(){
-//        if(challenge == null){
-//            //return false;
-//        }
-//        if(submitter == null){
-//            return false;
-//        }
-        return true;
+    public void updateValues(Submissions other){
+        // Cannot change id
+        if(other.getChallenge() != null){
+            this.challenge = other.getChallenge();
+        }
+
+        if(other.getSubmitter() != null){
+            this.submitter = other.getSubmitter();
+        }
+
+        if(other.getLatitude() != DEFAULT_DOUBLE_VALUE){
+            this.latitude = other.getLatitude();
+        }
+
+        if(other.getLongitude() != DEFAULT_DOUBLE_VALUE){
+            this.longitude = other.getLongitude();
+        }
+
+        if(other.getPhotourl() != null && !other.getPhotourl().isBlank()){
+            this.photourl = other.getPhotourl();
+        }
+
+        if(other.getReports() != 0){
+            this.reports = other.getReports();
+        }
     }
 }
 
