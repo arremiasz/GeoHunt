@@ -76,11 +76,10 @@ public class geohuntController {
     // Delete Submission
     @DeleteMapping("/geohunt/submission/{id}")
     public ResponseEntity<String> deleteSubmission(@PathVariable long id){
-        // Get Submission with Id
-
         // Remove Submission
+        submissionsRepository.deleteById(id);
 
         // Need to check what should be returned
-        return null;
+        return ResponseEntity.status(200).body("submission removed.");
     }
 }
