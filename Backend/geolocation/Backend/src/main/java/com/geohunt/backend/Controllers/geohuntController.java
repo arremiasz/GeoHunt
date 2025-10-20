@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 public class geohuntController {
 
@@ -81,5 +83,24 @@ public class geohuntController {
 
         // Need to check what should be returned
         return ResponseEntity.status(200).body("submission removed.");
+    }
+
+    // List Submissions by user
+    @GetMapping("/geohunt/submission")
+    public ResponseEntity<List<Submissions>> listSubmissionsWithUser(@RequestParam long uid){
+        try{
+            Account account = accountService.getAccountById(uid);
+            return ResponseEntity.status(200).body(account.getSubmissions());
+        }
+        catch (IllegalArgumentException e){
+            return ResponseEntity.status(404).body(null);
+        }
+    }
+
+    // List Submissions by challenge
+    @GetMapping("/geohunt/submission")
+    public ResponseEntity<List<Submissions>> listSubmissionsWithChallenge(@RequestParam long cid){
+        // Challenges not implemented yet.
+        return ResponseEntity.status(501).body(null);
     }
 }
