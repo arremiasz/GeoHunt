@@ -32,6 +32,7 @@ import com.android.volley.toolbox.StringRequest;
 import com.google.android.material.textfield.TextInputLayout;
 import com.jubair5.geohunt.LauncherActivity;
 import com.jubair5.geohunt.R;
+import com.jubair5.geohunt.submissions.AddPlaceActivity;
 import com.jubair5.geohunt.submissions.Place;
 import com.jubair5.geohunt.submissions.PlaceDetailActivity;
 import com.jubair5.geohunt.submissions.PlacesAdapter;
@@ -411,7 +412,8 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
 
     @Override
     public void onAddPlaceClick() {
-        Toast.makeText(getContext(), "Add a new place!", Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(getActivity(), AddPlaceActivity.class);
+        startActivity(intent);
     }
 
     @Override

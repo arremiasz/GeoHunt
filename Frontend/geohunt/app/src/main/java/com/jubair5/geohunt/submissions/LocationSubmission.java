@@ -59,7 +59,7 @@ public class LocationSubmission {
         try {
             json.put("latitude", location.latitude);
             json.put("longitude", location.longitude);
-            json.put("image", location.image);
+            json.put("photourl", location.image);
             json.put("creator", location.creator);
         } catch (JSONException e) {
             Log.e(TAG, "Error converting location to JSON", e);
