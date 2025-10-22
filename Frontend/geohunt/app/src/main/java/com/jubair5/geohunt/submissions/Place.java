@@ -4,14 +4,20 @@
  */
 package com.jubair5.geohunt.submissions;
 
-public class Place {
-    private String imageUrl;
+import org.json.JSONObject;
 
-    public Place(String imageUrl) {
-        this.imageUrl = imageUrl;
+public class Place {
+    private String photoUrl;
+    private double latitude;
+    private double longitude;
+
+    public Place(JSONObject json) {
+        photoUrl = json.optString("photourl");
+        latitude = json.optDouble("latitude");
+        longitude = json.optDouble("longitude");
     }
 
     public String getImageUrl() {
-        return imageUrl;
+        return photoUrl;
     }
 }

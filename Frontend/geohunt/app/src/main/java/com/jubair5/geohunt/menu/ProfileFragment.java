@@ -27,6 +27,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.google.android.material.textfield.TextInputLayout;
 import com.jubair5.geohunt.LauncherActivity;
@@ -92,6 +93,7 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         usernameLabel.setText("@" + username);
 
         setupRecyclerView();
+        fetchSubmissions();
 
         editButton.setOnClickListener(v -> showEditOptions());
         deleteButton.setOnClickListener(v -> showDeleteConfirmationDialog());
@@ -112,13 +114,43 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
      */
     private void setupRecyclerView() {
         placesList = new ArrayList<>();
-        // Add dummy data for now
-        placesList.add(new Place(""));
-        placesList.add(new Place(""));
-
         placesAdapter = new PlacesAdapter(getContext(), placesList, this);
         placesRecyclerView.setAdapter(placesAdapter);
     }
+
+    /**
+     * Fetches the user's submissions from the server.
+     */
+    private void fetchSubmissions() {
+        int userId = prefs.getInt(KEY_USER_ID, -1);
+        if (userId == -1) {
+            Log.e(TAG, "User ID not found in shared preferences.");
+            return;
+        }
+
+        String url = ApiConstants.BASE_URL + ApiConstants.GET_SUBMITTED_LOCATIONS_ENDPOINT + "?uid=" + userId;
+
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null,
+                response -> {
+                    Log.d(TAG, "Response: " + response.toString());
+                    try {
+                        placesList.clear();
+                        for (int i = 0; i < response.length(); i++) {
+                            JSONObject placeObject = response.getJSONObject(i);
+                            placesList.add(new Place(placeObject));
+                        }
+                        placesAdapter.notifyDataSetChanged();
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Error parsing places JSON", e);
+                    }
+                },
+                error -> {
+                    Log.e(TAG, "Error fetching places", error);
+                });
+
+        VolleySingleton.getInstance(requireContext()).addToRequestQueue(jsonArrayRequest);
+    }
+
 
     /**
      * Switches the UI to edit mode

@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import com.bumptech.glide.Glide;
 import com.jubair5.geohunt.R;
 
 import java.util.List;
@@ -52,8 +53,7 @@ public class PlacesAdapter extends RecyclerView.Adapter<PlacesAdapter.ViewHolder
             holder.addIcon.setVisibility(View.GONE);
             holder.placeImage.setVisibility(View.VISIBLE);
             Place place = places.get(position - 1);
-            // TODO: Load image with Glide or Picasso
-            // Glide.with(context).load(place.getImageUrl()).into(holder.placeImage);
+            Glide.with(context).load(place.getImageUrl()).into(holder.placeImage);
             holder.itemView.setOnClickListener(v -> listener.onPlaceClick(place));
         }
     }
@@ -71,6 +71,9 @@ public class PlacesAdapter extends RecyclerView.Adapter<PlacesAdapter.ViewHolder
         return VIEW_TYPE_PLACE;
     }
 
+    /**
+     * ViewHolder class for the adapter.
+     */
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView placeImage;
         ImageView addIcon;
