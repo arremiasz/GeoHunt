@@ -18,9 +18,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 
 import com.jubair5.geohunt.R;
+import com.jubair5.geohunt.menu.map.LocationsFragment;
 
 public class MapFragment extends Fragment {
 

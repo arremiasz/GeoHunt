@@ -3,10 +3,9 @@
  * Displays user information, statistics and account settings.
  * @author Nathan Imig
  */
-package com.jubair5.geohunt.menu;
+package com.jubair5.geohunt.menu.map;
 
 //import android.app.AlertDialog;
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -24,7 +23,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;

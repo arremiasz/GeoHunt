@@ -11,9 +11,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.jubair5.geohunt.menu.AddLocationFragment;
 import com.jubair5.geohunt.menu.HomeFragment;
-import com.jubair5.geohunt.menu.LocationsFragment;
 import com.jubair5.geohunt.menu.MapFragment;
 import com.jubair5.geohunt.menu.ProfileFragment;
 
