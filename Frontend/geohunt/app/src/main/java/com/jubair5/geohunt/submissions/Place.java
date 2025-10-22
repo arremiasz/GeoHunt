@@ -20,4 +20,12 @@ public class Place {
     public String getImageUrl() {
         return photoUrl;
     }
+
+    public double getLatitude() {
+        return latitude;
+    }
+
+    public double getLongitude() {
+        return longitude;
+    }
 }

@@ -32,8 +32,9 @@ import com.android.volley.toolbox.StringRequest;
 import com.google.android.material.textfield.TextInputLayout;
 import com.jubair5.geohunt.LauncherActivity;
 import com.jubair5.geohunt.R;
-import com.jubair5.geohunt.submissions.PlacesAdapter;
 import com.jubair5.geohunt.submissions.Place;
+import com.jubair5.geohunt.submissions.PlaceDetailActivity;
+import com.jubair5.geohunt.submissions.PlacesAdapter;
 import com.jubair5.geohunt.network.ApiConstants;
 import com.jubair5.geohunt.network.VolleySingleton;
 
@@ -415,6 +416,10 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
 
     @Override
     public void onPlaceClick(Place place) {
-        Toast.makeText(getContext(), "View place details!", Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(getActivity(), PlaceDetailActivity.class);
+        intent.putExtra("IMAGE_URL", place.getImageUrl());
+        intent.putExtra("LATITUDE", place.getLatitude());
+        intent.putExtra("LONGITUDE", place.getLongitude());
+        startActivity(intent);
     }
 }
