@@ -24,12 +24,15 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.Request;
 import com.android.volley.toolbox.StringRequest;
 import com.google.android.material.textfield.TextInputLayout;
 import com.jubair5.geohunt.LauncherActivity;
 import com.jubair5.geohunt.R;
+import com.jubair5.geohunt.submissions.PlacesAdapter;
+import com.jubair5.geohunt.submissions.Place;
 import com.jubair5.geohunt.network.ApiConstants;
 import com.jubair5.geohunt.network.VolleySingleton;
 
@@ -37,8 +40,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
-public class ProfileFragment extends Fragment {
+public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceClickListener {
 
     private static final String TAG = "ProfileFragment";
     private static final String SHARED_PREFS_NAME = "GeoHuntPrefs";
@@ -52,6 +57,9 @@ public class ProfileFragment extends Fragment {
     private TextInputLayout editUsernameLayout, editEmailLayout, editNewPasswordLayout, editCurrentPasswordLayout;
     private EditText editUsername, editEmail, editNewPassword, editCurrentPassword;
     private Button editButton, deleteButton, saveChangesButton, cancelButton, logoutButton;
+    private RecyclerView placesRecyclerView;
+    private PlacesAdapter placesAdapter;
+    private List<Place> placesList;
 
     private SharedPreferences prefs;
     private View root;
@@ -78,9 +86,12 @@ public class ProfileFragment extends Fragment {
         saveChangesButton = root.findViewById(R.id.save_changes_button);
         cancelButton = root.findViewById(R.id.cancel_button);
         logoutButton = root.findViewById(R.id.logout_button);
+        placesRecyclerView = root.findViewById(R.id.places_recycler_view);
 
         String username = prefs.getString(KEY_USER_NAME, "User");
         usernameLabel.setText("@" + username);
+
+        setupRecyclerView();
 
         editButton.setOnClickListener(v -> showEditOptions());
         deleteButton.setOnClickListener(v -> showDeleteConfirmationDialog());
@@ -94,6 +105,19 @@ public class ProfileFragment extends Fragment {
         });
 
         return root;
+    }
+
+    /**
+     * Sets up the RecyclerView for displaying places.
+     */
+    private void setupRecyclerView() {
+        placesList = new ArrayList<>();
+        // Add dummy data for now
+        placesList.add(new Place(""));
+        placesList.add(new Place(""));
+
+        placesAdapter = new PlacesAdapter(getContext(), placesList, this);
+        placesRecyclerView.setAdapter(placesAdapter);
     }
 
     /**
@@ -337,7 +361,7 @@ public class ProfileFragment extends Fragment {
     }
 
     /**
-     * Logs out the user by clearing SharedPreferences and navigating to LauncherActivity.
+     * Logs out the user by clearing SharedPreferences and navigates to LauncherActivity.
      */
     private void logout() {
         prefs.edit().clear().apply();
@@ -350,5 +374,15 @@ public class ProfileFragment extends Fragment {
             startActivity(intent);
             getActivity().finish();
         }
+    }
+
+    @Override
+    public void onAddPlaceClick() {
+        Toast.makeText(getContext(), "Add a new place!", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onPlaceClick(Place place) {
+        Toast.makeText(getContext(), "View place details!", Toast.LENGTH_SHORT).show();
     }
 }
