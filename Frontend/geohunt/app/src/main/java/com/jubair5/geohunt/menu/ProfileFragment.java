@@ -5,6 +5,7 @@
  */
 package com.jubair5.geohunt.menu;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -21,6 +22,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -32,10 +35,10 @@ import com.android.volley.toolbox.StringRequest;
 import com.google.android.material.textfield.TextInputLayout;
 import com.jubair5.geohunt.LauncherActivity;
 import com.jubair5.geohunt.R;
-import com.jubair5.geohunt.submissions.AddPlaceActivity;
-import com.jubair5.geohunt.submissions.Place;
-import com.jubair5.geohunt.submissions.PlaceDetailActivity;
-import com.jubair5.geohunt.submissions.PlacesAdapter;
+import com.jubair5.geohunt.places.AddPlaceActivity;
+import com.jubair5.geohunt.places.Place;
+import com.jubair5.geohunt.places.PlaceDetailActivity;
+import com.jubair5.geohunt.places.PlacesAdapter;
 import com.jubair5.geohunt.network.ApiConstants;
 import com.jubair5.geohunt.network.VolleySingleton;
 
@@ -66,6 +69,15 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
 
     private SharedPreferences prefs;
     private View root;
+
+    private final ActivityResultLauncher<Intent> addPlaceLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == Activity.RESULT_OK) {
+                    Log.d(TAG, "Returned from AddPlaceActivity with success. Refreshing submissions.");
+                    fetchSubmissions();
+                }
+            });
 
     @Nullable
     @Override
@@ -137,7 +149,7 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
                     Log.d(TAG, "Response: " + response.toString());
                     try {
                         placesList.clear();
-                        for (int i = 0; i < response.length(); i++) {
+                        for (int i = response.length()-1; i >= 0; i--) {
                             JSONObject placeObject = response.getJSONObject(i);
                             placesList.add(new Place(placeObject));
                         }
@@ -413,7 +425,7 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
     @Override
     public void onAddPlaceClick() {
         Intent intent = new Intent(getActivity(), AddPlaceActivity.class);
-        startActivity(intent);
+        addPlaceLauncher.launch(intent);
     }
 
     @Override

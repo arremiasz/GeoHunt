@@ -2,7 +2,7 @@
  * Object to handle location submission to the server
  * @author Alex Remiasz
  */
-package com.jubair5.geohunt.submissions;
+package com.jubair5.geohunt.places;
 
 import android.util.Log;
 
@@ -20,7 +20,7 @@ public class LocationSubmission {
     private Location location;
 
     /**
-     * Submits the location to the server
+     * Submits the users current location to the server
      * @return {@code true} if submission was successful, {@code false} otherwise}
      */
     public boolean performSubmit() {

@@ -2,7 +2,7 @@
  * Activity to display the details of a place.
  * @author Alex Remiasz
  */
-package com.jubair5.geohunt.submissions;
+package com.jubair5.geohunt.places;
 
 import android.os.Bundle;
 import android.widget.ImageView;
@@ -27,7 +27,7 @@ public class PlaceDetailActivity extends AppCompatActivity implements OnMapReady
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_place_detail);
+        setContentView(R.layout.place_detail_activity);
 
         getSupportActionBar().setTitle("My Place");
 

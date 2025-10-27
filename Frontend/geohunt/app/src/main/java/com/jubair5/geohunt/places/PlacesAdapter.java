@@ -2,7 +2,7 @@
  * Adapter class that handles the list of places.
  * @author Alex Remiasz
  */
-package com.jubair5.geohunt.submissions;
+package com.jubair5.geohunt.places;
 
 import android.content.Context;
 import android.view.LayoutInflater;

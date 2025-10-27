@@ -2,7 +2,7 @@
  * Place Class
  * @author Alex Remiasz
  */
-package com.jubair5.geohunt.submissions;
+package com.jubair5.geohunt.places;
 
 import org.json.JSONObject;
 
