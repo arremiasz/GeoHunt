@@ -139,7 +139,6 @@ public class AddPlaceActivity extends AppCompatActivity implements OnMapReadyCal
      */
     private void submitPlace() {
         // TODO: Implement the POST request logic here.
-        // For now, we'll just simulate a successful submission
         Toast.makeText(this, "Submit button clicked!", Toast.LENGTH_SHORT).show();
         setResult(Activity.RESULT_OK);
         finish();

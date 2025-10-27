@@ -431,6 +431,7 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
     @Override
     public void onPlaceClick(Place place) {
         Intent intent = new Intent(getActivity(), PlaceDetailActivity.class);
+        intent.putExtra("ID", place.getId());
         intent.putExtra("IMAGE_URL", place.getImageUrl());
         intent.putExtra("LATITUDE", place.getLatitude());
         intent.putExtra("LONGITUDE", place.getLongitude());
