@@ -13,7 +13,7 @@ public class Place {
     private double longitude;
 
     public Place(JSONObject json) {
-//        id = json.optInt("id");
+        id = json.optInt("id");
         photoUrl = json.optString("photourl");
         latitude = json.optDouble("latitude");
         longitude = json.optDouble("longitude");

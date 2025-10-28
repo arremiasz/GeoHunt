@@ -1,6 +1,6 @@
 /**
  * Profile Page Fragment
- * Displays user information, statistics and account settings.
+ * Displays user information, places, statistics and account settings.
  * @author Alex Remiasz
  */
 package com.jubair5.geohunt.menu;
@@ -70,11 +70,11 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
     private SharedPreferences prefs;
     private View root;
 
-    private final ActivityResultLauncher<Intent> addPlaceLauncher = registerForActivityResult(
+    private final ActivityResultLauncher<Intent> activityLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == Activity.RESULT_OK) {
-                    Log.d(TAG, "Returned from AddPlaceActivity with success. Refreshing submissions.");
+                    Log.d(TAG, "Returned from an activity with success. Refreshing submissions.");
                     fetchSubmissions();
                 }
             });
@@ -142,14 +142,14 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
             return;
         }
 
-        String url = ApiConstants.BASE_URL + ApiConstants.GET_SUBMITTED_LOCATIONS_ENDPOINT + "?uid=" + userId;
+        String url = ApiConstants.BASE_URL + ApiConstants.GET_SUBMITTED_PLACES_ENDPOINT + "?uid=" + userId;
 
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null,
                 response -> {
                     Log.d(TAG, "Response: " + response.toString());
                     try {
                         placesList.clear();
-                        for (int i = response.length()-1; i >= 0; i--) {
+                        for (int i = response.length() - 1; i >= 0; i--) {
                             JSONObject placeObject = response.getJSONObject(i);
                             placesList.add(new Place(placeObject));
                         }
@@ -425,7 +425,7 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
     @Override
     public void onAddPlaceClick() {
         Intent intent = new Intent(getActivity(), AddPlaceActivity.class);
-        addPlaceLauncher.launch(intent);
+        activityLauncher.launch(intent);
     }
 
     @Override
@@ -435,6 +435,6 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         intent.putExtra("IMAGE_URL", place.getImageUrl());
         intent.putExtra("LATITUDE", place.getLatitude());
         intent.putExtra("LONGITUDE", place.getLongitude());
-        startActivity(intent);
+        activityLauncher.launch(intent);
     }
 }

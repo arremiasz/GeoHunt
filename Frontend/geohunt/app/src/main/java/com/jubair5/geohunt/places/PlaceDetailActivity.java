@@ -1,8 +1,13 @@
+/**
+ * Activity for displaying details of a place.
+ * @author Alex Remiasz
+ */
 package com.jubair5.geohunt.places;
 
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -11,6 +16,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.android.volley.Request;
+import com.android.volley.toolbox.StringRequest;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -19,6 +26,8 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.jubair5.geohunt.R;
+import com.jubair5.geohunt.network.ApiConstants;
+import com.jubair5.geohunt.network.VolleySingleton;
 
 public class PlaceDetailActivity extends AppCompatActivity implements OnMapReadyCallback {
 
@@ -54,6 +63,9 @@ public class PlaceDetailActivity extends AppCompatActivity implements OnMapReady
         mapView.getMapAsync(this);
     }
 
+    /**
+     * Shows a confirmation dialog before deleting the place.
+     */
     private void showDeleteConfirmationDialog() {
         new AlertDialog.Builder(this)
                 .setTitle("Delete Place")
@@ -63,16 +75,31 @@ public class PlaceDetailActivity extends AppCompatActivity implements OnMapReady
                 .show();
     }
 
+    /**
+     * Creates and sends a DELETE request to the server to delete the current place.
+     */
     private void deletePlace() {
         int id = getIntent().getIntExtra("ID", -1);
         if (id == -1) {
-            Toast.makeText(this, "Place ID not found!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Error: Place ID not found!", Toast.LENGTH_SHORT).show();
             return;
         }
-        // TODO: Implement the DELETE request logic here.
-        Toast.makeText(this, "Place deleted!", Toast.LENGTH_SHORT).show();
-        setResult(Activity.RESULT_OK);
-        finish();
+
+        String url = ApiConstants.BASE_URL + ApiConstants.DEL_SUBMITTED_PLACE_ENDPOINT + "?id=" + id;
+
+        StringRequest deleteRequest = new StringRequest(Request.Method.DELETE, url,
+                response -> {
+                    Log.d("PlaceDetailActivity", "Delete successful: " + response);
+                    Toast.makeText(this, "Place deleted!", Toast.LENGTH_SHORT).show();
+                    setResult(Activity.RESULT_OK);
+                    finish();
+                },
+                error -> {
+                    Log.e("PlaceDetailActivity", "Failed to delete place", error);
+                    Toast.makeText(this, "Failed to delete place. Please try again.", Toast.LENGTH_SHORT).show();
+                });
+
+        VolleySingleton.getInstance(this).addToRequestQueue(deleteRequest);
     }
 
     @Override

@@ -6,10 +6,14 @@ package com.jubair5.geohunt.places;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.location.Location;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -23,6 +27,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
+import com.android.volley.Request;
+import com.android.volley.toolbox.StringRequest;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -32,8 +38,17 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.jubair5.geohunt.R;
+import com.jubair5.geohunt.network.ApiConstants;
+import com.jubair5.geohunt.network.VolleySingleton;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 public class AddPlaceActivity extends AppCompatActivity implements OnMapReadyCallback {
 
@@ -135,13 +150,79 @@ public class AddPlaceActivity extends AppCompatActivity implements OnMapReadyCal
     }
 
     /**
-     * Handles the submission of the new place.
+     * Handles the submission of the new place by converting the image to Base64 and sending
+     * all data in a JSON object via a POST request.
      */
     private void submitPlace() {
-        // TODO: Implement the POST request logic here.
-        Toast.makeText(this, "Submit button clicked!", Toast.LENGTH_SHORT).show();
-        setResult(Activity.RESULT_OK);
-        finish();
+        SharedPreferences prefs = getSharedPreferences("GeoHuntPrefs", Context.MODE_PRIVATE);
+        int userId = prefs.getInt("userId", -1);
+
+        if (userId == -1) {
+            Toast.makeText(this, "Error: User not logged in.", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "User ID not found in shared preferences for submission.");
+            return;
+        }
+
+        String imageString;
+        try {
+            InputStream inputStream = getContentResolver().openInputStream(imageUri);
+            Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+            imageString = bitmapToString(bitmap);
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to read image file.", e);
+            Toast.makeText(this, "Error processing image.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        JSONObject requestBody = new JSONObject();
+        try {
+            requestBody.put("uid", userId);
+            requestBody.put("latitude", latitude);
+            requestBody.put("longitude", longitude);
+            requestBody.put("photourl", imageString);
+        } catch (JSONException e) {
+            Log.e(TAG, "Failed to create JSON object for submission.", e);
+            return;
+        }
+
+        String url = ApiConstants.BASE_URL + ApiConstants.SUBMIT_PLACE_ENDPOINT;
+
+        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
+                response -> {
+                    Log.d(TAG, "Submission successful: " + response);
+                    Toast.makeText(this, "Place submitted successfully!", Toast.LENGTH_SHORT).show();
+                    setResult(Activity.RESULT_OK);
+                    finish();
+                },
+                error -> {
+                    Log.e(TAG, "Submission failed", error);
+                    Toast.makeText(this, "Submission failed. Please try again.", Toast.LENGTH_LONG).show();
+                }
+        ) {
+            @Override
+            public byte[] getBody() {
+                return requestBody.toString().getBytes(StandardCharsets.UTF_8);
+            }
+
+            @Override
+            public String getBodyContentType() {
+                return "application/json; charset=utf-8";
+            }
+        };
+
+        VolleySingleton.getInstance(this).addToRequestQueue(postRequest);
+    }
+
+    /**
+     * Converts a Bitmap image to a Base64 encoded string.
+     * @param bitmap The bitmap to be converted.
+     * @return The Base64 encoded string representation of the bitmap.
+     */
+    private String bitmapToString(Bitmap bitmap) {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 70, byteArrayOutputStream);
+        byte[] byteArray = byteArrayOutputStream.toByteArray();
+        return Base64.encodeToString(byteArray, Base64.DEFAULT);
     }
 
     /**

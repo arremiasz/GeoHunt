@@ -20,8 +20,10 @@ public final class ApiConstants {
     public static final String DELETE_ACCOUNT_ENDPOINT = "/account/byId";
     public static final String UPDATE_ACCOUNT_ENDPOINT = "/account/update";
 
-    // Location Endpoints
-    public static final String SUBMIT_LOCATIONS_ENDPOINT = "/";
-    public static final String GET_SUBMITTED_LOCATIONS_ENDPOINT = "/geohunt/submission";
+    // Place Endpoints
+    public static final String SUBMIT_PLACE_ENDPOINT = "/geohunt/submission"; // TODO: Set this endpoint to the correct one and adjust query
+    public static final String GET_SUBMITTED_PLACES_ENDPOINT = "/geohunt/submission"; // TODO: Set this endpoint to the correct one and adjust query
+    public static final String DEL_SUBMITTED_PLACE_ENDPOINT = "/geohunt/submission/delete"; // TODO: Set this endpoint to the correct one and adjust query
+
 
 }
