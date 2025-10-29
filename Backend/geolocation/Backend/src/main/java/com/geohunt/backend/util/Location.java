@@ -9,6 +9,9 @@ import lombok.Setter;
 public class Location {
     private static final double EARTH_RADIUS_KM = 6371; // Constant for the radius of the earth
 
+    private static final double KM_TO_MILES = 0.6213712; // Number of miles in a Kilometer
+    private static final double MILES_TO_FEET = 5280; // Number of feet in a mile
+
     public double latitude; // Latitude of a location, aka degrees north/south
     public double longitude; // Longitude of a location, aka degrees east/west
 
@@ -42,7 +45,16 @@ public class Location {
         return distance;
     }
 
+    public double distanceFeet(Location other){
+        return KM_TO_MILES * MILES_TO_FEET * distanceKM(other);
+    }
+
+    public double distanceMiles(Location other){
+        return KM_TO_MILES * distanceKM(other);
+    }
+
     private double degreesToRadians(double angleDegrees){
         return angleDegrees * (Math.PI/180);
     }
+
 }
