@@ -47,7 +47,9 @@ public class Notifications {
         // server side log
         logger.info("[onMessage] " + username + ": " + message);
 
+        if(message.startsWith("!")) {
 
+        }
 
     }
 }
