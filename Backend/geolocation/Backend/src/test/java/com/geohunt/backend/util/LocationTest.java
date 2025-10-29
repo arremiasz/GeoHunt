@@ -22,8 +22,6 @@ class LocationTest {
         assertEquals(135.79, roundMultiple(location3.distanceKM(location4), 100));
 
         assertEquals(182.17, roundMultiple(location5.distanceKM(location6), 100));
-
-
     }
 
     @Test

@@ -32,7 +32,7 @@ public class Location {
         double long1 = degreesToRadians(this.longitude); // longitude in radians
 
         double lat2 = degreesToRadians(other.latitude); // latitude in radians
-        double long2 = degreesToRadians(other.latitude); // longitude in radians
+        double long2 = degreesToRadians(other.longitude); // longitude in radians
 
         double difLat = lat2 - lat1;
         double difLong = long2 - long1;
