@@ -8,14 +8,19 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Looper;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
+import androidx.transition.TransitionManager;
 
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
@@ -48,6 +53,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
     private Circle radiusCircle;
+    private LinearLayout settingsContainer;
     private double radius = 1.0; // Default radius in miles
     private double currentLat;
     private double currentLng;
@@ -76,6 +82,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapView = findViewById(R.id.game_map_view);
         Slider radiusSlider = findViewById(R.id.radius_slider);
         Button readyButton = findViewById(R.id.ready_button);
+        settingsContainer = findViewById(R.id.settings_container);
 
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
@@ -156,12 +163,22 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     /**
-     * Starts the main game loop with the data received from the server.
+     * Starts the main game loop with the data received from the server. Makes the map full screen.
      * @param id The ID of the target location.
      * @param imageUrl The URL of the Street View image for the target.
      */
     private void startGame(int id, String imageUrl) {
-        // TODO: Start the game with the received location data.
+        settingsContainer.setVisibility(View.GONE);
+
+        if (radiusCircle != null) {
+            radiusCircle.remove();
+        }
+
+        TransitionManager.beginDelayedTransition((ViewGroup) mapView.getParent());
+        ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) mapView.getLayoutParams();
+        params.matchConstraintPercentHeight = 1.0f;
+        mapView.setLayoutParams(params);
+
         Log.d(TAG, "Game started with ID: " + id + " and Image URL: " + imageUrl);
     }
 
