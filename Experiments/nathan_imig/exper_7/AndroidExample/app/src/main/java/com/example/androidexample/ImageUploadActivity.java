@@ -49,6 +49,8 @@ public class ImageUploadActivity extends AppCompatActivity {
         });
 
         selectBtn.setOnClickListener(v -> mGetContent.launch("image/*"));
+
+
         uploadBtn = findViewById(R.id.uploadBtn);
         uploadBtn.setOnClickListener(v -> uploadImage());
     }
