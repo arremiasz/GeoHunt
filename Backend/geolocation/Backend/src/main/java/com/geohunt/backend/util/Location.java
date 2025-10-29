@@ -1,4 +1,4 @@
-package com.geohunt.backend.data;
+package com.geohunt.backend.util;
 
 
 import lombok.Getter;
