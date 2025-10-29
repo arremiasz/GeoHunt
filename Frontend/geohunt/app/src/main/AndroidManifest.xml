@@ -63,7 +63,8 @@
             android:exported="false" />
         <activity
             android:name=".game.GameActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/Theme.GeoHunt.NoActionBar" />
     </application>
 
 </manifest>

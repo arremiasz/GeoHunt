@@ -1,3 +1,7 @@
+/**
+ * Fragment containing the home screen, with single and multiplayer options
+ * @author Alex Remiasz
+ */
 package com.jubair5.geohunt.menu;
 
 import android.Manifest;
