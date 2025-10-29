@@ -16,8 +16,8 @@ import java.util.List;
 public class Challenges {
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private @Id long id;
-    int latitude;
-    int longitude;
+    double latitude;
+    double longitude;
     String streetviewurl;
     @ManyToOne
     @JoinColumn(name="account_id")

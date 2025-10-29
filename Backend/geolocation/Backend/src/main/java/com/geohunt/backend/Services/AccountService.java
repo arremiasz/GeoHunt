@@ -1,5 +1,7 @@
-package com.geohunt.backend.database;
+package com.geohunt.backend.Services;
 
+import com.geohunt.backend.database.Account;
+import com.geohunt.backend.database.AccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
