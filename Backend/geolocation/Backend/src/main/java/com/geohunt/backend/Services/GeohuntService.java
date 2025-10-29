@@ -37,7 +37,7 @@ public class GeohuntService {
         );
     }
 
-    public String getChallenge(double lat, double lon, double rad) {
+    public Challenges getChallenge(double lat, double lon, double rad) {
         List<Challenges> possible = getPossibleChallenges(lat, lon, rad);
 
         if (possible.size() < 2) {
@@ -48,7 +48,7 @@ public class GeohuntService {
 
         Random random = new Random();
         Challenges r = possible.get(random.nextInt(possible.size()));
-        return r.getStreetviewurl();
+        return r;
     }
 
     public List<Challenges> generateChallenges(double lat, double lon, double rad, int count) {

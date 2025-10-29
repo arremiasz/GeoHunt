@@ -4,7 +4,9 @@ import com.geohunt.backend.Services.GeohuntService;
 import com.geohunt.backend.database.Challenges;
 import com.geohunt.backend.database.ChallengesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,8 +21,28 @@ public class geohuntController {
     ChallengesRepository challengesRepository;
 
     @GetMapping("/geohunt/getLocation")
-    public ResponseEntity<String> getLocation(@RequestParam double lat, @RequestParam double lng, @RequestParam double radius) {
-        String c = geohuntService.getChallenge(lat, lng, radius);
-        return ResponseEntity.ok().body(c);
+    public ResponseEntity<Challenges> getLocation(@RequestParam double lat, @RequestParam double lng, @RequestParam double radius) {
+        try{
+            Challenges c = geohuntService.getChallenge(lat, lng, radius);
+            return ResponseEntity.ok().body(c);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/geohunt/getChallengeByID")
+    public ResponseEntity<Challenges> getChallengeByID(@RequestParam long id) {
+        try{
+            Challenges c = challengesRepository.findById(id);
+            return ResponseEntity.ok().body(c);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+    }
+
+    @DeleteMapping("/geohunt/deleteByID")
+    public ResponseEntity<Challenges> deleteChallengeByID(@RequestParam long id) {
+
     }
 }
