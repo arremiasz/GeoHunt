@@ -42,7 +42,12 @@ public class geohuntController {
     }
 
     @DeleteMapping("/geohunt/deleteByID")
-    public ResponseEntity<Challenges> deleteChallengeByID(@RequestParam long id) {
-
+    public ResponseEntity deleteChallengeByID(@RequestParam long id) {
+        try{
+            challengesRepository.deleteById(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
     }
 }

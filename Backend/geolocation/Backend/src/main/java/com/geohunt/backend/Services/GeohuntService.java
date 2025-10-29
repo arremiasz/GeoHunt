@@ -97,4 +97,8 @@ public class GeohuntService {
 
         return new double[]{Math.toDegrees(newLat), Math.toDegrees(newLon)};
     }
+
+    public void deleteChallengeByID(long id) {
+        challengesRepository.deleteById(id);
+    }
 }
