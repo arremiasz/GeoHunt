@@ -1,3 +1,7 @@
+/**
+ * Activity responsible for handling the main game function
+ * @author Alex Remiasz
+ */
 package com.jubair5.geohunt.game;
 
 import android.Manifest;
@@ -6,12 +10,15 @@ import android.graphics.Color;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -54,6 +61,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     private LocationCallback locationCallback;
     private Circle radiusCircle;
     private LinearLayout settingsContainer;
+    private FrameLayout countdownOverlay;
+    private TextView countdownText;
     private double radius = 1.0; // Default radius in miles
     private double currentLat;
     private double currentLng;
@@ -83,6 +92,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         Slider radiusSlider = findViewById(R.id.radius_slider);
         Button readyButton = findViewById(R.id.ready_button);
         settingsContainer = findViewById(R.id.settings_container);
+        countdownOverlay = findViewById(R.id.countdown_overlay);
+        countdownText = findViewById(R.id.countdown_text);
 
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
@@ -145,7 +156,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                     try {
                         int id = response.getInt("id");
                         String imageUrl = response.getString("streetviewurl");
-                        Toast.makeText(this, "Game starting!", Toast.LENGTH_SHORT).show();
                         startGame(id, imageUrl);
                     } catch (JSONException e) {
                         Log.e(TAG, "Error parsing game start response", e);
@@ -179,7 +189,32 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         params.matchConstraintPercentHeight = 1.0f;
         mapView.setLayoutParams(params);
 
-        Log.d(TAG, "Game started with ID: " + id + " and Image URL: " + imageUrl);
+        startCountdown(id, imageUrl);
+    }
+
+    /**
+     * Displays a 3-second countdown overlay and then proceeds to the main game logic.
+     * @param id The ID of the target location.
+     * @param imageUrl The URL of the Street View image for the target.
+     */
+    private void startCountdown(int id, String imageUrl) {
+        countdownOverlay.setVisibility(View.VISIBLE);
+        new CountDownTimer(4000, 1000) {
+            public void onTick(long millisUntilFinished) {
+                long seconds = millisUntilFinished / 1000;
+                if (seconds > 0) {
+                    countdownText.setText(String.valueOf(seconds));
+                } else {
+                    countdownText.setText("GO!");
+                }
+            }
+
+            public void onFinish() {
+                countdownOverlay.setVisibility(View.GONE);
+                Log.d(TAG, "Countdown finished. Starting game with ID: " + id);
+                // TODO: Main game logic starts here
+            }
+        }.start();
     }
 
     @Override
