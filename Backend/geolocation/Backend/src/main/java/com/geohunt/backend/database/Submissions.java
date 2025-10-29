@@ -2,6 +2,7 @@ package com.geohunt.backend.database;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.geohunt.backend.data.Location;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -66,6 +67,22 @@ public class Submissions {
         if(other.getReports() != 0){
             this.reports = other.getReports();
         }
+    }
+
+    /**
+     *
+     * @return double distance
+     */
+    public double distanceFromChallenge(){
+        try{
+            Location submissionLocation = new Location(this.latitude, this.longitude);
+            Location challengeLocation = new Location(challenge.getLatitude(), challenge.getLongitude());
+            return submissionLocation.distanceKM(challengeLocation);
+        }
+        catch (Exception e){
+            return -1;
+        }
+
     }
 }
 
