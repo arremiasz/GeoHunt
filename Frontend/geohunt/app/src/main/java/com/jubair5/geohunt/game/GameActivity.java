@@ -5,6 +5,7 @@
 package com.jubair5.geohunt.game;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
@@ -14,10 +15,12 @@ import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,6 +36,7 @@ import androidx.transition.TransitionManager;
 
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.bumptech.glide.Glide;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -61,7 +65,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final String TAG = "GameActivity";
     private MapView mapView;
     private GoogleMap googleMap;
-    private FusedLocationProviderClient fusedLocationClient;
+    private FusedLocationProviderClient fusedLocationProviderClient;
     private LocationCallback locationCallback;
     private Circle radiusCircle;
     private LinearLayout settingsContainer;
@@ -69,12 +73,18 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     private TextView countdownText;
     private CardView stopwatchContainer;
     private TextView stopwatchText;
+    private CardView hintContainer;
+    private ImageView hintImage;
+    private ImageView fullscreenPreview;
     private double radius = 1.0; // Default radius in miles
     private double currentLat;
     private double currentLng;
 
     private Handler stopwatchHandler = new Handler(Looper.getMainLooper());
     private long startTime = 0L;
+
+    // For dragging the hint box
+    private float dX, dY;
 
     /**
      * This method handles the result of the location permission request.
@@ -105,11 +115,14 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         countdownText = findViewById(R.id.countdown_text);
         stopwatchContainer = findViewById(R.id.stopwatch_container);
         stopwatchText = findViewById(R.id.stopwatch_text);
+        hintContainer = findViewById(R.id.hint_container);
+        hintImage = findViewById(R.id.hint_image);
+        fullscreenPreview = findViewById(R.id.fullscreen_preview);
 
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
 
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
         radiusSlider.addOnChangeListener((slider, value, fromUser) -> {
             radius = value;
@@ -117,6 +130,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
 
         readyButton.setOnClickListener(v -> readyUp());
+        setupHintBoxListeners();
     }
 
     /**
@@ -125,8 +139,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
      */
     private void readyUp() {
         Log.d(TAG, "Ready button clicked. Stopping location updates.");
-        if (fusedLocationClient != null && locationCallback != null) {
-            fusedLocationClient.removeLocationUpdates(locationCallback);
+        if (fusedLocationProviderClient != null && locationCallback != null) {
+            fusedLocationProviderClient.removeLocationUpdates(locationCallback);
         }
 
         // Get the most current location
@@ -135,7 +149,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             return;
         }
 
-        fusedLocationClient.getLastLocation().addOnSuccessListener(this, location -> {
+        fusedLocationProviderClient.getLastLocation().addOnSuccessListener(this, location -> {
             if (location != null) {
                 currentLat = location.getLatitude();
                 currentLng = location.getLongitude();
@@ -229,6 +243,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onFinish() {
                 countdownOverlay.setVisibility(View.GONE);
                 startStopwatch();
+                showHint(imageUrl);
                 Log.d(TAG, "Countdown finished. Starting game with challenge ID: " + id);
                 // TODO: Main game logic starts here
             }
@@ -266,6 +281,105 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         return (int) (millis / 1000);
     }
 
+    /**
+     * Makes the hint container visible and loads the image.
+     * @param imageUrl The URL of the hint image.
+     */
+    private void showHint(String imageUrl) {
+        hintContainer.setVisibility(View.VISIBLE);
+        Glide.with(this).load(imageUrl).into(hintImage);
+        Glide.with(this).load(imageUrl).into(fullscreenPreview);
+    }
+
+    /**
+     * Sets up the listeners for the hint box to allow dragging and clicking.
+     */
+    @SuppressLint("ClickableViewAccessibility")
+    private void setupHintBoxListeners() {
+        fullscreenPreview.setOnClickListener(v -> fullscreenPreview.setVisibility(View.GONE));
+
+        // Set the click listener to handle the click action
+        hintContainer.setOnClickListener(v -> fullscreenPreview.setVisibility(View.VISIBLE));
+
+        hintContainer.setOnTouchListener(new View.OnTouchListener() {
+            private long startClickTime;
+            private static final int MAX_CLICK_DURATION = 200;
+            private float pressedX, pressedY;
+
+            @Override
+            public boolean onTouch(View view, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        startClickTime = System.currentTimeMillis();
+                        pressedX = event.getRawX();
+                        pressedY = event.getRawY();
+                        dX = view.getX() - pressedX;
+                        dY = view.getY() - pressedY;
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        view.animate()
+                                .x(event.getRawX() + dX)
+                                .y(event.getRawY() + dY)
+                                .setDuration(0)
+                                .start();
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        long clickDuration = System.currentTimeMillis() - startClickTime;
+                        float distance = (float) Math.hypot(event.getRawX() - pressedX, event.getRawY() - pressedY);
+
+                        if (clickDuration < MAX_CLICK_DURATION && distance < 10) {
+                            // It's a click, trigger the OnClickListener
+                            view.performClick();
+                        } else {
+                            // It's a drag
+                            snapToCorner(view);
+                        }
+                        break;
+                    default:
+                        return false;
+                }
+                return true;
+            }
+        });
+    }
+
+    /**
+     * Snaps the hint box to the nearest corner of the screen.
+     * @param view The hint box view.
+     */
+    private void snapToCorner(View view) {
+        ViewGroup parent = (ViewGroup) view.getParent();
+        int parentWidth = parent.getWidth();
+        int parentHeight = parent.getHeight();
+        int margin = (int) (16 * getResources().getDisplayMetrics().density); // 16dp margin
+
+        float viewX = view.getX();
+        float viewY = view.getY();
+
+        float endX, endY;
+
+        // Snap to left or right corner
+        if (viewX + view.getWidth() / 2f < parentWidth / 2f) {
+            endX = margin;
+        } else {
+            endX = parentWidth - view.getWidth() - margin;
+        }
+
+        // Snap to top or bottom corner
+        if (viewY + view.getHeight() / 2f < parentHeight / 2f) {
+            endY = margin + 150;
+        } else {
+            endY = parentHeight - view.getHeight() - margin;
+        }
+
+        view.animate()
+                .x(endX)
+                .y(endY)
+                .setDuration(200)
+                .start();
+    }
+
+
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
         this.googleMap = googleMap;
@@ -280,7 +394,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             if (googleMap != null) {
                 googleMap.setMyLocationEnabled(true);
-                fusedLocationClient.getLastLocation().addOnSuccessListener(this, location -> {
+                fusedLocationProviderClient.getLastLocation().addOnSuccessListener(this, location -> {
                     if (location != null) {
                         LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
                         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 14f));
@@ -399,7 +513,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
-        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
+        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
     }
 
     @Override
@@ -425,8 +539,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onPause() {
         super.onPause();
         mapView.onPause();
-        if (fusedLocationClient != null && locationCallback != null) {
-            fusedLocationClient.removeLocationUpdates(locationCallback);
+        if (fusedLocationProviderClient != null && locationCallback != null) {
+            fusedLocationProviderClient.removeLocationUpdates(locationCallback);
         }
     }
 
