@@ -18,6 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.jubair5.geohunt.R;
+import com.jubair5.geohunt.friends.FriendsListActivity;
 import com.jubair5.geohunt.places.AddPlaceActivity;
 
 public class HomeFragment extends Fragment {
@@ -26,20 +27,17 @@ public class HomeFragment extends Fragment {
     private View root;
     private SharedPreferences prefs;
     private static final String SHARED_PREFS_NAME = "GeoHuntPrefs";
-    private final ActivityResultLauncher<Intent> activityLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == Activity.RESULT_OK) {
-                    Log.d(TAG, "Returned from an activity with success. Refreshing submissions.");
-                }
-            });
-    private Button FriendList;
+
+    private Button friendList;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        root = inflater.inflate(R.layout.profile_fragment, container, false);
+        root = inflater.inflate(R.layout.home_fragment, container, false);
         prefs = requireActivity().getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
+
+        friendList = root.findViewById(R.id.friendList);
+        friendList.setOnClickListener(v -> goToFriends());
 
 
 
@@ -47,13 +45,8 @@ public class HomeFragment extends Fragment {
         return root;
     }
 
-
-
-
-
-
-    public void onFreindsClick() {
-        Intent intent = new Intent(getActivity(), AddPlaceActivity.class);
-        activityLauncher.launch(intent);
+    private void goToFriends() {
+        Intent intent = new Intent(getActivity(), FriendsListActivity.class);
+        startActivity(intent);
     }
 }

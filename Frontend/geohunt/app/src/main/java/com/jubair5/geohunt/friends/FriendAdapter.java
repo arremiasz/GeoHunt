@@ -17,8 +17,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 
 import com.jubair5.geohunt.R;
-import com.jubair5.geohunt.places.Place;
-import com.jubair5.geohunt.places.PlacesAdapter;
 
 import java.util.List;
 
@@ -31,16 +29,15 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
 
 
     public interface OnFriendClickListener {
-        void onAddPlaceClick();
+        void onFriendClick();
     }
-    public FriendAdapter(Context context, List<Friend> friends, FriendAdapter.OnFriendClickListener listener) {
+
+    public FriendAdapter(Context context, List<Friend> friends, OnFriendClickListener listener){
         this.context = context;
         this.friends = friends;
         this.listener = listener;
     }
-    public FriendAdapter(List<Friend> friend) {
-        this.friends = friend;
-    }
+
 
 
 
@@ -49,13 +46,14 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
     @NonNull
     @Override
     public FriendAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.item_place, parent, false);
+        View view = LayoutInflater.from(context).inflate(R.layout.item_friend, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull FriendAdapter.ViewHolder holder, int position) {
-
+        Friend friend = friends.get(position-1);
+        holder.friendNameTextView.setText(friend.getUsername());
     }
 
     @Override
@@ -69,6 +67,8 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
+            friendNameTextView = itemView.findViewById(R.id.username_label);
+            profileImageView = itemView.findViewById(R.id.profile_icon);
         }
     }
 }
