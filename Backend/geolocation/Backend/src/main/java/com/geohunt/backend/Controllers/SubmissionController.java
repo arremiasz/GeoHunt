@@ -1,9 +1,6 @@
 package com.geohunt.backend.Controllers;
 
-import com.geohunt.backend.database.Account;
-import com.geohunt.backend.database.AccountService;
-import com.geohunt.backend.database.Submissions;
-import com.geohunt.backend.database.SubmissionsRepository;
+import com.geohunt.backend.database.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +12,9 @@ public class SubmissionController {
 
     @Autowired
     SubmissionsRepository submissionsRepository;
+
+    @Autowired
+    ChallengesRepository challengesRepository;
 
     @Autowired
     AccountService accountService;
@@ -33,7 +33,11 @@ public class SubmissionController {
 
         // Set Challenge and Account that the submission is tied to.
         submission.setSubmitter(accountService.getAccountById(uid));
-        submission.setChallenge(null); // Challenges not implemented yet.
+        submission.setChallenge(null); // TODO: Implement challenges when merging with Location Generation
+
+        if(!submission.validate()){
+            return ResponseEntity.status(400).body(null);
+        }
 
         // Add Submission to Database
         submissionsRepository.save(submission);
@@ -81,8 +85,8 @@ public class SubmissionController {
     }
 
     // List Submissions by user
-    @GetMapping("/geohunt/submission")
-    public ResponseEntity<List<Submissions>> listSubmissionsWithUser(@RequestParam long uid){
+    @GetMapping("/account/{uid}/submissions")
+    public ResponseEntity<List<Submissions>> listSubmissionsWithUser(@PathVariable long uid){
         try{
             Account account = accountService.getAccountById(uid);
             return ResponseEntity.status(200).body(account.getSubmissions());
@@ -93,9 +97,15 @@ public class SubmissionController {
     }
 
     // List Submissions by challenge
-    @GetMapping("/geohunt/submission")
+    @GetMapping("/geohunt/challenge/{cid}/submissions")
     public ResponseEntity<List<Submissions>> listSubmissionsWithChallenge(@RequestParam long cid){
-        // Challenges not implemented yet.
-        return ResponseEntity.status(501).body(null);
+        // TODO: Test with challenges code once merging.
+        try{
+            Challenges challenge = challengesRepository.getReferenceById(cid);
+            return ResponseEntity.status(200).body(challenge.getSubmissions());
+        }
+        catch (IllegalArgumentException e){
+            return ResponseEntity.status(404).body(null);
+        }
     }
 }

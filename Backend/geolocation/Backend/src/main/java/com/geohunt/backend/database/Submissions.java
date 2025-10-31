@@ -40,6 +40,10 @@ public class Submissions {
 
     private long longtitude; // placeholder until fixed in main and mysql server
 
+    public boolean validate(){
+        return true;
+    }
+
     public void updateValues(Submissions other){
         // Cannot change id
         if(other.getChallenge() != null){
