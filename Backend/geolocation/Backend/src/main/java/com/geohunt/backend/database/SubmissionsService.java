@@ -22,7 +22,7 @@ public class SubmissionsService {
 
     // Save Submission
 
-    public long saveSubmission(Submissions submission, long uid, long cid) throws IllegalArgumentException {
+    public Submissions saveSubmission(Submissions submission, long uid, long cid) throws IllegalArgumentException {
         // TODO: Implement challenges when merging with Location Generation
         Account account = accountService.getAccountById(uid);
         Challenges challenge = null;
@@ -41,12 +41,12 @@ public class SubmissionsService {
         // Add Submission to Database
         submissionsRepository.save(submission);
 
-        return submission.getId();
+        return submission;
     }
 
     // Get Submission
 
-    public Submissions getSubmissionById(long sid){
+    public Submissions getSubmissionById(long sid) throws IllegalArgumentException {
         if(submissionsRepository.findById(sid).isPresent()){
             return submissionsRepository.findById(sid).get();
         }
@@ -57,12 +57,15 @@ public class SubmissionsService {
 
     // Update Submission
 
-    public Submissions updateSubmission(Submissions updatedValues, long sid){
+    public Submissions updateSubmission(Submissions updatedValues, long sid) throws IllegalArgumentException {
         // Get Submission with Id
         Submissions submissionToUpdate = getSubmissionById(sid);
 
         // Update Submission values
         submissionToUpdate.updateValues(updatedValues);
+
+        // Save Submission
+        submissionsRepository.save(submissionToUpdate);
 
         // Return updated Submission
         return submissionToUpdate;
@@ -82,7 +85,7 @@ public class SubmissionsService {
 
     // List Submission
 
-    public List<Submissions> getSubmissionListByChallenge(long cid){
+    public List<Submissions> getSubmissionListByChallenge(long cid) throws IllegalArgumentException {
         if(challengesRepository.findById(cid).isPresent()){
             Challenges challenge = challengesRepository.findById(cid).get();
             return getSubmissionListByChallenge(challenge);
@@ -96,7 +99,7 @@ public class SubmissionsService {
         return challenge.getSubmissions();
     }
 
-    public List<Submissions> getSubmissionListByAccount(long uid){
+    public List<Submissions> getSubmissionListByAccount(long uid) throws IllegalArgumentException {
         Account account = accountService.getAccountById(uid);
         return getSubmissionListByAccount(account);
     }

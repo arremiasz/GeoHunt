@@ -11,7 +11,7 @@ import java.util.List;
 public class SubmissionController {
 
     @Autowired
-    SubmissionsRepository submissionsRepository;
+    SubmissionsService submissionsService;
 
     @Autowired
     ChallengesRepository challengesRepository;
@@ -29,33 +29,25 @@ public class SubmissionController {
 
     // Post Submission
     @PostMapping("/geohunt/submission")
-    public ResponseEntity<Submissions> receiveSubmission(@RequestBody Submissions submission, @RequestParam long uid, @RequestParam long cid){
-
-        // Set Challenge and Account that the submission is tied to.
-        submission.setSubmitter(accountService.getAccountById(uid));
-        submission.setChallenge(null); // TODO: Implement challenges when merging with Location Generation
-
-        if(!submission.validate()){
+    public ResponseEntity<Submissions> saveSubmission(@RequestBody Submissions submission, @RequestParam long uid, @RequestParam long cid){
+        try{
+            return ResponseEntity.status(200).body( submissionsService.saveSubmission(submission,uid,cid) );
+        }
+        catch (IllegalArgumentException e){
             return ResponseEntity.status(400).body(null);
         }
-
-        // Add Submission to Database
-        submissionsRepository.save(submission);
-
-        // Return a copy of the submission as JSON
-        return ResponseEntity.status(200).body(submission);
     }
 
     // Get Submission
     @GetMapping("/geohunt/submission/{id}")
     public ResponseEntity<Submissions> getSubmission(@PathVariable long id){
-        if(submissionsRepository.findById(id).isEmpty()){
-            // No submission with given id exists.
+        try {
+            Submissions submission = submissionsService.getSubmissionById(id);
+            return ResponseEntity.status(200).body(submission);
+        }
+        catch (IllegalArgumentException e){
             return ResponseEntity.status(404).body(null);
         }
-        // Return submission as JSON
-        Submissions submission = submissionsRepository.findById(id).get();
-        return ResponseEntity.status(200).body(submission);
     }
 
     // Get User of Submission
@@ -65,38 +57,49 @@ public class SubmissionController {
     // Put / Update Submission
     @PutMapping("/geohunt/submission/{id}")
     public ResponseEntity<Submissions> updateSubmission(@RequestBody Submissions updatedValues, @PathVariable long id){
-        // Get Submission with Id
-        if(submissionsRepository.findById(id).isEmpty()){
-            return ResponseEntity.status(404).body(null); // No submission exists.
+
+        try {
+            Submissions submission = submissionsService.updateSubmission(updatedValues,id);
+            return ResponseEntity.status(200).body(submission);
         }
-        Submissions submissionToUpdate = submissionsRepository.findById(id).get();
+        catch (IllegalArgumentException e){
+            return ResponseEntity.status(400).body(null);
+        }
 
-        // Update Submission values
-        submissionToUpdate.updateValues(updatedValues);
-
-        // Save Submission
-        submissionsRepository.save(submissionToUpdate);
-
-        // Return updated Submission
-        return ResponseEntity.status(200).body(submissionToUpdate);
+//        // Get Submission with Id
+//        if(submissionsRepository.findById(id).isEmpty()){
+//            return ResponseEntity.status(404).body(null); // No submission exists.
+//        }
+//        Submissions submissionToUpdate = submissionsRepository.findById(id).get();
+//
+//        // Update Submission values
+//        submissionToUpdate.updateValues(updatedValues);
+//
+//        // Save Submission
+//        submissionsRepository.save(submissionToUpdate);
+//
+//        // Return updated Submission
+//        return ResponseEntity.status(200).body(submissionToUpdate);
     }
 
     // Delete Submission
     @DeleteMapping("/geohunt/submission/{id}")
     public ResponseEntity<String> deleteSubmission(@PathVariable long id){
         // Remove Submission
-        submissionsRepository.deleteById(id);
+        submissionsService.deleteSubmissionById(id);
 
         // Need to check what should be returned
         return ResponseEntity.status(200).body("submission removed.");
+
+        // TODO: Check if the submission needs to be unlinked from the challenge and user objects.
     }
 
     // List Submissions by user
     @GetMapping("/account/{uid}/submissions")
     public ResponseEntity<List<Submissions>> listSubmissionsWithUser(@PathVariable long uid){
         try{
-            Account account = accountService.getAccountById(uid);
-            return ResponseEntity.status(200).body(account.getSubmissions());
+            List<Submissions> submissionsList = submissionsService.getSubmissionListByAccount(uid);
+            return ResponseEntity.status(200).body(submissionsList);
         }
         catch (IllegalArgumentException e){
             return ResponseEntity.status(404).body(null);
@@ -108,8 +111,8 @@ public class SubmissionController {
     public ResponseEntity<List<Submissions>> listSubmissionsWithChallenge(@PathVariable long cid){
         // TODO: Test with challenges code once merging.
         try{
-            Challenges challenge = challengesRepository.getReferenceById(cid);
-            return ResponseEntity.status(200).body(challenge.getSubmissions());
+            List<Submissions> submissionsList = submissionsService.getSubmissionListByChallenge(cid);
+            return ResponseEntity.status(200).body(submissionsList);
         }
         catch (IllegalArgumentException e){
             return ResponseEntity.status(404).body(null);
