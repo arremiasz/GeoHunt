@@ -38,7 +38,7 @@ public class Submissions {
     private LocalDateTime submissionTime;
     private int reports;
 
-    private long longtitude; // placeholder until fixed in main and mysql server
+    private long longtitude; // TODO: placeholder until fixed in main and mysql server
 
     public boolean validate(){
         return true;
@@ -84,7 +84,11 @@ public class Submissions {
         catch (Exception e){
             return -1;
         }
+    }
 
+    public LocalDateTime setSubmissionTimeToNow(){
+        submissionTime = LocalDateTime.now();
+        return submissionTime;
     }
 }
 
