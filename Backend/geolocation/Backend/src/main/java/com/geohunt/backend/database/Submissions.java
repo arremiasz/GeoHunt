@@ -1,6 +1,7 @@
 package com.geohunt.backend.database;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.geohunt.backend.util.Location;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -38,6 +39,7 @@ public class Submissions {
     private LocalDateTime submissionTime;
     private int reports;
 
+    @JsonIgnore
     private long longtitude; // TODO: placeholder until fixed in main and mysql server
 
     public boolean validate(){

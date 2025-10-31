@@ -58,6 +58,10 @@ public class SubmissionController {
         return ResponseEntity.status(200).body(submission);
     }
 
+    // Get User of Submission
+
+    // Get Challenge of Submission
+
     // Put / Update Submission
     @PutMapping("/geohunt/submission/{id}")
     public ResponseEntity<Submissions> updateSubmission(@RequestBody Submissions updatedValues, @PathVariable long id){
@@ -69,6 +73,9 @@ public class SubmissionController {
 
         // Update Submission values
         submissionToUpdate.updateValues(updatedValues);
+
+        // Save Submission
+        submissionsRepository.save(submissionToUpdate);
 
         // Return updated Submission
         return ResponseEntity.status(200).body(submissionToUpdate);
@@ -98,7 +105,7 @@ public class SubmissionController {
 
     // List Submissions by challenge
     @GetMapping("/geohunt/challenge/{cid}/submissions")
-    public ResponseEntity<List<Submissions>> listSubmissionsWithChallenge(@RequestParam long cid){
+    public ResponseEntity<List<Submissions>> listSubmissionsWithChallenge(@PathVariable long cid){
         // TODO: Test with challenges code once merging.
         try{
             Challenges challenge = challengesRepository.getReferenceById(cid);
