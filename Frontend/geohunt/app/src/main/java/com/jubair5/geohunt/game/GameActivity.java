@@ -11,6 +11,7 @@ import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
@@ -25,6 +26,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.transition.TransitionManager;
@@ -52,6 +54,8 @@ import com.jubair5.geohunt.network.VolleySingleton;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Locale;
+
 public class GameActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private static final String TAG = "GameActivity";
@@ -63,9 +67,14 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     private LinearLayout settingsContainer;
     private FrameLayout countdownOverlay;
     private TextView countdownText;
+    private CardView stopwatchContainer;
+    private TextView stopwatchText;
     private double radius = 1.0; // Default radius in miles
     private double currentLat;
     private double currentLng;
+
+    private Handler stopwatchHandler = new Handler(Looper.getMainLooper());
+    private long startTime = 0L;
 
     /**
      * This method handles the result of the location permission request.
@@ -94,6 +103,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         settingsContainer = findViewById(R.id.settings_container);
         countdownOverlay = findViewById(R.id.countdown_overlay);
         countdownText = findViewById(R.id.countdown_text);
+        stopwatchContainer = findViewById(R.id.stopwatch_container);
+        stopwatchText = findViewById(R.id.stopwatch_text);
 
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
@@ -129,6 +140,11 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                 currentLat = location.getLatitude();
                 currentLng = location.getLongitude();
                 Log.d(TAG, "Final location for game start: Lat: " + currentLat + ", Lng: " + currentLng);
+
+                if (googleMap != null) {
+                    googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLat, currentLng), 18f));
+                }
+
                 sendGameStartRequest();
             } else {
                 Log.e(TAG, "Could not get final location to start game.");
@@ -199,6 +215,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
      */
     private void startCountdown(int id, String imageUrl) {
         countdownOverlay.setVisibility(View.VISIBLE);
+        countdownText.setText(String.valueOf(3));
         new CountDownTimer(4000, 1000) {
             public void onTick(long millisUntilFinished) {
                 long seconds = millisUntilFinished / 1000;
@@ -211,10 +228,42 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             public void onFinish() {
                 countdownOverlay.setVisibility(View.GONE);
-                Log.d(TAG, "Countdown finished. Starting game with ID: " + id);
+                startStopwatch();
+                Log.d(TAG, "Countdown finished. Starting game with challenge ID: " + id);
                 // TODO: Main game logic starts here
             }
         }.start();
+    }
+
+    /**
+     * Starts the stopwatch and updates the text view.
+     */
+    private void startStopwatch() {
+        stopwatchContainer.setVisibility(View.VISIBLE);
+        startTime = System.currentTimeMillis();
+        stopwatchHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                long millis = System.currentTimeMillis() - startTime;
+                int seconds = (int) (millis / 1000);
+                int minutes = seconds / 60;
+                seconds = seconds % 60;
+
+                stopwatchText.setText(String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds));
+
+                stopwatchHandler.postDelayed(this, 500);
+            }
+        });
+    }
+
+    /**
+     * Stops the stopwatch and returns the elapsed time.
+     * @return The elapsed time in seconds.
+     */
+    private int stopStopwatch() {
+        stopwatchHandler.removeCallbacksAndMessages(null);
+        long millis = System.currentTimeMillis() - startTime;
+        return (int) (millis / 1000);
     }
 
     @Override
@@ -369,6 +418,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onStop() {
         super.onStop();
         mapView.onStop();
+        stopwatchHandler.removeCallbacksAndMessages(null);
     }
 
     @Override
