@@ -1,6 +1,7 @@
 package com.example.demo.websocket;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -106,7 +107,23 @@ public class ChatServer {
                 return;
             }
             sendMessageToPArticularUser(destUserName, "[DM from " + username + "]: " + actualMessage);
-            sendMessageToPArticularUser(username, "[DM from " + username + "]: " + actualMessage);
+            sendMessageToPArticularUser(username, "[DM to " + destUserName + "]: " + actualMessage);
+        } else if(message.startsWith("/")){
+
+            //split by space
+            String[] split_msg = message.split("\\s+");
+
+            //
+            switch (split_msg[0]){
+                case "/list":
+                    String userList = listUsers();
+                    sendMessageToPArticularUser(username, "[Users Online]: " + userList);
+                    return;
+                default:
+                    sendMessageToPArticularUser(username, "[error]: unable to recognize command.");
+                    return;
+            }
+
         } else { // Message to whole chat
             broadcast(username + ": " + message);
         }
@@ -177,5 +194,15 @@ public class ChatServer {
                 logger.info("[Broadcast Exception] " + e.getMessage());
             }
         });
+    }
+
+    // Chat commands
+    private String listUsers(){
+        StringBuilder list = new StringBuilder();
+        sessionUsernameMap.forEach((session, username) -> {
+            list.append(username);
+            list.append(" ");
+        });
+        return list.toString();
     }
 }
