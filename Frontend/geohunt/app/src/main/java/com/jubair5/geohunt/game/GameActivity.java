@@ -7,6 +7,8 @@ package com.jubair5.geohunt.game;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.location.Location;
 import android.net.Uri;
@@ -14,6 +16,7 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Base64;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -32,6 +35,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.transition.TransitionManager;
 
 import com.android.volley.Request;
@@ -57,6 +61,10 @@ import com.jubair5.geohunt.network.VolleySingleton;
 
 import org.json.JSONException;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Locale;
 
 public class GameActivity extends AppCompatActivity implements OnMapReadyCallback {
@@ -81,6 +89,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     private double currentLng;
     private boolean gameStarted = false;
     private boolean userHasPanned = false;
+    private Uri guessImageUri;
+    private int challengeId;
 
     private Handler stopwatchHandler = new Handler(Looper.getMainLooper());
     private long startTime = 0L;
@@ -250,7 +260,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                 showHint(imageUrl);
                 guessButton.setVisibility(View.VISIBLE);
                 Log.d(TAG, "Countdown finished. Starting game with challenge ID: " + id);
-                // TODO: Main game logic starts here
+                challengeId = id;
             }
         }.start();
     }
@@ -288,11 +298,98 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     /**
      * This method is called when the user clicks the guess button.
+     * It initiates the process of taking a picture for the guess.
      */
     private void startGuess() {
         Log.d(TAG, "Guess button clicked.");
-        // TODO: Implement guess logic
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            requestCameraPermissionForGuessLauncher.launch(Manifest.permission.CAMERA);
+        } else {
+            launchCameraForGuess();
+        }
     }
+
+    /**
+     * Creates a temporary file URI and launches the camera intent for the guess.
+     */
+    private void launchCameraForGuess() {
+        guessImageUri = createImageUri("guess_photo.jpg");
+        if (guessImageUri != null) {
+            takePictureForGuessLauncher.launch(guessImageUri);
+        } else {
+            Log.e(TAG, "Failed to create image URI for guess.");
+            Toast.makeText(this, "Error preparing camera for guess.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void submitGuess(String imageString) {
+
+    }
+
+    /**
+     * Creates a content Uri for a temporary file in the app's cache directory.
+     * @param fileName The name of the file to create.
+     * @return The Uri for the temporary image file.
+     */
+    private Uri createImageUri(String fileName) {
+        File imageFile = new File(getCacheDir(), fileName);
+        return FileProvider.getUriForFile(this, getPackageName() + ".provider", imageFile);
+    }
+
+    /**
+     * Converts a Bitmap image to a Base64 encoded string.
+     * @param bitmap The bitmap to be converted.
+     * @return The Base64 encoded string representation of the bitmap.
+     */
+    private String bitmapToString(Bitmap bitmap) {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 70, byteArrayOutputStream);
+        byte[] byteArray = byteArrayOutputStream.toByteArray();
+        return Base64.encodeToString(byteArray, Base64.DEFAULT);
+    }
+
+    /**
+     * This method handles getting the camera permission for guessing.
+     */
+    private final ActivityResultLauncher<String> requestCameraPermissionForGuessLauncher = registerForActivityResult(
+            new ActivityResultContracts.RequestPermission(),
+            isGranted -> {
+                if (isGranted) {
+                    Log.d(TAG, "Camera permission for guess granted.");
+                    launchCameraForGuess();
+                } else {
+                    Log.w(TAG, "Camera permission for guess denied.");
+                    Toast.makeText(this, "Camera permission is required to make a guess.", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+    /**
+     * This method is called when the user has taken a picture for their guess.
+     */
+    private final ActivityResultLauncher<Uri> takePictureForGuessLauncher = registerForActivityResult(
+            new ActivityResultContracts.TakePicture(),
+            success -> {
+                if (success) {
+                    Log.d(TAG, "Guess image capture successful.");
+                    try {
+                        InputStream inputStream = getContentResolver().openInputStream(guessImageUri);
+                        Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+                        String imageString = bitmapToString(bitmap);
+
+                        Log.d(TAG, "Guess image as Base64 string is ready.");
+                        Toast.makeText(this, "Guess captured! Submitting...", Toast.LENGTH_SHORT).show();
+
+                        submitGuess(imageString);
+
+                    } catch (IOException e) {
+                        Log.e(TAG, "Failed to read guess image file.", e);
+                        Toast.makeText(this, "Error processing guess image.", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Log.w(TAG, "Guess image capture cancelled or failed.");
+                    Toast.makeText(this, "Guess cancelled.", Toast.LENGTH_SHORT).show();
+                }
+            });
 
     /**
      * Makes the hint container visible and loads the image.

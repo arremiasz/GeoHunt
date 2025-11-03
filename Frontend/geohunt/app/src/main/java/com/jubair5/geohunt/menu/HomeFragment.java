@@ -121,8 +121,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
      */
     private void startLocationUpdates() {
         LocationRequest locationRequest = LocationRequest.create();
-        locationRequest.setInterval(10000); // 10 seconds
-        locationRequest.setFastestInterval(5000); // 5 seconds
+        locationRequest.setInterval(5000); // 10 seconds
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
         locationCallback = new LocationCallback() {
@@ -132,7 +131,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                     Location location = locationResult.getLastLocation();
                     LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
                     if (googleMap != null) {
-                        googleMap.moveCamera(CameraUpdateFactory.newLatLng(currentLatLng));
+                        googleMap.animateCamera(CameraUpdateFactory.newLatLng(currentLatLng));
                     }
                 }
             }
