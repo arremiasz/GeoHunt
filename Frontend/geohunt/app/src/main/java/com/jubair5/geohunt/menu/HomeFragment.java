@@ -33,10 +33,14 @@ public class HomeFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        // Sets up view and preference
         root = inflater.inflate(R.layout.home_fragment, container, false);
         prefs = requireActivity().getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
 
+        // Sets up all ui elements
         friendList = root.findViewById(R.id.friendList);
+
+        //Set up button methods
         friendList.setOnClickListener(v -> goToFriends());
 
 

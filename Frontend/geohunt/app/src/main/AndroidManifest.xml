@@ -61,6 +61,9 @@
         <activity
             android:name=".places.AddPlaceActivity"
             android:exported="false" />
+        <activity
+            android:name=".friends.FriendsListActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
