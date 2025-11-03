@@ -16,7 +16,9 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 
+import com.bumptech.glide.Glide;
 import com.jubair5.geohunt.R;
+import com.jubair5.geohunt.places.Place;
 
 import java.util.List;
 
@@ -25,11 +27,11 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
     private final Context context;
     private final List<Friend> friends;
 
-    private final FriendAdapter.OnFriendClickListener listener;
+    private final OnFriendClickListener listener;
 
 
     public interface OnFriendClickListener {
-        void onFriendClick();
+        void onFriendClick(Friend friend);
     }
 
     public FriendAdapter(Context context, List<Friend> friends, OnFriendClickListener listener){
@@ -37,9 +39,6 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
         this.friends = friends;
         this.listener = listener;
     }
-
-
-
 
 
 
@@ -52,8 +51,14 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull FriendAdapter.ViewHolder holder, int position) {
-        Friend friend = friends.get(position-1);
+        Friend friend = friends.get(position );
+
+        // Name and profile
         holder.friendNameTextView.setText(friend.getUsername());
+        Glide.with(context).load(friend.getImageUrl()).into(holder.profileImageView);
+
+        // Click
+        holder.itemView.setOnClickListener(v -> listener.onFriendClick(friend));
     }
 
     @Override

@@ -4,7 +4,12 @@
  */
 package com.jubair5.geohunt.friends;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.widget.EditText;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -12,11 +17,15 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.jubair5.geohunt.R;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class FriendsListActivity extends AppCompatActivity {
 
+    private TextView friendsTitle;
+    private EditText searchBar;
+
+
+    // Set up for the actual list
     private RecyclerView friendsRecycleViewer;
     private FriendAdapter friendAdapter;
     private List<Friend> friendList;
@@ -24,15 +33,53 @@ public class FriendsListActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstancesState){
         super.onCreate(savedInstancesState);
-
         setContentView(R.layout.friends_list_activity);
 
+        // Set up Ui elements
+        friendsTitle = findViewById(R.id.friends_label);
+        searchBar = findViewById(R.id.search_bar);
         friendsRecycleViewer = findViewById(R.id.friends_recycler_view);
+
         friendsRecycleViewer.setLayoutManager(new LinearLayoutManager(this));
 
-        // Get all of the data
-        friendList = new ArrayList<>();
-        friendAdapter = new FriendAdapter(getBaseContext(), friendList, this);
+        friendAdapter = new FriendAdapter(getBaseContext(), friendList, friend ->{
+            Intent intent = new Intent(FriendsListActivity.this, SingleFriendActivity.class);
+            intent.putExtra("FRIEND_ID", friend.getId());
+            startActivity(intent);
+        });
+
+        friendsRecycleViewer.setAdapter(friendAdapter);
+
+        // Search Bar
+        searchBar.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    searchForFriends(s.toString().trim());
+            }
+        });
+
+
 
     }
+
+    private void searchForFriends(String name){
+        if(name.isEmpty()){
+            friendList.clear();
+            friendAdapter.notifyDataSetChanged();
+            return;
+        }
+        // Get users to backend
+    }
+
+
 }

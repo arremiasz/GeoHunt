@@ -17,4 +17,6 @@
     <string name="current_password">Current Password</string>
     <string name="my_places">My Places</string>
     <string name="Friends">Friends</string>
+    <string name="search_for_friends">Search For Friends</string>
+    <string name="send_friend_request">Send Friend Request</string>
 </resources>

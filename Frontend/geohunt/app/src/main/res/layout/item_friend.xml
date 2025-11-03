@@ -7,10 +7,6 @@
     app:cardElevation="4dp"
     android:layout_margin="4dp">
 
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="120dp">
-
         <ImageView
             android:id="@+id/profile_icon"
             android:layout_width="match_parent"
@@ -23,6 +19,5 @@
             android:layout_height="48dp"
             android:layout_gravity="center" />
 
-    </FrameLayout>
 
 </androidx.cardview.widget.CardView>
