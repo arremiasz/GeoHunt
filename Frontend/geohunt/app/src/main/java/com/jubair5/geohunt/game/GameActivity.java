@@ -56,7 +56,6 @@ import com.jubair5.geohunt.network.ApiConstants;
 import com.jubair5.geohunt.network.VolleySingleton;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.Locale;
 
@@ -76,9 +75,12 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     private CardView hintContainer;
     private ImageView hintImage;
     private ImageView fullscreenPreview;
+    private Button guessButton;
     private double radius = 1.0; // Default radius in miles
     private double currentLat;
     private double currentLng;
+    private boolean gameStarted = false;
+    private boolean userHasPanned = false;
 
     private Handler stopwatchHandler = new Handler(Looper.getMainLooper());
     private long startTime = 0L;
@@ -118,6 +120,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         hintContainer = findViewById(R.id.hint_container);
         hintImage = findViewById(R.id.hint_image);
         fullscreenPreview = findViewById(R.id.fullscreen_preview);
+        guessButton = findViewById(R.id.guess_button);
+        guessButton.setVisibility(View.GONE);
 
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
@@ -130,6 +134,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
 
         readyButton.setOnClickListener(v -> readyUp());
+        guessButton.setOnClickListener(v -> startGuess());
         setupHintBoxListeners();
     }
 
@@ -138,10 +143,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
      * and sends the game parameters to the server.
      */
     private void readyUp() {
-        Log.d(TAG, "Ready button clicked. Stopping location updates.");
-        if (fusedLocationProviderClient != null && locationCallback != null) {
-            fusedLocationProviderClient.removeLocationUpdates(locationCallback);
-        }
+        Log.d(TAG, "Ready button clicked. Beginning ready sequence.");
+
 
         // Get the most current location
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -209,6 +212,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
      */
     private void startGame(int id, String imageUrl) {
         settingsContainer.setVisibility(View.GONE);
+        gameStarted = true;
 
         if (radiusCircle != null) {
             radiusCircle.remove();
@@ -236,7 +240,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                 if (seconds > 0) {
                     countdownText.setText(String.valueOf(seconds));
                 } else {
-                    countdownText.setText("GO!");
+                    countdownText.setText(R.string.go);
                 }
             }
 
@@ -244,6 +248,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                 countdownOverlay.setVisibility(View.GONE);
                 startStopwatch();
                 showHint(imageUrl);
+                guessButton.setVisibility(View.VISIBLE);
                 Log.d(TAG, "Countdown finished. Starting game with challenge ID: " + id);
                 // TODO: Main game logic starts here
             }
@@ -279,6 +284,14 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         stopwatchHandler.removeCallbacksAndMessages(null);
         long millis = System.currentTimeMillis() - startTime;
         return (int) (millis / 1000);
+    }
+
+    /**
+     * This method is called when the user clicks the guess button.
+     */
+    private void startGuess() {
+        Log.d(TAG, "Guess button clicked.");
+        // TODO: Implement guess logic
     }
 
     /**
@@ -390,6 +403,21 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(@NonNull GoogleMap googleMap) {
         this.googleMap = googleMap;
         enableMyLocation();
+
+        googleMap.setOnCameraMoveStartedListener(reason -> {
+            if (reason == GoogleMap.OnCameraMoveStartedListener.REASON_GESTURE) {
+                Log.d(TAG, "User panned the map.");
+                userHasPanned = true;
+            }
+        });
+
+        googleMap.setOnMyLocationButtonClickListener(() -> {
+            Log.d(TAG, "My Location button clicked.");
+            userHasPanned = false;
+            LatLng currentLatLng = new LatLng(currentLat, currentLng);
+            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 18f));
+            return true;
+        });
     }
 
     /**
@@ -403,14 +431,13 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                 fusedLocationProviderClient.getLastLocation().addOnSuccessListener(this, location -> {
                     if (location != null) {
                         LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
-                        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 14f));
-                        updateCircle(currentLatLng);
-                        checkZoomAndAdjust();
+                        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f));
+                        startLocationUpdates();
                     } else {
-                        Log.w(TAG, "FusedLocationProviderClient returned null location for initial position.");
+                        Log.w(TAG, "Could not get current location on map ready.");
+                        Toast.makeText(this, "Could not get current location.", Toast.LENGTH_SHORT).show();
                     }
                 });
-                startLocationUpdates();
             }
         } else {
             requestLocationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
@@ -418,109 +445,82 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     /**
-     * Updates the circle on the map with a new center and radius.
-     * @param center The new center for the circle.
+     * Starts requesting location updates to keep the user's position centered.
      */
-    private void updateCircle(LatLng center) {
-        if (googleMap == null) return;
-
-        if (radiusCircle == null) {
-            CircleOptions circleOptions = new CircleOptions()
-                    .center(center != null ? center : new LatLng(0, 0))
-                    .radius(radius * 1609.34) // Convert miles to meters
-                    .strokeColor(Color.BLUE)
-                    .fillColor(0x220000FF);
-            radiusCircle = googleMap.addCircle(circleOptions);
-        } else {
-            if (center != null) {
-                radiusCircle.setCenter(center);
-            }
-        }
-    }
-
-    /**
-     * Updates the radius of the circle on the map and checks if a zoom adjustment is needed.
-     */
-    private void updateCircleRadius() {
-        if (radiusCircle != null) {
-            radiusCircle.setRadius(radius * 1609.34);
-            checkZoomAndAdjust();
-        }
-    }
-
-    /**
-     * Checks if the radius circle fits well within the map view, zooming out if it's too large
-     * and zooming in if it's too small.
-     */
-    private void checkZoomAndAdjust() {
-        if (googleMap == null || radiusCircle == null) return;
-
-        LatLngBounds mapBounds = googleMap.getProjection().getVisibleRegion().latLngBounds;
-        LatLngBounds circleBounds = getCircleBounds(radiusCircle.getCenter(), radiusCircle.getRadius());
-
-        // Zoom out if the circle is not fully contained within the map's visible bounds
-        if (!mapBounds.contains(circleBounds.northeast) || !mapBounds.contains(circleBounds.southwest)) {
-            googleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(circleBounds, 150));
-        } else {
-            // Zoom in if the circle takes up less than a third of the map's height
-            double circleVisibleSpan = Math.abs(circleBounds.northeast.latitude - circleBounds.southwest.latitude);
-            double mapVisibleSpan = Math.abs(mapBounds.northeast.latitude - mapBounds.southwest.latitude);
-
-            if (circleVisibleSpan < (mapVisibleSpan / 3.0)) {
-                googleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(circleBounds, 150));
-            }
-        }
-    }
-
-    /**
-     * Calculates the bounding box for a circle on the map.
-     * @param center The center of the circle.
-     * @param radiusInMeters The radius of the circle in meters.
-     * @return A LatLngBounds object representing the circle's bounding box.
-     */
-    private LatLngBounds getCircleBounds(LatLng center, double radiusInMeters) {
-        double R2D = 180 / Math.PI;
-        double EarthRadius = 6378137; // meters
-        double lat = center.latitude;
-        double lon = center.longitude;
-
-        double rlat = (radiusInMeters / EarthRadius) * R2D;
-        double rlon = rlat / Math.cos(Math.toRadians(lat));
-
-        return new LatLngBounds(
-                new LatLng(lat - rlat, lon - rlon),
-                new LatLng(lat + rlat, lon + rlon)
-        );
-    }
-
-    /**
-     * Configures and starts continuous location updates.
-     */
+    @SuppressLint("MissingPermission")
     private void startLocationUpdates() {
-        LocationRequest locationRequest = LocationRequest.create();
-        locationRequest.setInterval(5000); // 5 seconds
-        locationRequest.setFastestInterval(2500); // 2.5 seconds
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        LocationRequest locationRequest = new LocationRequest.Builder(1000)
+                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                .build();
 
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(@NonNull LocationResult locationResult) {
                 if (locationResult.getLastLocation() != null) {
                     Location location = locationResult.getLastLocation();
-                    LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
-                    if (googleMap != null) {
+                    currentLat = location.getLatitude();
+                    currentLng = location.getLongitude();
+
+                    if (gameStarted && !userHasPanned) {
+                        LatLng currentLatLng = new LatLng(currentLat, currentLng);
                         googleMap.animateCamera(CameraUpdateFactory.newLatLng(currentLatLng));
-                        updateCircle(currentLatLng);
+                    } else if (!gameStarted) {
+                        updateCircleRadius();
                     }
                 }
             }
         };
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
-        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
+        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper());
     }
+
+    /**
+     * Updates the radius circle on the map to reflect the current search radius.
+     */
+    private void updateCircleRadius() {
+        if (googleMap != null) {
+            if (radiusCircle != null) {
+                radiusCircle.remove();
+            }
+            LatLng currentLatLng = new LatLng(currentLat, currentLng);
+            radiusCircle = googleMap.addCircle(new CircleOptions()
+                    .center(currentLatLng)
+                    .radius(radius * 1609.34) // Convert miles to meters
+                    .strokeColor(Color.BLUE)
+                    .strokeWidth(2f)
+                    .fillColor(0x220000FF));
+
+            // Adjust camera to fit the circle
+            LatLngBounds bounds = new LatLngBounds.Builder()
+                    .include(getOffsetLatLng(currentLatLng, radius * 1609.34, 0))
+                    .include(getOffsetLatLng(currentLatLng, radius * 1609.34, 90))
+                    .include(getOffsetLatLng(currentLatLng, radius * 1609.34, 180))
+                    .include(getOffsetLatLng(currentLatLng, radius * 1609.34, 270))
+                    .build();
+            googleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100));
+        }
+    }
+
+    /**
+     * Calculates a new LatLng based on a starting point, a distance in meters, and a bearing.
+     * @param latLng The starting LatLng.
+     * @param distance The distance in meters.
+     * @param bearing The bearing in degrees.
+     * @return The new LatLng.
+     */
+    private LatLng getOffsetLatLng(LatLng latLng, double distance, double bearing) {
+        double lat1 = Math.toRadians(latLng.latitude);
+        double lon1 = Math.toRadians(latLng.longitude);
+        double brng = Math.toRadians(bearing);
+        double dR = distance / 6378137; // Earth's radius in meters
+
+        double lat2 = Math.asin(Math.sin(lat1) * Math.cos(dR) + Math.cos(lat1) * Math.sin(dR) * Math.cos(brng));
+        double lon2 = lon1 + Math.atan2(Math.sin(brng) * Math.sin(dR) * Math.cos(lat1),
+                Math.cos(dR) - Math.sin(lat1) * Math.sin(lat2));
+
+        return new LatLng(Math.toDegrees(lat2), Math.toDegrees(lon2));
+    }
+
 
     @Override
     protected void onResume() {
@@ -538,27 +538,33 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onStop() {
         super.onStop();
         mapView.onStop();
-        stopwatchHandler.removeCallbacksAndMessages(null);
     }
 
     @Override
     protected void onPause() {
-        super.onPause();
         mapView.onPause();
+        super.onPause();
         if (fusedLocationProviderClient != null && locationCallback != null) {
             fusedLocationProviderClient.removeLocationUpdates(locationCallback);
         }
+        stopwatchHandler.removeCallbacksAndMessages(null);
     }
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         mapView.onDestroy();
+        super.onDestroy();
     }
 
     @Override
     public void onLowMemory() {
         super.onLowMemory();
         mapView.onLowMemory();
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        mapView.onSaveInstanceState(outState);
     }
 }
