@@ -37,6 +37,13 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <!-- Dependency for websocket -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
+
         <!-- The H2 database dependency -->
         <!--    <dependency>-->
         <!--        <groupId>com.h2database</groupId>-->
