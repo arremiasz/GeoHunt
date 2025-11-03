@@ -18,7 +18,7 @@ import java.util.Map;
 
 @Controller
 @ServerEndpoint("/multiplayer/{username}")
-public class MultiplayerController {
+public class MultiplayerSocket {
 
     public static AccountService accountService;
 
@@ -30,7 +30,7 @@ public class MultiplayerController {
 
     private static Map<String, Lobby> usernameLobbyMap = new HashMap<>();
 
-    private final Logger logger = LoggerFactory.getLogger(MultiplayerController.class);
+    private final Logger logger = LoggerFactory.getLogger(MultiplayerSocket.class);
 
     @OnOpen
     public void onOpen(Session session, @PathParam("username") String username) throws IOException{
