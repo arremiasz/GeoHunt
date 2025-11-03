@@ -52,23 +52,35 @@ public class MultiplayerSocket {
 
         // Send confirmation message
         sendStringToSingleUser(username, "Connection Success");
+        logger.info("OnOpen : User " + username + " connected");
     }
 
     @OnMessage
     public void onMessage(Session session, String message){
         // If the user is not in a lobby, they can create or join one.
         // If a user is in a lobby, the request is handled by the lobby.
-        logger.info("Entered into Message: Got Message:" + message);
+        logger.info("OnMessage : Got Message: " + message);
 
         sendStringToSession(session, "Received: " + message);
+
+        String[] splitMsg = message.split("\\s+");
+
+        if(splitMsg.length == 0){
+            // message is empty, do nothing
+            return;
+        }
+        else if (splitMsg[0].equals("create")) {
+            // message starts with "create" - create lobby
+
+        }
     }
 
     @OnClose
     public void onClose(Session session){
         // Remove player from lobby.
-        logger.info("Entered into Close");
-
         String username = sessionUsernameMap.get(session);
+        logger.info("OnClose : User " + username + " disconnected");
+
         sessionUsernameMap.remove(session);
         usernameSessionMap.remove(username);
         usernameLobbyMap.remove(username);
@@ -77,9 +89,28 @@ public class MultiplayerSocket {
     @OnError
     public void onError(Session session, Throwable throwable) {
         // Do error handling here
-        logger.info("Entered into Error");
+        logger.info("OnError : Entered into Error");
         throwable.printStackTrace();
     }
+
+    // Lobby Management
+
+    public void createLobby(String username){
+        if(usernameLobbyMap.get(username) != null){
+            // User is already in lobby, cannot create a new lobby.
+        }
+        else{
+            Lobby lobby = new Lobby(username);
+            usernameLobbyMap.put(username, lobby);
+            sendStringToSingleUser(username, "Successfully created lobby");
+        }
+    }
+
+    public void joinLobby(String username, String message){
+
+    }
+
+    // Sending Messages
 
     public void sendStringToUserList(List<String> usernames, String message){
         for(String username : usernames) {
