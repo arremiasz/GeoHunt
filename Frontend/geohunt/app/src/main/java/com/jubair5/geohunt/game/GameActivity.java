@@ -286,7 +286,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
      * @param imageUrl The URL of the hint image.
      */
     private void showHint(String imageUrl) {
-        hintContainer.setVisibility(View.VISIBLE);
+        fullscreenPreview.setVisibility(View.VISIBLE);
+        hintContainer.post(() -> snapToCorner(hintContainer));
         Glide.with(this).load(imageUrl).into(hintImage);
         Glide.with(this).load(imageUrl).into(fullscreenPreview);
     }
@@ -296,10 +297,15 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
      */
     @SuppressLint("ClickableViewAccessibility")
     private void setupHintBoxListeners() {
-        fullscreenPreview.setOnClickListener(v -> fullscreenPreview.setVisibility(View.GONE));
+        fullscreenPreview.setOnClickListener(v -> {
+            fullscreenPreview.setVisibility(View.GONE);
+            hintContainer.setVisibility(View.VISIBLE);
+        });
 
-        // Set the click listener to handle the click action
-        hintContainer.setOnClickListener(v -> fullscreenPreview.setVisibility(View.VISIBLE));
+        hintContainer.setOnClickListener(v -> {
+            fullscreenPreview.setVisibility(View.VISIBLE);
+            hintContainer.setVisibility(View.GONE);
+        });
 
         hintContainer.setOnTouchListener(new View.OnTouchListener() {
             private long startClickTime;
@@ -328,10 +334,10 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                         float distance = (float) Math.hypot(event.getRawX() - pressedX, event.getRawY() - pressedY);
 
                         if (clickDuration < MAX_CLICK_DURATION && distance < 10) {
-                            // It's a click, trigger the OnClickListener
+                            // Click
                             view.performClick();
                         } else {
-                            // It's a drag
+                            // Drag
                             snapToCorner(view);
                         }
                         break;
@@ -351,7 +357,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         ViewGroup parent = (ViewGroup) view.getParent();
         int parentWidth = parent.getWidth();
         int parentHeight = parent.getHeight();
-        int margin = (int) (16 * getResources().getDisplayMetrics().density); // 16dp margin
+        int margin = (int) (16 * getResources().getDisplayMetrics().density);
 
         float viewX = view.getX();
         float viewY = view.getY();
@@ -369,7 +375,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (viewY + view.getHeight() / 2f < parentHeight / 2f) {
             endY = margin + 150;
         } else {
-            endY = parentHeight - view.getHeight() - margin;
+            endY = parentHeight - view.getHeight() - margin - 200;
         }
 
         view.animate()
@@ -399,9 +405,9 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                         LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
                         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 14f));
                         updateCircle(currentLatLng);
-                        checkZoomAndAdjust(); // Check zoom after first location
+                        checkZoomAndAdjust();
                     } else {
-                        Log.w(TAG, "FusedLocationProvider returned null location for initial position.");
+                        Log.w(TAG, "FusedLocationProviderClient returned null location for initial position.");
                     }
                 });
                 startLocationUpdates();
