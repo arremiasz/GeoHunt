@@ -29,13 +29,17 @@ public class SubmissionController {
 
     // Post Submission
     @PostMapping("/geohunt/submission")
-    public ResponseEntity<Submissions> saveSubmission(@RequestBody Submissions submission, @RequestParam long uid, @RequestParam long cid){
+    public ResponseEntity<Double> saveSubmission(@RequestBody Submissions submission, @RequestParam long uid, @RequestParam long cid){
+        Submissions savedSubmission;
+        double distance;
         try{
-            return ResponseEntity.status(200).body( submissionsService.saveSubmission(submission,uid,cid) );
+            savedSubmission = submissionsService.saveSubmission(submission, uid, cid);
+            distance = savedSubmission.distanceFromChallenge();
         }
         catch (IllegalArgumentException e){
-            return ResponseEntity.status(400).body(null);
+            return ResponseEntity.status(400).body(-1.0);
         }
+        return ResponseEntity.status(200).body(distance);
     }
 
     // Get Submission
@@ -50,10 +54,6 @@ public class SubmissionController {
         }
     }
 
-    // Get User of Submission
-
-    // Get Challenge of Submission
-
     // Put / Update Submission
     @PutMapping("/geohunt/submission/{id}")
     public ResponseEntity<Submissions> updateSubmission(@RequestBody Submissions updatedValues, @PathVariable long id){
@@ -65,33 +65,20 @@ public class SubmissionController {
         catch (IllegalArgumentException e){
             return ResponseEntity.status(400).body(null);
         }
-
-//        // Get Submission with Id
-//        if(submissionsRepository.findById(id).isEmpty()){
-//            return ResponseEntity.status(404).body(null); // No submission exists.
-//        }
-//        Submissions submissionToUpdate = submissionsRepository.findById(id).get();
-//
-//        // Update Submission values
-//        submissionToUpdate.updateValues(updatedValues);
-//
-//        // Save Submission
-//        submissionsRepository.save(submissionToUpdate);
-//
-//        // Return updated Submission
-//        return ResponseEntity.status(200).body(submissionToUpdate);
     }
 
     // Delete Submission
     @DeleteMapping("/geohunt/submission/{id}")
     public ResponseEntity<String> deleteSubmission(@PathVariable long id){
         // Remove Submission
-        submissionsService.deleteSubmissionById(id);
+        boolean removed = submissionsService.deleteSubmissionById(id);
 
-        // Need to check what should be returned
-        return ResponseEntity.status(200).body("submission removed.");
-
-        // TODO: Check if the submission needs to be unlinked from the challenge and user objects.
+        if(removed){
+            return ResponseEntity.status(200).body("submission removed.");
+        }
+        else {
+            return ResponseEntity.status(404).body("cannot find submission to delete.");
+        }
     }
 
     // List Submissions by user

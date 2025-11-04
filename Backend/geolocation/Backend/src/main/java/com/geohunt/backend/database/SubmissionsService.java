@@ -23,9 +23,14 @@ public class SubmissionsService {
     // Save Submission
 
     public Submissions saveSubmission(Submissions submission, long uid, long cid) throws IllegalArgumentException {
-        // TODO: Implement challenges when merging with Location Generation
-        Account account = accountService.getAccountById(uid);
-        Challenges challenge = null;
+        Account account;
+        Challenges challenge;
+        if(challengesRepository.findById(cid).isEmpty()){
+            throw new IllegalArgumentException("Cannot find challenge via challenge id");
+        }
+
+        account = accountService.getAccountById(uid);
+        challenge = challengesRepository.findById(cid).get();
 
         // Set Challenge and Account that the submission is tied to.
         submission.setSubmitter(account);
