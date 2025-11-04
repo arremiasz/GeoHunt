@@ -73,16 +73,16 @@ public class FriendsService {
         if (Accounts.size() == 1) {
             Optional<Account> account = Accounts.get(0);
             if(account.get().getId() == targetId) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Cannot find account of main user.");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Sender not found.");
             } else {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body("Cannot find account of target.");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Target not found.");
             }
         }
         Account acc = Accounts.get(0).get();
         Account target = Accounts.get(1).get();
 
         Optional<Friends> friendship = friendsRepository.findByPrimaryAndTarget(acc, target);
-        if(friendship.isEmpty()) {return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Friend not found.");}
+        if(friendship.isEmpty()) {return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Both accounts are not friends.");}
 
 
         friendsRepository.delete(friendship.get());
@@ -94,13 +94,20 @@ public class FriendsService {
         if (Accounts.size() == 1) {
             Optional<Account> account = Accounts.get(0);
             if(account.get().getId() == targetId) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Cannot find account of main user.");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Sender not found.");
             } else {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body("Cannot find account of target.");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Target not found.");
             }
         }
-        Account acc = Accounts.get(0).get();
-        Account target = Accounts.get(1).get();
+        Account acc;
+        Account target;
+        try{
+            acc = Accounts.get(0).get();
+            target = Accounts.get(1).get();
+        } catch (IndexOutOfBoundsException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Cannot find account of main or target user.");
+        }
+
 
         Optional<Friends> friendship = friendsRepository.findByPrimaryAndTarget(acc, target);
         if(friendship.isEmpty()) {return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Friend Request not sent.");}
@@ -128,9 +135,9 @@ public class FriendsService {
         if (Accounts.size() == 1) {
             Optional<Account> account = Accounts.get(0);
             if(account.get().getId() == targetId) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Cannot find account of main user.");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Sender not found.");
             } else {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body("Cannot find account of target.");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Target not found.");
             }
         }
         Account acc = Accounts.get(0).get();
