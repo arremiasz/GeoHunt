@@ -12,6 +12,10 @@ public final class ApiConstants {
 //    public static final String BASE_URL = "http://coms-3090-030.class.las.iastate.edu:8080";
     public static final String BASE_URL = "https://6bfe1ae1-ae39-462f-910e-7d53b5da9867.mock.pstmn.io";
 
+    // WebSocket URL
+//    public static final String WEBSOCKET_URL = "ws://coms-3090-030.class.las.iastate.edu:8080/game";
+    public static final String WEBSOCKET_URL = "ws://10.0.2.2:8080";
+
     // Account Endpoints
     public static final String SIGNUP_ENDPOINT = "/signup";
     public static final String LOGIN_ENDPOINT = "/login";

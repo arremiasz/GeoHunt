@@ -66,6 +66,13 @@
             android:exported="false"
             android:theme="@style/Theme.GeoHunt.NoActionBar" />
         <activity
+            android:name=".game.MultiplayerGameActivity"
+            android:exported="false"
+            android:theme="@style/Theme.GeoHunt.NoActionBar" />
+        <activity
+            android:name=".game.LobbyActivity"
+            android:exported="false" />
+        <activity
             android:name=".game.ResultsActivity"
             android:exported="false" />
     </application>
