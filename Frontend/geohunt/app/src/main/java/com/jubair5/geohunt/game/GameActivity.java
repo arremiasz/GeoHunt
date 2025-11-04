@@ -6,6 +6,8 @@ package com.jubair5.geohunt.game;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -60,11 +62,13 @@ import com.jubair5.geohunt.network.ApiConstants;
 import com.jubair5.geohunt.network.VolleySingleton;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 public class GameActivity extends AppCompatActivity implements OnMapReadyCallback {
@@ -323,6 +327,54 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void submitGuess(String imageString) {
+        SharedPreferences prefs = getSharedPreferences("GeoHuntPrefs", Context.MODE_PRIVATE);
+        int userId = prefs.getInt("userId", -1);
+
+        if (userId == -1) {
+            Toast.makeText(this, "Error: User not logged in.", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "User ID not found in shared preferences for submission.");
+            return;
+        }
+
+        JSONObject requestBody = new JSONObject();
+        try {
+            requestBody.put("uid", userId);
+            requestBody.put("cid", challengeId);
+            requestBody.put("latitude", currentLat);
+            requestBody.put("longitude", currentLng);
+            requestBody.put("photourl", imageString);
+            requestBody.put("time", stopStopwatch());
+
+        } catch (JSONException e) {
+            Log.e(TAG, "Failed to create JSON object for submission.", e);
+        }
+
+        String url = ApiConstants.BASE_URL + ApiConstants.POST_SUBMISSION_ENDPOINT;
+
+        JsonObjectRequest submissionRequest = new JsonObjectRequest(Request.Method.POST, url, requestBody,
+                response -> {
+                    Log.d(TAG, "Submission successful: " + response.toString());
+                    // TODO: Handle successful submission (e.g., show results screen)
+                    Toast.makeText(this, "Guess submitted successfully!", Toast.LENGTH_LONG).show();
+                    finish(); // For now, just finish the activity
+                },
+                error -> {
+                    Log.e(TAG, "Submission failed.", error);
+                    Toast.makeText(this, "Error submitting guess. Please try again.", Toast.LENGTH_LONG).show();
+                }
+        ) {
+            @Override
+            public byte[] getBody() {
+            return requestBody.toString().getBytes(StandardCharsets.UTF_8);
+            }
+
+            @Override
+            public String getBodyContentType() {
+            return "application/json; charset=utf-8";
+            }
+        };
+
+        VolleySingleton.getInstance(this).addToRequestQueue(submissionRequest);
 
     }
 
