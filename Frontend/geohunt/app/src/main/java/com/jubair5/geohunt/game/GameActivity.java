@@ -7,8 +7,10 @@ package com.jubair5.geohunt.game;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -56,6 +58,7 @@ import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.material.slider.Slider;
 import com.jubair5.geohunt.R;
 import com.jubair5.geohunt.network.ApiConstants;
@@ -95,6 +98,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     private boolean userHasPanned = false;
     private Uri guessImageUri;
     private int challengeId;
+    private int strokeColor = Color.BLUE;
+    private int fillColor = 0x220000FF;
 
     private Handler stopwatchHandler = new Handler(Looper.getMainLooper());
     private long startTime = 0L;
@@ -121,7 +126,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_game);
+        setContentView(R.layout.game_activity);
 
         mapView = findViewById(R.id.game_map_view);
         Slider radiusSlider = findViewById(R.id.radius_slider);
@@ -354,9 +359,10 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         JsonObjectRequest submissionRequest = new JsonObjectRequest(Request.Method.POST, url, requestBody,
                 response -> {
                     Log.d(TAG, "Submission successful: " + response.toString());
-                    // TODO: Handle successful submission (e.g., show results screen)
-                    Toast.makeText(this, "Guess submitted successfully!", Toast.LENGTH_LONG).show();
-                    finish(); // For now, just finish the activity
+                    Intent intent = new Intent(GameActivity.this, ResultsActivity.class);
+                    intent.putExtra("results", response.toString());
+                    startActivity(intent);
+                    finish();
                 },
                 error -> {
                     Log.e(TAG, "Submission failed.", error);
@@ -429,7 +435,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                         String imageString = bitmapToString(bitmap);
 
                         Log.d(TAG, "Guess image as Base64 string is ready.");
-                        Toast.makeText(this, "Guess captured! Submitting...", Toast.LENGTH_SHORT).show();
 
                         submitGuess(imageString);
 
@@ -552,6 +557,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(@NonNull GoogleMap googleMap) {
         this.googleMap = googleMap;
         enableMyLocation();
+        setMapStyle();
 
         googleMap.setOnCameraMoveStartedListener(reason -> {
             if (reason == GoogleMap.OnCameraMoveStartedListener.REASON_GESTURE) {
@@ -624,6 +630,19 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     /**
+     * Sets the map style based on the current system theme (dark or light).
+     */
+    private void setMapStyle() {
+        int nightModeFlags = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
+            Log.d(TAG, "Setting dark mode map style.");
+            googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.map_style_dark));
+            strokeColor = Color.rgb(0,100, 255);
+            fillColor = Color.argb(34, 0,150, 255);
+        }
+    }
+
+    /**
      * Updates the radius circle on the map to reflect the current search radius.
      */
     private void updateCircleRadius() {
@@ -635,9 +654,9 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             radiusCircle = googleMap.addCircle(new CircleOptions()
                     .center(currentLatLng)
                     .radius(radius * 1609.34) // Convert miles to meters
-                    .strokeColor(Color.BLUE)
+                    .strokeColor(strokeColor)
                     .strokeWidth(2f)
-                    .fillColor(0x220000FF));
+                    .fillColor(fillColor));
 
             // Adjust camera to fit the circle
             LatLngBounds bounds = new LatLngBounds.Builder()
