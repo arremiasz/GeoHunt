@@ -81,7 +81,7 @@ public class Submissions {
         try{
             Location submissionLocation = new Location(this.latitude, this.longitude);
             Location challengeLocation = new Location(challenge.getLatitude(), challenge.getLongitude());
-            return submissionLocation.distanceKM(challengeLocation);
+            return submissionLocation.distanceMiles(challengeLocation);
         }
         catch (Exception e){
             return -1;
