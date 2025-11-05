@@ -1,222 +1,185 @@
 // Run: npm install ws uuid@8.3.2
 const { WebSocketServer, WebSocket } = require('ws');
+const http = require('http');
+const url = require('url');
 const { v4: uuidv4 } = require('uuid');
 
-const wss = new WebSocketServer({ port: 8080 });
+// --- Server State ---
 
-// --- Our Central Lobby State ---
-const lobbyState = {
-  lobbyId: `lobby-${uuidv4().substring(0, 8)}`,
-  leaderId: null, 
-  players: [],
-  settings: {
-    radius: 1.0,
-    center: { lat: 40.7128, lng: -74.0060 },
-    powerups: true
-  },
-  gameState: 'lobby'
-};
+// --- MODIFIED ---
+// lobbies: Map<lobbyId, { members: Set<WebSocket>, leader: WebSocket }>
+// Stores all active lobbies, their members, and who the leader is.
+const lobbies = new Map();
 
-// Map to store WebSocket objects <-> Player objects
-// The Player object will now be added *after* they join, not on connection.
+// clients: Map<WebSocket, { username: string, currentLobbyId: string | null }>
 const clients = new Map();
 
-console.log(`🚀 Advanced Mock Lobby Server started at ws://localhost:8080`);
-console.log(`Lobby ID: ${lobbyState.lobbyId}`);
+// --- 1. Create a standard HTTP server ---
+const httpServer = http.createServer((req, res) => {
+  res.writeHead(404, { 'Content-Type': 'text/plain' });
+  res.end('Not found');
+});
 
-// --- Helper Functions ---
+// --- 2. Create the WebSocket server ---
+const wss = new WebSocketServer({ noServer: true });
 
-function broadcast(message, excludeClient) {
-  wss.clients.forEach(client => {
-    if (client.readyState === WebSocket.OPEN && client !== excludeClient) {
+// --- 3. Handle the 'upgrade' event to parse the URL ---
+httpServer.on('upgrade', (request, socket, head) => {
+  const { pathname } = url.parse(request.url);
+  const match = pathname.match(/^\/multiplayer\/([a-zA-Z0-9_-]+)$/);
+
+  if (!match) {
+    socket.write('HTTP/1.1 400 Bad Request\r\n\r\n');
+    socket.destroy();
+    return;
+  }
+
+  const username = match[1];
+
+  wss.handleUpgrade(request, socket, head, (ws) => {
+    wss.emit('connection', ws, username);
+  });
+});
+
+// --- 4. Handle new WebSocket connections ---
+wss.on('connection', (ws, username) => {
+  console.log(`🎉 Client connected: ${username}`);
+  
+  clients.set(ws, {
+    username: username,
+    currentLobbyId: null
+  });
+
+  ws.send('Connection Success');
+
+// --- 5. Handle incoming messages (Updated: Leader-Broadcast Logic) ---
+  ws.on('message', (rawMessage) => {
+    const message = rawMessage.toString().trim();
+    const senderInfo = clients.get(ws);
+    const currentLobbyId = senderInfo.currentLobbyId;
+
+    // --- CASE 1: User is NOT in a lobby ---
+    if (!currentLobbyId) {
+      if (message === 'create') {
+        const lobbyId = `lobby-${uuidv4().substring(0, 6)}`;
+        
+        const newLobby = {
+          members: new Set(),
+          leader: ws // Set the sender as the leader
+        };
+        
+        newLobby.members.add(ws);
+        lobbies.set(lobbyId, newLobby);
+        senderInfo.currentLobbyId = lobbyId;
+        
+        console.log(`Lobby ${lobbyId} created by ${senderInfo.username}`);
+        ws.send(`Successfully created lobby ${lobbyId}`);
+      }
+      
+      else if (message.startsWith('join ')) {
+        const lobbyId = message.substring(5);
+        const lobby = lobbies.get(lobbyId);
+
+        if (!lobby) {
+          ws.send('Error: Lobby not found.');
+          return;
+        }
+
+        const joinMsg = `User ${senderInfo.username} joined the lobby`;
+        broadcast(lobby.members, joinMsg, ws);
+
+        lobby.members.add(ws);
+        senderInfo.currentLobbyId = lobbyId;
+        
+        console.log(`${senderInfo.username} joined lobby ${lobbyId}`);
+        ws.send(`Successfully joined lobby ${lobbyId}`);
+      }
+      
+      else {
+        // Not in a lobby, and not a valid command
+        ws.send('Error: You are not in a lobby. (Try "create" or "join {lobbyId}")');
+      }
+    }
+    
+    // --- CASE 2: User IS in a lobby ---
+    else {
+      const lobby = lobbies.get(currentLobbyId);
+
+      // Check if the sender is the leader
+      if (lobby.leader === ws) {
+        // --- This is the new rule ---
+        // If sender is leader, broadcast *any* message they send.
+        console.log(`Broadcasting leader message from ${senderInfo.username} to lobby ${currentLobbyId}: "${message}"`);
+        broadcast(lobby.members, message); // Send to *everyone*
+      } 
+      
+      else {
+        // Sender is in a lobby, but is NOT the leader
+        ws.send('Error: Only the lobby leader can send commands.');
+      }
+    }
+  });
+
+  // --- 6. Handle disconnections ---
+  ws.on('close', () => {
+    const disconnectedClient = clients.get(ws);
+    if (!disconnectedClient) return;
+
+    console.log(`Client disconnected: ${disconnectedClient.username}`);
+    
+    const lobbyId = disconnectedClient.currentLobbyId;
+    if (lobbyId) {
+      const lobby = lobbies.get(lobbyId);
+      if (lobby) {
+        lobby.members.delete(ws); // Remove from the Set
+        
+        const disconnectMsg = `User ${disconnectedClient.username} disconnected`;
+        broadcast(lobby.members, disconnectMsg);
+
+        // --- MODIFIED: Handle leader disconnection ---
+        if (disconnectedClient.ws === lobby.leader) {
+          console.log(`Lobby ${lobbyId} leader disconnected.`);
+          // If members are left, promote the "next" one
+          if (lobby.members.size > 0) {
+            // Get the first item from the Set
+            const newLeader = lobby.members.values().next().value; 
+            lobby.leader = newLeader;
+            
+            const newLeaderInfo = clients.get(newLeader);
+            console.log(`New leader for ${lobbyId} is ${newLeaderInfo.username}`);
+            broadcast(lobby.members, `User ${newLeaderInfo.username} is now the lobby leader`);
+          }
+        }
+        
+        // Clean up empty lobbies
+        if (lobby.members.size === 0) {
+          lobbies.delete(lobbyId);
+          console.log(`Lobby ${lobbyId} is now empty and has been removed.`);
+        }
+      }
+    }
+    
+    clients.delete(ws);
+  });
+
+  ws.on('error', console.error);
+});
+
+/**
+ * Helper function to broadcast a message to all clients in a lobby (Set).
+ * @param {Set<WebSocket>} membersSet - The Set of WebSocket clients.
+ * @param {string} message - The string message to send.
+ * @param {WebSocket} [excludeClient] - (Optional) A client to exclude.
+ */
+function broadcast(membersSet, message, excludeClient) {
+  membersSet.forEach(client => {
+    if (client !== excludeClient && client.readyState === WebSocket.OPEN) {
       client.send(message);
     }
   });
 }
 
-function sendError(ws, errorMessage) {
-  const errorMsg = JSON.stringify({
-    type: 'ERROR',
-    message: errorMessage
-  });
-  ws.send(errorMsg);
-}
-
-/**
- * Gathers the current lobbyState and broadcasts a LOBBY_UPDATE to everyone.
- */
-function broadcastLobbyUpdate() {
-  // Create a "serializable" version of the players list for the JSON payload
-  const serializablePlayers = lobbyState.players.map(p => ({
-    userId: p.id,       // This now comes from the client
-    username: p.username, // This now comes from the client
-    isReady: p.isReady
-  }));
-
-  const updateMessage = JSON.stringify({
-    type: 'LOBBY_UPDATE',
-    lobbyId: lobbyState.lobbyId,
-    leaderId: lobbyState.leaderId,
-    players: serializablePlayers,
-    settings: lobbyState.settings
-  });
-
-  console.log('Broadcasting LOBBY_UPDATE:');
-  console.log(JSON.stringify(JSON.parse(updateMessage), null, 2));
-  broadcast(updateMessage);
-}
-
-// --- Main Connection Logic ---
-
-wss.on('connection', ws => {
-  console.log(`🎉 Client connected, awaiting JOIN_LOBBY...`);
-
-  // --- Message Handling for this Client ---
-  ws.on('message', rawMessage => {
-    let message;
-    try {
-      message = JSON.parse(rawMessage);
-    } catch (e) {
-      console.error('Failed to parse JSON:', rawMessage);
-      return;
-    }
-
-    // Get the player object for the client.
-    // Note: This will be undefined if they haven't sent JOIN_LOBBY yet.
-    const senderPlayer = clients.get(ws);
-
-    // --- Main Message Router ---
-    switch (message.type) {
-      
-      // THIS IS THE NEW, MOST IMPORTANT CASE
-      case 'JOIN_LOBBY': {
-        // If client is already joined, ignore.
-        if (senderPlayer) break; 
-
-        const { user } = message;
-        if (!user || !user.id || !user.displayName) {
-          sendError(ws, 'Invalid JOIN_LOBBY message. Must include user object with id and displayName.');
-          return;
-        }
-
-        // Create the player object from client data
-        const newPlayer = {
-          id: user.id,
-          username: user.displayName,
-          isReady: false,
-          ws: ws // Keep a reference to their connection
-        };
-
-        // Add them to our tracking systems
-        clients.set(ws, newPlayer);
-        lobbyState.players.push(newPlayer);
-
-        // If they are the first player, make them the leader.
-        if (lobbyState.leaderId === null) {
-          lobbyState.leaderId = newPlayer.id;
-        }
-
-        console.log(`👍 Client ${newPlayer.username} (${newPlayer.id}) has joined the lobby.`);
-        
-        // Send a full lobby update to EVERYONE.
-        // This is how the new client gets the lobbyId and full player list.
-        broadcastLobbyUpdate();
-        break;
-      }
-        
-      case 'UPDATE_SETTINGS': {
-        // Guard Clause: Make sure the client has joined first.
-        if (!senderPlayer) {
-          sendError(ws, 'You must join the lobby before updating settings.');
-          break;
-        }
-
-        if (senderPlayer.id !== lobbyState.leaderId) {
-          sendError(ws, 'Only the lobby leader can change game settings.');
-          break;
-        }
-        
-        lobbyState.settings = { ...lobbyState.settings, ...message.settings };
-        broadcastLobbyUpdate();
-        break;
-      }
-
-      case 'SET_READY': {
-        // Guard Clause
-        if (!senderPlayer) {
-          sendError(ws, 'You must join the lobby before setting ready status.');
-          break;
-        }
-
-        senderPlayer.isReady = message.isReady;
-        broadcastLobbyUpdate();
-        break;
-      }
-
-      case 'START_GAME': {
-        // Guard Clause
-        if (!senderPlayer) {
-          sendError(ws, 'You must join the lobby before starting the game.');
-          break;
-        }
-
-        if (senderPlayer.id !== lobbyState.leaderId) {
-          sendError(ws, 'Only the lobby leader can start the game.');
-          break;
-        }
-
-        const allReady = lobbyState.players.every(p => p.isReady);
-        if (!allReady) {
-          sendError(ws, 'Not all players are ready.');
-          break;
-        }
-        
-        lobbyState.gameState = 'in-game';
-        
-        const gameStartMessage = JSON.stringify({
-          type: 'GAME_STARTING',
-          challenge: {
-            id: 12345,
-            streetviewurl: "https://maps.googleapis.com/maps/api/streetview?size=600x400&location=42.0266,-93.6465&key=AIzaSyA4cGMdtzfM4Ub-1agmFLqKP5WLWLLwLLg"
-          }
-        });
-        
-        broadcast(gameStartMessage);
-        break;
-      }
-        
-      default:
-        console.warn(`Unknown message type received: ${message.type}`);
-    }
-  });
-
-  // --- Disconnection Handling ---
-  ws.on('close', () => {
-    // Get the player object (if they ever successfully joined)
-    const disconnectedPlayer = clients.get(ws);
-    
-    // Always remove them from the clients map
-    clients.delete(ws);
-
-    // If they were a joined player, update the lobby
-    if (disconnectedPlayer) {
-      console.log(`Client ${disconnectedPlayer.username} disconnected.`);
-      
-      // Remove from our state
-      lobbyState.players = lobbyState.players.filter(p => p.id !== disconnectedPlayer.id);
-
-      // Check if the leader left
-      if (disconnectedPlayer.id === lobbyState.leaderId) {
-        lobbyState.leaderId = lobbyState.players.length > 0 ? lobbyState.players[0].id : null;
-        console.log(`Leader disconnected. New leader is ${lobbyState.leaderId}`);
-      }
-
-      // Broadcast the updated lobby to all remaining players
-      broadcastLobbyUpdate();
-    } else {
-      console.log('A client disconnected before joining.');
-    }
-  });
-
-  ws.on('error', console.error);
+// --- 7. Start the HTTP server ---
+httpServer.listen(8080, () => {
+  console.log('🚀 String-Based Server (with Leader Logic) listening on ws://localhost:8080');
 });

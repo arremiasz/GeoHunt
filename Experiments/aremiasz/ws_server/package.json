@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "bufferutil": "^4.0.9",
+    "http": "^0.0.1-security",
     "utf-8-validate": "^6.0.5",
     "uuid": "^8.3.2",
     "uuidv4": "^6.2.13",

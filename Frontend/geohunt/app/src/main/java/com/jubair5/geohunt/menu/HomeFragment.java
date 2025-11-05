@@ -11,17 +11,20 @@ import android.content.res.Configuration;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Looper;
+import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
@@ -71,6 +74,8 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         mapView = view.findViewById(R.id.map_view_home);
         Button playButton = view.findViewById(R.id.play_button);
         Button multiplayerButton = view.findViewById(R.id.multiplayer_button);
+        Button dummyButton2 = view.findViewById(R.id.dummy_button_2);
+
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
 
@@ -85,6 +90,31 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             Intent intent = new Intent(getActivity(), LobbyActivity.class);
             startActivity(intent);
         });
+
+        dummyButton2.setOnClickListener(v -> {
+            // prompt the user for a lobby ID in an alert and store in a string
+            AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+            builder.setTitle("Join Lobby by ID");
+
+            final EditText input = new EditText(requireContext());
+            input.setInputType(InputType.TYPE_CLASS_TEXT);
+            builder.setView(input);
+
+            builder.setPositiveButton("Join", (dialog, which) -> {
+                String lobbyId = input.getText().toString();
+                if (!lobbyId.isEmpty()) {
+                    Intent intent = new Intent(getActivity(), LobbyActivity.class);
+                    intent.putExtra("lobbyId", lobbyId);
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(getContext(), "Lobby ID cannot be empty.", Toast.LENGTH_SHORT).show();
+                }
+            });
+            builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+            builder.show();
+        });
+
 
         return view;
     }

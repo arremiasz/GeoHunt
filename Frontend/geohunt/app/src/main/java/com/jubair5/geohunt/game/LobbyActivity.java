@@ -53,16 +53,16 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private static final String TAG = "LobbyActivity";
     // Set to true to simulate server responses and test UI
-    private static final boolean MOCK_MODE = true;
+    private static final boolean MOCK_MODE = false;
 
     private static final String SHARED_PREFS_NAME = "GeoHuntPrefs";
     private static final String KEY_USER_NAME = "userName";
-    private static final String KEY_USER_ID = "userId";
     private WebSocketClient webSocketClient;
     private PlayerAdapter playerAdapter;
     private List<Player> playerList = new ArrayList<>();
@@ -80,7 +80,6 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
     private boolean userHasPanned = false;
 
     private String lobbyId;
-    private int userId;
     private String username;
     private SharedPreferences prefs;
 
@@ -112,7 +111,6 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
 
         // Get lobbyId from intent (if joining) and user info from SharedPreferences
         lobbyId = getIntent().getStringExtra("lobbyId");
-        userId = prefs.getInt(KEY_USER_ID, -1);
         username = prefs.getString(KEY_USER_NAME, "User");
 
         radiusSlider = findViewById(R.id.radius_slider);
@@ -127,6 +125,9 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
         radiusSlider.addOnChangeListener((slider, value, fromUser) -> {
             radius = value;
             updateCircleRadius(true);
+            if (startGameButton.isEnabled()) { // User is the lobby leader
+                sendLobbyMessage(String.format(Locale.US, "radius %.2f", value));
+            }
         });
 
         Button inviteButton = findViewById(R.id.invite_button);
@@ -323,6 +324,7 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
                 sendLobbyMessage("create");
             } else {
                 sendLobbyMessage("join " + lobbyId);
+                setLobbyLeader(false);
             }
         } else if (message.startsWith("Successfully created lobby")) {
             String[] parts = message.split("\\s+");
@@ -331,15 +333,31 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
             setLobbyLeader(true);
             // Add self to player list
             playerList.clear();
-            playerList.add(new Player(String.valueOf(userId), username));
+            playerList.add(new Player(username, getApplicationContext()));
             playerAdapter.notifyDataSetChanged();
         } else if (message.startsWith("User ") && message.endsWith(" joined the lobby")) {
             // e.g., "User Player2 joined the lobby"
             String joinedUser = message.substring(5, message.indexOf(" joined the lobby"));
             Toast.makeText(this, joinedUser + " has joined!", Toast.LENGTH_SHORT).show();
-            // We need a way to get the user ID for the new player, for now, we use a placeholder
-            playerList.add(new Player("-1", joinedUser));
+            playerList.add(new Player(joinedUser, getApplicationContext()));
             playerAdapter.notifyDataSetChanged();
+        } else if (message.startsWith("User ") && message.endsWith(" disconnected")) {
+            String disconnectedUser = message.substring(5, message.indexOf(" disconnected"));
+            Toast.makeText(this, disconnectedUser + " has disconnected.", Toast.LENGTH_SHORT).show();
+            playerList.removeIf(player -> player.getUsername().equals(disconnectedUser));
+            playerAdapter.notifyDataSetChanged();
+        } else if (message.startsWith("radius ")) {
+            if (!startGameButton.isEnabled()) { // Only non-leaders should react to this message
+                try {
+                    float newRadius = Float.parseFloat(message.substring(7));
+                    radius = newRadius;
+                    radiusSlider.setValue(newRadius);
+                    updateCircleRadius(true);
+                    Log.d(TAG, "Lobby radius updated to: " + newRadius);
+                } catch (NumberFormatException e) {
+                    Log.e(TAG, "Could not parse radius from message: " + message, e);
+                }
+            }
         } else if (message.equals("cannot join lobby")){
             Toast.makeText(this, "Failed to join lobby. It might be full or invalid.", Toast.LENGTH_LONG).show();
             finish(); // Close activity if join fails
@@ -429,14 +447,10 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
     private void setupMockMode() {
         Log.d(TAG, "Running in Mock Mode");
         playerList.clear();
-        playerList.add(new Player(String.valueOf(userId), username));
-        playerList.add(new Player("2", "Player 2"));
-        playerList.add(new Player("3", "Player 3"));
-        playerList.add(new Player("4", "Player 4"));
-        playerList.add(new Player("5", "Player 5"));
-        playerList.add(new Player("6", "Player 6"));
-        playerList.add(new Player("7", "Player 7"));
-        playerList.add(new Player("8", "Player 8"));
+        playerList.add(new Player(username, getApplicationContext()));
+        playerList.add(new Player("Player 2", getApplicationContext()));
+        playerList.add(new Player("Player 3", getApplicationContext()));
+        playerList.add(new Player("Player 4", getApplicationContext()));
         playerAdapter.notifyDataSetChanged();
         setLobbyLeader(true);
     }
