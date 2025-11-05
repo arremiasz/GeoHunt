@@ -70,7 +70,15 @@ public class Notifications {
 
             String targetUser = splitMsg[1];
             String msg = "You have been sent a friend request by: " + username;
-            sendMessageToParticularUser(targetUser, msg);
+            if(targetUser.equals(username)) {
+                sendMessageToParticularUser(username, "You cannot send a friend request to yourself.");
+            }
+            try{
+                sendMessageToParticularUser(targetUser, msg);
+            } catch (IllegalArgumentException e){
+                sendMessageToParticularUser(username, "Target not found." );
+            }
+
 
         } else if (message.startsWith("FriendAcc")) {
             String[] splitMsg = message.split(" ");
@@ -280,6 +288,8 @@ public class Notifications {
             Session userSession = usernameSessionMap.get(username);
             if (userSession != null && userSession.isOpen()) {
                 userSession.getBasicRemote().sendText(message);
+            } else{
+                throw new IllegalArgumentException();
             }
         } catch (IOException e) {
             logger.info("[DM Exception] " + e.getMessage());
