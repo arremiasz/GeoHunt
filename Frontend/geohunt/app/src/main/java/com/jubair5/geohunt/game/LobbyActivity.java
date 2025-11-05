@@ -4,17 +4,38 @@
  */
 package com.jubair5.geohunt.game;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.content.res.Configuration;
+import android.location.Location;
 import android.os.Bundle;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.material.slider.Slider;
 import com.jubair5.geohunt.R;
 import com.jubair5.geohunt.network.ApiConstants;
@@ -29,7 +50,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LobbyActivity extends AppCompatActivity {
+public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private static final String TAG = "LobbyActivity";
     // Set to true to simulate server responses and test UI
@@ -43,11 +64,30 @@ public class LobbyActivity extends AppCompatActivity {
     private List<Player> playerList = new ArrayList<>();
     private Button startGameButton;
     private Slider radiusSlider;
+    private MapView mapView;
+    private GoogleMap googleMap;
+    private FusedLocationProviderClient fusedLocationClient;
+    private LocationCallback locationCallback;
 
     private String lobbyId;
     private int userId;
     private String username;
     private SharedPreferences prefs;
+
+    /**
+     * This method handles the result of the location permission request.
+     */
+    private final ActivityResultLauncher<String> requestLocationPermissionLauncher = registerForActivityResult(
+            new ActivityResultContracts.RequestPermission(),
+            isGranted -> {
+                if (isGranted) {
+                    Log.d(TAG, "Location permission granted.");
+                    enableMyLocation();
+                } else {
+                    Log.w(TAG, "Location permission denied.");
+                    Toast.makeText(this, "Location permission is required to show your position on the map.", Toast.LENGTH_LONG).show();
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +107,12 @@ public class LobbyActivity extends AppCompatActivity {
 
         radiusSlider = findViewById(R.id.radius_slider);
         startGameButton = findViewById(R.id.start_game_button);
+        mapView = findViewById(R.id.map_view_lobby);
+
+        mapView.onCreate(savedInstanceState);
+        mapView.getMapAsync(this);
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         Button inviteButton = findViewById(R.id.invite_button);
         inviteButton.setOnClickListener(v -> inviteFriends());
@@ -78,6 +124,68 @@ public class LobbyActivity extends AppCompatActivity {
         } else {
             createWebSocketClient();
         }
+    }
+
+    @Override
+    public void onMapReady(@NonNull GoogleMap googleMap) {
+        this.googleMap = googleMap;
+        setMapStyle();
+        enableMyLocation();
+    }
+
+    /**
+     * Sets the map style based on the current system theme.
+     */
+    private void setMapStyle() {
+        int nightModeFlags = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
+            Log.d(TAG, "Setting dark mode map style.");
+            googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.map_style_dark));
+        }
+    }
+
+    /**
+     * Checks for location permission, and if granted, enables the 'My Location' layer and
+     * moves the camera to the user's current position.
+     */
+    private void enableMyLocation() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            if (googleMap != null) {
+                googleMap.setMyLocationEnabled(true);
+                fusedLocationClient.getLastLocation().addOnSuccessListener(this, location -> {
+                    if (location != null) {
+                        LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
+                        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f));
+                        startLocationUpdates();
+                    } else {
+                        Log.w(TAG, "Could not get current location on map ready.");
+                        Toast.makeText(this, "Could not get current location.", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        } else {
+            requestLocationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+    }
+
+    /**
+     * Starts requesting location updates.
+     */
+    @SuppressLint("MissingPermission")
+    private void startLocationUpdates() {
+        LocationRequest locationRequest = new LocationRequest.Builder(10000)
+                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                .build();
+
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(@NonNull LocationResult locationResult) {
+                // The location updates are running, but we are not moving the camera
+                // to allow the user to pan freely.
+            }
+        };
+
+        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper());
     }
 
     private void createWebSocketClient() {
@@ -147,7 +255,7 @@ public class LobbyActivity extends AppCompatActivity {
             playerAdapter.notifyDataSetChanged();
         } else if (message.equals("cannot join lobby")){
             Toast.makeText(this, "Failed to join lobby. It might be full or invalid.", Toast.LENGTH_LONG).show();
-            finish();
+            finish(); // Close activity if join fails
         }
     }
 
@@ -177,12 +285,53 @@ public class LobbyActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        mapView.onResume();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mapView.onStart();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mapView.onStop();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mapView.onPause();
+        if (fusedLocationClient != null && locationCallback != null) {
+            fusedLocationClient.removeLocationUpdates(locationCallback);
+        }
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         if (webSocketClient != null) {
             webSocketClient.close();
         }
+        mapView.onDestroy();
     }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        mapView.onLowMemory();
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        mapView.onSaveInstanceState(outState);
+    }
+
 
     private void setLobbyLeader(boolean isLeader) {
         startGameButton.setEnabled(isLeader);
