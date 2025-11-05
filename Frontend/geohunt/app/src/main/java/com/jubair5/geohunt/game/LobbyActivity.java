@@ -123,10 +123,24 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         radiusSlider.addOnChangeListener((slider, value, fromUser) -> {
-            radius = value;
-            updateCircleRadius(true);
-            if (startGameButton.isEnabled()) { // User is the lobby leader
-                sendLobbyMessage(String.format(Locale.US, "radius %.2f", value));
+            if (fromUser) {
+                radius = value;
+                updateCircleRadius(true);
+            }
+        });
+
+        radiusSlider.addOnSliderTouchListener(new Slider.OnSliderTouchListener() {
+            @SuppressLint("RestrictedApi")
+            @Override
+            public void onStartTrackingTouch(@NonNull Slider slider) {}
+
+            @SuppressLint("RestrictedApi")
+            @Override
+            public void onStopTrackingTouch(@NonNull Slider slider) {
+                // Only send the update if the user is the lobby leader
+                if (startGameButton.isEnabled()) {
+                    sendLobbyMessage(String.format(Locale.US, "radius %.2f", slider.getValue()));
+                }
             }
         });
 
@@ -149,6 +163,7 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
         enableMyLocation();
 
         googleMap.setOnCameraMoveListener(() -> {
+            if (!startGameButton.isEnabled()) return;
             lobbyCenter = googleMap.getCameraPosition().target;
             updateCircleRadius(false);
         });
@@ -156,6 +171,15 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
         googleMap.setOnCameraMoveStartedListener(reason -> {
             if (reason == GoogleMap.OnCameraMoveStartedListener.REASON_GESTURE) {
                 userHasPanned = true;
+            }
+        });
+
+        googleMap.setOnCameraIdleListener(() -> {
+            if (!startGameButton.isEnabled()) return;
+            lobbyCenter = googleMap.getCameraPosition().target;
+            updateCircleRadius(false);
+            if (startGameButton.isEnabled()) { // User is the lobby leader
+                sendLobbyMessage(String.format(Locale.US, "center %f %f", lobbyCenter.latitude, lobbyCenter.longitude));
             }
         });
     }

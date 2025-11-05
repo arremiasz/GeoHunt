@@ -120,7 +120,7 @@ wss.on('connection', (ws, username) => {
     }
   });
 
-  // --- 6. Handle disconnections ---
+  // --- 6. Handle disconnections (Updated Leader Promotion) ---
   ws.on('close', () => {
     const disconnectedClient = clients.get(ws);
     if (!disconnectedClient) return;
@@ -131,20 +131,26 @@ wss.on('connection', (ws, username) => {
     if (lobbyId) {
       const lobby = lobbies.get(lobbyId);
       if (lobby) {
-        lobby.members.delete(ws); // Remove from the Set
+        // First, remove the disconnected client from the lobby
+        lobby.members.delete(ws); 
         
+        // Notify the remaining members
         const disconnectMsg = `User ${disconnectedClient.username} disconnected`;
         broadcast(lobby.members, disconnectMsg);
 
-        // --- MODIFIED: Handle leader disconnection ---
-        if (disconnectedClient.ws === lobby.leader) {
+        // --- New Leader Logic ---
+        // Check if the person who left was the leader
+        if (ws === lobby.leader) {
           console.log(`Lobby ${lobbyId} leader disconnected.`);
-          // If members are left, promote the "next" one
+          
+          // Check if there are any members left
           if (lobby.members.size > 0) {
-            // Get the first item from the Set
-            const newLeader = lobby.members.values().next().value; 
-            lobby.leader = newLeader;
             
+            // Get the "next" person (the new first item in the Set)
+            const newLeader = lobby.members.values().next().value; 
+            lobby.leader = newLeader; // Assign them as the new leader
+            
+            // Announce the new leader
             const newLeaderInfo = clients.get(newLeader);
             console.log(`New leader for ${lobbyId} is ${newLeaderInfo.username}`);
             broadcast(lobby.members, `User ${newLeaderInfo.username} is now the lobby leader`);
