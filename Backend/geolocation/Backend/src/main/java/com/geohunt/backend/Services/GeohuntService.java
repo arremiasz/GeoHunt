@@ -1,10 +1,17 @@
 package com.geohunt.backend.Services;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.geohunt.backend.database.Challenges;
 import com.geohunt.backend.database.ChallengesRepository;
-import com.geohunt.backend.database.SubmissionsRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -45,36 +52,72 @@ public class GeohuntService {
             challengesRepository.saveAll(generated);
             possible.addAll(generated);
         }
-
         Random random = new Random();
         Challenges r = possible.get(random.nextInt(possible.size()));
         return r;
+
     }
 
     public List<Challenges> generateChallenges(double lat, double lon, double rad, int count) {
         List<Challenges> generated = new ArrayList<>();
         String apiKey = "AIzaSyA4cGMdtzfM4Ub-1agmFLqKP5WLWLLwLLg";
+        ObjectMapper mapper = new ObjectMapper();
+        HttpClient client = HttpClient.newHttpClient();
 
-        for (int i = 0; i < count; i++) {
-            double[] coords = randomLocation(lat, lon, rad);
-            double newLat = coords[0];
-            double newLon = coords[1];
+        try {
+            // Convert miles to meters for Places API
+            int radiusMeters = (int) (rad * 1609.34);
 
-            String streetviewUrl = String.format(
-                    "https://maps.googleapis.com/maps/api/streetview?size=600x400&location=%f,%f&key=%s",
-                    newLat, newLon, apiKey
+            // Example query: “tourist attractions”, “landmarks”, “parks”, etc.
+            String placesUrl = String.format(
+                    "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=%f,%f&radius=%d&type=tourist_attraction&key=%s",
+                    lat, lon, radiusMeters, apiKey
             );
 
-            Challenges challenge = new Challenges();
-            challenge.setLatitude(newLat);
-            challenge.setLongitude(newLon);
-            challenge.setStreetviewurl(streetviewUrl);
-            challenge.setCreationdate(LocalDate.now());
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(placesUrl))
+                    .GET()
+                    .build();
 
-            generated.add(challenge);
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            JsonNode root = mapper.readTree(response.body());
+            JsonNode results = root.get("results");
+
+            if (results == null || !results.isArray() || results.isEmpty()) {
+                System.out.println("No landmarks found in the area, falling back to random generation.");
+                return fallbackGenerate(lat, lon, rad, count);
+            }
+
+            int added = 0;
+            for (JsonNode place : results) {
+                if (added >= count) break;
+
+                JsonNode location = place.path("geometry").path("location");
+                double newLat = location.path("lat").asDouble();
+                double newLon = location.path("lng").asDouble();
+
+                String streetviewUrl = String.format(
+                        "https://maps.googleapis.com/maps/api/streetview?size=600x400&location=%f,%f&key=%s",
+                        newLat, newLon, apiKey
+                );
+
+                Challenges challenge = new Challenges();
+                challenge.setLatitude(newLat);
+                challenge.setLongitude(newLon);
+                challenge.setStreetviewurl(streetviewUrl);
+                challenge.setCreationdate(LocalDate.now());
+
+                generated.add(challenge);
+                added++;
+            }
+
+            return generated;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error using Places API, falling back to random generation.");
+            return fallbackGenerate(lat, lon, rad, count);
         }
-
-        return generated;
     }
 
     private double[] randomLocation(double lat, double lon, double radiusMiles) {
@@ -100,5 +143,28 @@ public class GeohuntService {
 
     public void deleteChallengeByID(long id) {
         challengesRepository.deleteById(id);
+    }
+
+    private List<Challenges> fallbackGenerate(double lat, double lon, double rad, int count) {
+        List<Challenges> generated = new ArrayList<>();
+        String apiKey = "AIzaSyA4cGMdtzfM4Ub-1agmFLqKP5WLWLLwLLg";
+        for (int i = 0; i < count; i++) {
+            double[] coords = randomLocation(lat, lon, rad);
+            double newLat = coords[0];
+            double newLon = coords[1];
+
+            String streetviewUrl = String.format(
+                    "https://maps.googleapis.com/maps/api/streetview?size=600x400&location=%f,%f&key=%s",
+                    newLat, newLon, apiKey
+            );
+
+            Challenges challenge = new Challenges();
+            challenge.setLatitude(newLat);
+            challenge.setLongitude(newLon);
+            challenge.setStreetviewurl(streetviewUrl);
+            challenge.setCreationdate(LocalDate.now());
+            generated.add(challenge);
+        }
+        return generated;
     }
 }
