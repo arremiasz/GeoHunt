@@ -161,7 +161,8 @@ public class Notifications {
 
             String targetUser = splitMsg[1];
             String msg = String.join(" ", Arrays.copyOfRange(splitMsg, 2, splitMsg.length));
-            sendMessageToParticularUser(targetUser, msg);
+            String donemsg = "[" + username + "] " + msg;
+            sendMessageToParticularUser(targetUser, donemsg);
 
         } else if (message.startsWith("CustomGroupMsg")) {
             String[] splitMsg = message.split(" ");
