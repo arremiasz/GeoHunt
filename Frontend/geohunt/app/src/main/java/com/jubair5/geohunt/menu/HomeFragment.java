@@ -38,6 +38,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.jubair5.geohunt.R;
 import com.jubair5.geohunt.game.GameActivity;
+import com.jubair5.geohunt.game.LobbyActivity;
 
 public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
@@ -69,6 +70,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
         mapView = view.findViewById(R.id.map_view_home);
         Button playButton = view.findViewById(R.id.play_button);
+        Button multiplayerButton = view.findViewById(R.id.multiplayer_button);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
 
@@ -76,6 +78,11 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
         playButton.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), GameActivity.class);
+            startActivity(intent);
+        });
+
+        multiplayerButton.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), LobbyActivity.class);
             startActivity(intent);
         });
 

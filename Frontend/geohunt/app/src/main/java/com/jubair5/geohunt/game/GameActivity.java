@@ -77,57 +77,51 @@ import java.util.Locale;
 public class GameActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private static final String TAG = "GameActivity";
-    private MapView mapView;
-    private GoogleMap googleMap;
-    private FusedLocationProviderClient fusedLocationProviderClient;
-    private LocationCallback locationCallback;
-    private Circle radiusCircle;
-    private LinearLayout settingsContainer;
-    private FrameLayout countdownOverlay;
-    private TextView countdownText;
-    private CardView stopwatchContainer;
-    private TextView stopwatchText;
-    private CardView hintContainer;
-    private ImageView hintImage;
-    private ImageView fullscreenPreview;
-    private Button guessButton;
-    private double radius = 1.0; // Default radius in miles
-    private double currentLat;
-    private double currentLng;
-    private boolean gameStarted = false;
-    private boolean userHasPanned = false;
-    private Uri guessImageUri;
-    private int challengeId;
-    private int strokeColor = Color.BLUE;
-    private int fillColor = 0x220000FF;
+    protected MapView mapView;
+    protected GoogleMap googleMap;
+    protected FusedLocationProviderClient fusedLocationProviderClient;
+    protected LocationCallback locationCallback;
+    protected Circle radiusCircle;
+    protected LinearLayout settingsContainer;
+    protected FrameLayout countdownOverlay;
+    protected TextView countdownText;
+    protected CardView stopwatchContainer;
+    protected TextView stopwatchText;
+    protected CardView hintContainer;
+    protected ImageView hintImage;
+    protected ImageView fullscreenPreview;
+    protected Button guessButton;
+    protected double radius = 1.0; // Default radius in miles
+    protected double currentLat;
+    protected double currentLng;
+    protected boolean gameStarted = false;
+    protected boolean userHasPanned = false;
+    protected Uri guessImageUri;
+    protected int challengeId;
+    protected int strokeColor = Color.BLUE;
+    protected int fillColor = 0x220000FF;
 
-    private Handler stopwatchHandler = new Handler(Looper.getMainLooper());
-    private long startTime = 0L;
+    protected Handler stopwatchHandler = new Handler(Looper.getMainLooper());
+    protected long startTime = 0L;
 
     // For dragging the hint box
-    private float dX, dY;
+    protected float dX, dY;
 
-    /**
-     * This method handles the result of the location permission request.
-     */
-    private final ActivityResultLauncher<String> requestLocationPermissionLauncher = registerForActivityResult(
-            new ActivityResultContracts.RequestPermission(),
-            isGranted -> {
-                if (isGranted) {
-                    Log.d(TAG, "Location permission granted.");
-                    enableMyLocation();
-                } else {
-                    Log.w(TAG, "Location permission denied.");
-                    Toast.makeText(this, "Location permission is required for the game.", Toast.LENGTH_LONG).show();
-                    finish();
-                }
-            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.game_activity);
+        setup(savedInstanceState);
+    }
 
+    protected void onCreate(Bundle savedInstanceState, int activity) {
+        super.onCreate(savedInstanceState);
+        setContentView(activity);
+        setup(savedInstanceState);
+    }
+
+    protected void setup(Bundle savedInstanceState) {
         mapView = findViewById(R.id.game_map_view);
         Slider radiusSlider = findViewById(R.id.radius_slider);
         Button readyButton = findViewById(R.id.ready_button);
@@ -161,7 +155,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
      * This method is called when the user clicks the ready button. It stops location updates
      * and sends the game parameters to the server.
      */
-    private void readyUp() {
+    protected void readyUp() {
         Log.d(TAG, "Ready button clicked. Beginning ready sequence.");
 
 
@@ -192,7 +186,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     /**
      * Builds and sends the GET request to the server to get a generated location for the game.
      */
-    private void sendGameStartRequest() {
+    protected void sendGameStartRequest() {
         String url = Uri.parse(ApiConstants.BASE_URL + ApiConstants.GET_GENERATED_LOCATIONS_ENDPOINT)
                 .buildUpon()
                 .appendQueryParameter("lat", String.valueOf(currentLat))
@@ -229,7 +223,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
      * @param id The ID of the target location.
      * @param imageUrl The URL of the Street View image for the target.
      */
-    private void startGame(int id, String imageUrl) {
+    protected void startGame(int id, String imageUrl) {
         settingsContainer.setVisibility(View.GONE);
         gameStarted = true;
 
@@ -250,7 +244,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
      * @param id The ID of the target location.
      * @param imageUrl The URL of the Street View image for the target.
      */
-    private void startCountdown(int id, String imageUrl) {
+    protected void startCountdown(int id, String imageUrl) {
         countdownOverlay.setVisibility(View.VISIBLE);
         countdownText.setText(String.valueOf(3));
         new CountDownTimer(4000, 1000) {
@@ -277,7 +271,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     /**
      * Starts the stopwatch and updates the text view.
      */
-    private void startStopwatch() {
+    protected void startStopwatch() {
         stopwatchContainer.setVisibility(View.VISIBLE);
         startTime = System.currentTimeMillis();
         stopwatchHandler.post(new Runnable() {
@@ -299,7 +293,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
      * Stops the stopwatch and returns the elapsed time.
      * @return The elapsed time in seconds.
      */
-    private int stopStopwatch() {
+    protected int stopStopwatch() {
         stopwatchHandler.removeCallbacksAndMessages(null);
         long millis = System.currentTimeMillis() - startTime;
         return (int) (millis / 1000);
@@ -309,7 +303,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
      * This method is called when the user clicks the guess button.
      * It initiates the process of taking a picture for the guess.
      */
-    private void startGuess() {
+    protected void startGuess() {
         Log.d(TAG, "Guess button clicked.");
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             requestCameraPermissionForGuessLauncher.launch(Manifest.permission.CAMERA);
@@ -321,7 +315,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     /**
      * Creates a temporary file URI and launches the camera intent for the guess.
      */
-    private void launchCameraForGuess() {
+    protected void launchCameraForGuess() {
         guessImageUri = createImageUri("guess_photo.jpg");
         if (guessImageUri != null) {
             takePictureForGuessLauncher.launch(guessImageUri);
@@ -331,7 +325,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    private void submitGuess(String imageString) {
+    protected void submitGuess(String imageString) {
         SharedPreferences prefs = getSharedPreferences("GeoHuntPrefs", Context.MODE_PRIVATE);
         int userId = prefs.getInt("userId", -1);
 
@@ -389,7 +383,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
      * @param fileName The name of the file to create.
      * @return The Uri for the temporary image file.
      */
-    private Uri createImageUri(String fileName) {
+    protected Uri createImageUri(String fileName) {
         File imageFile = new File(getCacheDir(), fileName);
         return FileProvider.getUriForFile(this, getPackageName() + ".provider", imageFile);
     }
@@ -399,7 +393,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
      * @param bitmap The bitmap to be converted.
      * @return The Base64 encoded string representation of the bitmap.
      */
-    private String bitmapToString(Bitmap bitmap) {
+    protected String bitmapToString(Bitmap bitmap) {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 70, byteArrayOutputStream);
         byte[] byteArray = byteArrayOutputStream.toByteArray();
@@ -407,9 +401,25 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     /**
+     * This method handles the result of the location permission request.
+     */
+    protected final ActivityResultLauncher<String> requestLocationPermissionLauncher = registerForActivityResult(
+            new ActivityResultContracts.RequestPermission(),
+            isGranted -> {
+                if (isGranted) {
+                    Log.d(TAG, "Location permission granted.");
+                    enableMyLocation();
+                } else {
+                    Log.w(TAG, "Location permission denied.");
+                    Toast.makeText(this, "Location permission is required for the game.", Toast.LENGTH_LONG).show();
+                    finish();
+                }
+            });
+
+    /**
      * This method handles getting the camera permission for guessing.
      */
-    private final ActivityResultLauncher<String> requestCameraPermissionForGuessLauncher = registerForActivityResult(
+    protected final ActivityResultLauncher<String> requestCameraPermissionForGuessLauncher = registerForActivityResult(
             new ActivityResultContracts.RequestPermission(),
             isGranted -> {
                 if (isGranted) {
@@ -424,7 +434,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     /**
      * This method is called when the user has taken a picture for their guess.
      */
-    private final ActivityResultLauncher<Uri> takePictureForGuessLauncher = registerForActivityResult(
+    protected final ActivityResultLauncher<Uri> takePictureForGuessLauncher = registerForActivityResult(
             new ActivityResultContracts.TakePicture(),
             success -> {
                 if (success) {
@@ -452,7 +462,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
      * Makes the hint container visible and loads the image.
      * @param imageUrl The URL of the hint image.
      */
-    private void showHint(String imageUrl) {
+    protected void showHint(String imageUrl) {
         fullscreenPreview.setVisibility(View.VISIBLE);
         hintContainer.post(() -> snapToCorner(hintContainer));
         Glide.with(this).load(imageUrl).into(hintImage);
@@ -463,7 +473,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
      * Sets up the listeners for the hint box to allow dragging and clicking.
      */
     @SuppressLint("ClickableViewAccessibility")
-    private void setupHintBoxListeners() {
+    protected void setupHintBoxListeners() {
         fullscreenPreview.setOnClickListener(v -> {
             fullscreenPreview.setVisibility(View.GONE);
             hintContainer.setVisibility(View.VISIBLE);
@@ -520,7 +530,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
      * Snaps the hint box to the nearest corner of the screen.
      * @param view The hint box view.
      */
-    private void snapToCorner(View view) {
+    protected void snapToCorner(View view) {
         ViewGroup parent = (ViewGroup) view.getParent();
         int parentWidth = parent.getWidth();
         int parentHeight = parent.getHeight();
@@ -579,7 +589,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
      * Checks for location permission, and if granted, enables the 'My Location' layer and
      * moves the camera to the user's current position.
      */
-    private void enableMyLocation() {
+    protected void enableMyLocation() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             if (googleMap != null) {
                 googleMap.setMyLocationEnabled(true);
@@ -603,7 +613,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
      * Starts requesting location updates to keep the user's position centered.
      */
     @SuppressLint("MissingPermission")
-    private void startLocationUpdates() {
+    protected void startLocationUpdates() {
         LocationRequest locationRequest = new LocationRequest.Builder(1000)
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                 .build();
@@ -632,7 +642,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     /**
      * Sets the map style based on the current system theme (dark or light).
      */
-    private void setMapStyle() {
+    protected void setMapStyle() {
         int nightModeFlags = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
         if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
             Log.d(TAG, "Setting dark mode map style.");
@@ -645,7 +655,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     /**
      * Updates the radius circle on the map to reflect the current search radius.
      */
-    private void updateCircleRadius() {
+    protected void updateCircleRadius() {
         if (googleMap != null) {
             if (radiusCircle != null) {
                 radiusCircle.remove();
@@ -676,7 +686,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
      * @param bearing The bearing in degrees.
      * @return The new LatLng.
      */
-    private LatLng getOffsetLatLng(LatLng latLng, double distance, double bearing) {
+    protected LatLng getOffsetLatLng(LatLng latLng, double distance, double bearing) {
         double lat1 = Math.toRadians(latLng.latitude);
         double lon1 = Math.toRadians(latLng.longitude);
         double brng = Math.toRadians(bearing);
