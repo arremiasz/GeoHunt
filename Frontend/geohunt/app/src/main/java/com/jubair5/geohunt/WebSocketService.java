@@ -29,7 +29,7 @@ public class WebSocketService extends Service {
 
     private void connectWebSocket() {
         try {
-            URI uri = new URI("ws://yourserver.com/ws/notifications?userId=123");
+            URI uri = new URI("dummyString");
             webSocketClient = new WebSocketNotificationClient(uri, this);
             webSocketClient.connect();
         } catch (Exception e) {
