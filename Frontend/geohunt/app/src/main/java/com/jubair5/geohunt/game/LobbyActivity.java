@@ -310,6 +310,7 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
             public void onError(Exception ex) {
                 Log.e(TAG, "WebSocket error: " + ex.getMessage());
                 runOnUiThread(() -> Toast.makeText(LobbyActivity.this, "WebSocket error. See logs.", Toast.LENGTH_SHORT).show());
+                finish();
             }
         };
 
@@ -324,7 +325,6 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
                 sendLobbyMessage("create");
             } else {
                 sendLobbyMessage("join " + lobbyId);
-                setLobbyLeader(false);
             }
         } else if (message.startsWith("Successfully created lobby")) {
             String[] parts = message.split("\\s+");
@@ -335,12 +335,41 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
             playerList.clear();
             playerList.add(new Player(username, getApplicationContext()));
             playerAdapter.notifyDataSetChanged();
+        } else if (message.startsWith("Successfully joined lobby")) {
+            Toast.makeText(this, "Successfully joined lobby!", Toast.LENGTH_SHORT).show();
+            setLobbyLeader(false);
         } else if (message.startsWith("User ") && message.endsWith(" joined the lobby")) {
             // e.g., "User Player2 joined the lobby"
             String joinedUser = message.substring(5, message.indexOf(" joined the lobby"));
             Toast.makeText(this, joinedUser + " has joined!", Toast.LENGTH_SHORT).show();
             playerList.add(new Player(joinedUser, getApplicationContext()));
             playerAdapter.notifyDataSetChanged();
+
+            boolean userExists = false;
+            for (Player p : playerList) {
+                if (p.getUsername().equals(joinedUser)) {
+                    userExists = true;
+                    break;
+                }
+            }
+            if (!userExists) {
+                playerList.add(new Player(joinedUser, getApplicationContext()));
+                playerAdapter.notifyDataSetChanged();
+            }
+
+            if (startGameButton.isEnabled()) { // User is the lobby leader
+                sendLobbyMessage(String.format(Locale.US, "radius %.2f", radius));
+
+                if (lobbyCenter != null) {
+                    sendLobbyMessage(String.format(Locale.US, "center %f %f", lobbyCenter.latitude, lobbyCenter.longitude));
+                }
+
+                StringBuilder userListMessage = new StringBuilder("users");
+                for (Player p : playerList) {
+                    userListMessage.append(" ").append(p.getUsername());
+                }
+                sendLobbyMessage(userListMessage.toString());
+            }
         } else if (message.startsWith("User ") && message.endsWith(" disconnected")) {
             String disconnectedUser = message.substring(5, message.indexOf(" disconnected"));
             Toast.makeText(this, disconnectedUser + " has disconnected.", Toast.LENGTH_SHORT).show();
@@ -358,6 +387,29 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
                     Log.e(TAG, "Could not parse radius from message: " + message, e);
                 }
             }
+        } else if (message.startsWith("center ")) {
+            if (!startGameButton.isEnabled()) { // Only non-leaders should react to this message
+                try {
+                    String[] parts = message.substring(7).split(" ");
+                    double lat = Double.parseDouble(parts[0]);
+                    double lng = Double.parseDouble(parts[1]);
+                    lobbyCenter = new LatLng(lat, lng);
+                    updateCircleRadius(true);
+                    Log.d(TAG, "Lobby center updated to: " + lobbyCenter.toString());
+                } catch (Exception e) {
+                    Log.e(TAG, "Could not parse center from message: " + message, e);
+                }
+            }
+        } else if (message.startsWith("users ")) {
+            String[] users = message.substring(6).split(" ");
+            playerList.clear();
+            for (String user : users) {
+                if (!user.trim().isEmpty()) {
+                    playerList.add(new Player(user.trim(), getApplicationContext()));
+                }
+            }
+            playerAdapter.notifyDataSetChanged();
+            Log.d(TAG, "Lobby user list updated.");
         } else if (message.equals("cannot join lobby")){
             Toast.makeText(this, "Failed to join lobby. It might be full or invalid.", Toast.LENGTH_LONG).show();
             finish(); // Close activity if join fails
