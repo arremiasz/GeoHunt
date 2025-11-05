@@ -1,6 +1,7 @@
 package com.geohunt.backend.multiplayer;
 
 
+import com.geohunt.backend.database.Account;
 import com.geohunt.backend.database.AccountService;
 import jakarta.websocket.*;
 import jakarta.websocket.server.PathParam;
@@ -29,6 +30,7 @@ public class MultiplayerSocket {
     private static Map<String, Session> usernameSessionMap = new Hashtable<>();
 
     private static Map<String, Lobby> usernameLobbyMap = new HashMap<>();
+    private static Map<Long, Lobby> idLobbyMap = new HashMap<>();
 
     private final Logger logger = LoggerFactory.getLogger(MultiplayerSocket.class);
 
@@ -97,17 +99,25 @@ public class MultiplayerSocket {
 
     public void createLobby(String username){
         if(usernameLobbyMap.get(username) != null){
-            // User is already in lobby, cannot create a new lobby.
+            return;
         }
-        else{
-            Lobby lobby = new Lobby(username);
-            usernameLobbyMap.put(username, lobby);
-            sendStringToSingleUser(username, "Successfully created lobby");
-        }
+        Lobby lobby = new Lobby(username);
+        usernameLobbyMap.put(username, lobby);
+        idLobbyMap.put(lobby.getId(), lobby);
+        sendStringToSingleUser(username, "Successfully created lobby");
     }
 
-    public void joinLobby(String username, String message){
+    public void joinLobby(String username, long id){
+        Lobby lobby = idLobbyMap.get(id);
+        lobby.joinLobby(username);
+    }
 
+    public void closeLobby(Lobby lobby){
+        List<Account> lobbyPlayerList = lobby.getConnectedPlayers();
+        for(Account player : lobbyPlayerList){
+            lobby.disconnectUser(player.getUsername());
+            usernameLobbyMap.put(player.getUsername(), null);
+        }
     }
 
     // Sending Messages
