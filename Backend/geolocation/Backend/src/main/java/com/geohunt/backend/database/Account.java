@@ -30,7 +30,9 @@ public class Account {
     @JsonManagedReference("account-submissions")
     private List<Submissions> submissions;
 
-
+    @OneToMany(mappedBy="target")
+    @JsonManagedReference("account-notifications")
+    private List<Notifications> notifications;
 
     @OneToMany(mappedBy = "primary")
     private Set<Friends> sentFriendRequests;

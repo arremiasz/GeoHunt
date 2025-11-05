@@ -60,31 +60,36 @@ public class Notifications {
         //Multplayer Challenge Complete: MultComplete <groupId>
         //Solo challenge complete: ChallComplete
         //Custom Group Message: CustomGroupMsg <groupId> msg
-        //custom DM: CustomDM <username: Note: username is self name if you want to send notif to yourself.> msg
+        //custom DM: CustomDM <username> msg
+        //Create Group (For adding custom ID): CreateGroup <groupId>
+        //Add User to group: ForceAdd <groupId> <CommaSeparatedListOfUsernames>
+
         if (message.startsWith("FriendReq")) {
             String[] splitMsg = message.split(" ");
-            if (splitMsg.length < 2) return;
+            if (splitMsg.length < 2) { argError(username); return; }
 
             String targetUser = splitMsg[1];
             String msg = "You have been sent a friend request by: " + username;
             sendMessageToParticularUser(targetUser, msg);
+
         } else if (message.startsWith("FriendAcc")) {
             String[] splitMsg = message.split(" ");
-            if (splitMsg.length < 2) return;
+            if (splitMsg.length < 2) { argError(username); return; }
 
             String targetUser = splitMsg[1];
             String msg = username + " has accepted your friend request!";
             sendMessageToParticularUser(targetUser, msg);
+
         } else if (message.startsWith("Invite")) {
             String[] splitMsg = message.split(" ");
-            if (splitMsg.length < 3) return;
+            if (splitMsg.length < 3) { argError(username); return; }
 
             String targetUser = splitMsg[1];
             String groupId = splitMsg[2];
 
             if (groupId.equals("N")) {
                 String newId = username + "sGrp";
-                groupMembersMap.put(newId, new HashSet<>());
+                groupMembersMap.putIfAbsent(newId, new HashSet<>());
                 groupMembersMap.get(newId).add(username);
                 sendMessageToParticularUser(username, "Your new groupId is: " + newId);
                 currentGroup = newId;
@@ -93,11 +98,10 @@ public class Notifications {
 
             String msg = username + " invited you to join their group (" + groupId + ")";
             sendMessageToParticularUser(targetUser, msg);
-        }
 
-        else if (message.startsWith("AcceptInvite")) {
+        } else if (message.startsWith("AcceptInvite")) {
             String[] splitMsg = message.split(" ");
-            if (splitMsg.length < 2) return;
+            if (splitMsg.length < 2) { argError(username); return; }
 
             String groupId = splitMsg[1];
             if (!groupMembersMap.containsKey(groupId)) {
@@ -114,28 +118,30 @@ public class Notifications {
             currentGroup = groupId;
             sendMessageToParticularUser(username, "You have been added to the group!");
             broadcastInGroup(username + " has joined your group!", groupId, username);
-        } else if(message.startsWith("Leave")){
+
+        } else if (message.startsWith("Leave")) {
             String[] splitMsg = message.split(" ");
-            if (splitMsg.length < 2) return;
+            if (splitMsg.length < 2) { argError(username); return; }
+
             String groupId = splitMsg[1];
-            String msg = username + " left the group!";
             if (!groupMembersMap.containsKey(groupId)) {
                 sendMessageToParticularUser(username, "Group does not exist.");
                 return;
             }
+
             boolean didRemove = groupMembersMap.get(groupId).remove(username);
-            if (groupMembersMap.get(groupId).isEmpty()) {
-                groupMembersMap.remove(groupId);
-            }
+            if (groupMembersMap.get(groupId).isEmpty()) { groupMembersMap.remove(groupId); }
+
             if (didRemove) {
-                broadcastInGroup(msg, groupId, username);
+                broadcastInGroup(username + " left the group!", groupId, username);
             } else {
-                sendMessageToParticularUser(username, "That group does not exist or you are not in that group.");
+                sendMessageToParticularUser(username, "You are not in that group.");
             }
 
-        } else if(message.startsWith("MultComplete")){
+        } else if (message.startsWith("MultComplete")) {
             String[] splitMsg = message.split(" ");
-            if (splitMsg.length < 2) return;
+            if (splitMsg.length < 2) { argError(username); return; }
+
             String groupId = splitMsg[1];
             if (!groupMembersMap.containsKey(groupId)) {
                 sendMessageToParticularUser(username, "Group does not exist.");
@@ -144,28 +150,78 @@ public class Notifications {
 
             String msg = username + " has finished the challenge!";
             broadcastInGroup(msg, groupId, username);
-        } else if(message.startsWith("ChallComplete")){
-            String[] splitMsg = message.split(" ");
-            if (splitMsg.length < 1) return;
+
+        } else if (message.startsWith("ChallComplete")) {
+            // no args expected — simply acknowledge
             sendMessageToParticularUser(username, "You have completed the challenge!");
+
         } else if (message.startsWith("CustomDM")) {
             String[] splitMsg = message.split(" ");
-            if (splitMsg.length < 2) return;
+            if (splitMsg.length < 3) { argError(username); return; }
+
             String targetUser = splitMsg[1];
-            int startIndex = 2;
-            int endIndex = splitMsg.length - 1;
-            String msg = String.join(" ", Arrays.copyOfRange(splitMsg, startIndex, splitMsg.length));
+            String msg = String.join(" ", Arrays.copyOfRange(splitMsg, 2, splitMsg.length));
             sendMessageToParticularUser(targetUser, msg);
+
         } else if (message.startsWith("CustomGroupMsg")) {
             String[] splitMsg = message.split(" ");
-            if (splitMsg.length < 2) return;
-            String groupId = splitMsg[1];
-            int startIndex = 2;
-            int endIndex = splitMsg.length - 1;
-            String msg = String.join(" ", Arrays.copyOfRange(splitMsg, startIndex, splitMsg.length));
-            broadcastInGroup(msg, groupId, username);
-        }
+            if (splitMsg.length < 3) { argError(username); return; }
 
+            String groupId = splitMsg[1];
+            if (!groupMembersMap.containsKey(groupId)) {
+                sendMessageToParticularUser(username, "Group does not exist.");
+                return;
+            }
+
+            String msg = String.join(" ", Arrays.copyOfRange(splitMsg, 2, splitMsg.length));
+            broadcastInGroup(msg, groupId, username);
+
+        } else if (message.startsWith("CreateGroup")) {
+            String[] splitMsg = message.split(" ");
+            if (splitMsg.length < 2) { argError(username); return; }
+
+            String groupId = splitMsg[1];
+            if (groupMembersMap.containsKey(groupId)) {
+                sendMessageToParticularUser(username, "groupId already exists");
+                return;
+            }
+
+            groupMembersMap.putIfAbsent(groupId, new HashSet<>());
+            groupMembersMap.get(groupId).add(username);
+            sendMessageToParticularUser(username, "You have been added to the group with groupId: " + groupId);
+            currentGroup = groupId;
+
+        } else if (message.startsWith("ForceAdd")) {
+            String[] splitMsg = message.split(" ");
+            if (splitMsg.length < 3) { argError(username); return; }
+
+            String groupId = splitMsg[1];
+            String userGeneral = splitMsg[2];
+
+
+            groupMembersMap.putIfAbsent(groupId, new HashSet<>());
+
+            String[] usersToAdd = userGeneral.split(",");
+            StringBuilder added = new StringBuilder();
+            for (String u : usersToAdd) {
+                String trimmed = u.trim();
+                if (trimmed.isEmpty()) continue;
+                boolean addedNow = groupMembersMap.get(groupId).add(trimmed);
+                if (addedNow) {
+                    added.append(trimmed).append(",");
+                    sendMessageToParticularUser(trimmed, "You have been added to group with groupId: " + groupId + " by " + username);
+                }
+            }
+            if (added.length() > 0) {
+                added.setLength(added.length() - 1);
+                sendMessageToParticularUser(username, "Added users to " + groupId + ": " + added.toString());
+            } else {
+                sendMessageToParticularUser(username, "No new users were added to " + groupId + ".");
+            }
+
+        } else {
+            sendMessageToParticularUser(username, "Unknown command: " + message);
+        }
     }
 
     @OnClose
@@ -227,5 +283,9 @@ public class Notifications {
         } catch (IOException e) {
             logger.info("[DM Exception] " + e.getMessage());
         }
+    }
+
+    private void argError(String username){
+        sendMessageToParticularUser(username, "Incorrect usage of websocket endpoints.");
     }
 }
