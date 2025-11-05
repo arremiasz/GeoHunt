@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Map;
@@ -56,6 +57,10 @@ public class Notifications {
         //Multiplayer Invite: Invite <username> <groupId> //GroupId "N" if none currently. Will return a groupId.
         //Multiplayer Invite Accept: AcceptInvite <groupId>
         //Multiplayer leave group: Leave <groupId>
+        //Multplayer Challenge Complete: MultComplete <groupId>
+        //Solo challenge complete: ChallComplete
+        //Custom Group Message: CustomGroupMsg <groupId> msg
+        //custom DM: CustomDM <username: Note: username is self name if you want to send notif to yourself.> msg
         if (message.startsWith("FriendReq")) {
             String[] splitMsg = message.split(" ");
             if (splitMsg.length < 2) return;
@@ -121,8 +126,35 @@ public class Notifications {
                 sendMessageToParticularUser(username, "That group does not exist or you are not in that group.");
             }
 
+        } else if(message.startsWith("MultComplete")){
+            String[] splitMsg = message.split(" ");
+            if (splitMsg.length < 2) return;
+            String groupId = splitMsg[1];
 
-
+            String msg = username + " has finished the challenge!";
+            broadcastInGroup(msg, groupId, username);
+        } else if(message.startsWith("ChallComplete")){
+            String[] splitMsg = message.split(" ");
+            if (splitMsg.length < 1) return;
+            sendMessageToParticularUser(username, "You have completed the challenge!");
+        } else if (message.startsWith("CustomDM")) {
+            String[] splitMsg = message.split(" ");
+            if (splitMsg.length < 2) return;
+            String targetUser = splitMsg[1];
+            int startIndex = 2;
+            int endIndex = splitMsg.length - 1;
+            String[] msgArr = Arrays.copyOfRange(splitMsg, startIndex, endIndex);
+            String msg = msgArr.toString();
+            sendMessageToParticularUser(targetUser, msg);
+        } else if (message.startsWith("CustomGroupMsg")) {
+            String[] splitMsg = message.split(" ");
+            if (splitMsg.length < 2) return;
+            String groupId = splitMsg[1];
+            int startIndex = 2;
+            int endIndex = splitMsg.length - 1;
+            String[] msgArr = Arrays.copyOfRange(splitMsg, startIndex, endIndex);
+            String msg = msgArr.toString();
+            broadcastInGroup(msg, groupId, username);
         }
 
     }
