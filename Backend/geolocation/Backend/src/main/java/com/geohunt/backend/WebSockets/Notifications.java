@@ -119,7 +119,14 @@ public class Notifications {
             if (splitMsg.length < 2) return;
             String groupId = splitMsg[1];
             String msg = username + " left the group!";
+            if (!groupMembersMap.containsKey(groupId)) {
+                sendMessageToParticularUser(username, "Group does not exist.");
+                return;
+            }
             boolean didRemove = groupMembersMap.get(groupId).remove(username);
+            if (groupMembersMap.get(groupId).isEmpty()) {
+                groupMembersMap.remove(groupId);
+            }
             if (didRemove) {
                 broadcastInGroup(msg, groupId, username);
             } else {
@@ -130,6 +137,10 @@ public class Notifications {
             String[] splitMsg = message.split(" ");
             if (splitMsg.length < 2) return;
             String groupId = splitMsg[1];
+            if (!groupMembersMap.containsKey(groupId)) {
+                sendMessageToParticularUser(username, "Group does not exist.");
+                return;
+            }
 
             String msg = username + " has finished the challenge!";
             broadcastInGroup(msg, groupId, username);
@@ -143,8 +154,7 @@ public class Notifications {
             String targetUser = splitMsg[1];
             int startIndex = 2;
             int endIndex = splitMsg.length - 1;
-            String[] msgArr = Arrays.copyOfRange(splitMsg, startIndex, endIndex);
-            String msg = msgArr.toString();
+            String msg = String.join(" ", Arrays.copyOfRange(splitMsg, startIndex, splitMsg.length));
             sendMessageToParticularUser(targetUser, msg);
         } else if (message.startsWith("CustomGroupMsg")) {
             String[] splitMsg = message.split(" ");
@@ -152,8 +162,7 @@ public class Notifications {
             String groupId = splitMsg[1];
             int startIndex = 2;
             int endIndex = splitMsg.length - 1;
-            String[] msgArr = Arrays.copyOfRange(splitMsg, startIndex, endIndex);
-            String msg = msgArr.toString();
+            String msg = String.join(" ", Arrays.copyOfRange(splitMsg, startIndex, splitMsg.length));
             broadcastInGroup(msg, groupId, username);
         }
 
@@ -176,12 +185,15 @@ public class Notifications {
 
         if(currentGroup != null) {
             broadcastInGroup(username + " has disconnected.", currentGroup, username);
+            if (!groupMembersMap.containsKey(currentGroup)) {
+                sendMessageToParticularUser(username, "Group does not exist.");
+                return;
+            }
             groupMembersMap.get(currentGroup).remove(username);
             if(groupMembersMap.get(currentGroup).size() == 0) {
                 groupMembersMap.remove(currentGroup);
             }
         }
-        sendMessageToParticularUser(username, "You have been disconnected.");
     }
 
 
