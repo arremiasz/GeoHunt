@@ -17,11 +17,11 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.jubair5.geohunt.R;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class FriendsListActivity extends AppCompatActivity {
 
-    private TextView friendsTitle;
     private EditText searchBar;
 
 
@@ -35,13 +35,18 @@ public class FriendsListActivity extends AppCompatActivity {
         super.onCreate(savedInstancesState);
         setContentView(R.layout.friends_list_activity);
 
+        // Sets up the title
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle("Search for Friends");
+        }
+
         // Set up Ui elements
-        friendsTitle = findViewById(R.id.friends_label);
         searchBar = findViewById(R.id.search_bar);
         friendsRecycleViewer = findViewById(R.id.friends_recycler_view);
 
         friendsRecycleViewer.setLayoutManager(new LinearLayoutManager(this));
 
+        friendList = new ArrayList<>();
         friendAdapter = new FriendAdapter(getBaseContext(), friendList, friend ->{
             Intent intent = new Intent(FriendsListActivity.this, SingleFriendActivity.class);
             intent.putExtra("FRIEND_ID", friend.getId());

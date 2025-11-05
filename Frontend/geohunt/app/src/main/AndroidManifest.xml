@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <uses-feature android:name="android.hardware.camera" android:required="true" />
 
@@ -14,6 +15,8 @@
             <action android:name="android.media.action.IMAGE_CAPTURE" />
         </intent>
     </queries>
+
+
 
     <application
         android:allowBackup="true"
@@ -25,6 +28,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.GeoHunt"
         android:usesCleartextTraffic="true">
+
+        <service
+            android:name=".WebSocketService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

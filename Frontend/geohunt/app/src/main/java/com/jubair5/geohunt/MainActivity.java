@@ -4,6 +4,8 @@
  */
 package com.jubair5.geohunt;
 
+import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -28,6 +30,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
+
+        // Sets up WebSocket Service for notifications
+        Intent serviceIntent = new Intent(this, WebSocketService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent);
+        }
 
         active = homeFragment;
         botNav = findViewById(R.id.bottom_navigation);
