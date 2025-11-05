@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Looper;
@@ -34,7 +35,10 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.material.slider.Slider;
 import com.jubair5.geohunt.R;
@@ -68,6 +72,12 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
     private GoogleMap googleMap;
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
+    private Circle radiusCircle;
+    private double radius = 1.0; // Default radius in miles
+    private int strokeColor = Color.BLUE;
+    private int fillColor = 0x220000FF;
+    private LatLng lobbyCenter;
+    private boolean userHasPanned = false;
 
     private String lobbyId;
     private int userId;
@@ -114,6 +124,11 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
+        radiusSlider.addOnChangeListener((slider, value, fromUser) -> {
+            radius = value;
+            updateCircleRadius(true);
+        });
+
         Button inviteButton = findViewById(R.id.invite_button);
         inviteButton.setOnClickListener(v -> inviteFriends());
 
@@ -131,6 +146,17 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
         this.googleMap = googleMap;
         setMapStyle();
         enableMyLocation();
+
+        googleMap.setOnCameraMoveListener(() -> {
+            lobbyCenter = googleMap.getCameraPosition().target;
+            updateCircleRadius(false);
+        });
+
+        googleMap.setOnCameraMoveStartedListener(reason -> {
+            if (reason == GoogleMap.OnCameraMoveStartedListener.REASON_GESTURE) {
+                userHasPanned = true;
+            }
+        });
     }
 
     /**
@@ -141,6 +167,8 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
         if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
             Log.d(TAG, "Setting dark mode map style.");
             googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.map_style_dark));
+            strokeColor = Color.rgb(0, 100, 255);
+            fillColor = Color.argb(34, 0, 150, 255);
         }
     }
 
@@ -155,6 +183,7 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
                 fusedLocationClient.getLastLocation().addOnSuccessListener(this, location -> {
                     if (location != null) {
                         LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
+                        lobbyCenter = currentLatLng;
                         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f));
                         startLocationUpdates();
                     } else {
@@ -180,12 +209,70 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(@NonNull LocationResult locationResult) {
-                // The location updates are running, but we are not moving the camera
-                // to allow the user to pan freely.
+                if (!userHasPanned) {
+                    Location location = locationResult.getLastLocation();
+                    if (location != null) {
+                        LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
+                        googleMap.animateCamera(CameraUpdateFactory.newLatLng(currentLatLng));
+                        updateCircleRadius(true);
+                    }
+                }
             }
         };
 
         fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper());
+    }
+
+    /**
+     * Updates the radius circle on the map to reflect the current search radius.
+     * @param adjustCamera If true, the camera will be adjusted to fit the circle.
+     */
+    private void updateCircleRadius(boolean adjustCamera) {
+        if (googleMap != null) {
+            if (lobbyCenter == null) return;
+
+            if (radiusCircle == null) {
+                radiusCircle = googleMap.addCircle(new CircleOptions()
+                        .center(lobbyCenter)
+                        .radius(radius * 1609.34) // Convert miles to meters
+                        .strokeColor(strokeColor)
+                        .strokeWidth(2f)
+                        .fillColor(fillColor));
+            } else {
+                radiusCircle.setCenter(lobbyCenter);
+                radiusCircle.setRadius(radius * 1609.34);
+            }
+
+            if (adjustCamera) {
+                LatLngBounds bounds = new LatLngBounds.Builder()
+                        .include(getOffsetLatLng(lobbyCenter, radius * 1609.34, 0))
+                        .include(getOffsetLatLng(lobbyCenter, radius * 1609.34, 90))
+                        .include(getOffsetLatLng(lobbyCenter, radius * 1609.34, 180))
+                        .include(getOffsetLatLng(lobbyCenter, radius * 1609.34, 270))
+                        .build();
+                googleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100));
+            }
+        }
+    }
+
+    /**
+     * Calculates a new LatLng based on a starting point, a distance in meters, and a bearing.
+     * @param latLng The starting LatLng.
+     * @param distance The distance in meters.
+     * @param bearing The bearing in degrees.
+     * @return The new LatLng.
+     */
+    private LatLng getOffsetLatLng(LatLng latLng, double distance, double bearing) {
+        double lat1 = Math.toRadians(latLng.latitude);
+        double lon1 = Math.toRadians(latLng.longitude);
+        double brng = Math.toRadians(bearing);
+        double dR = distance / 6378137; // Earth's radius in meters
+
+        double lat2 = Math.asin(Math.sin(lat1) * Math.cos(dR) + Math.cos(lat1) * Math.sin(dR) * Math.cos(brng));
+        double lon2 = lon1 + Math.atan2(Math.sin(brng) * Math.sin(dR) * Math.cos(lat1),
+                Math.cos(dR) - Math.sin(lat1) * Math.sin(lat2));
+
+        return new LatLng(Math.toDegrees(lat2), Math.toDegrees(lon2));
     }
 
     private void createWebSocketClient() {
