@@ -11,8 +11,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Map;
+
 
 @ServerEndpoint("/notify/{name}")
 @Component
@@ -21,6 +23,7 @@ public class Notifications {
     private static Map<String, Session> usernameSessionMap = new Hashtable<>();
     private static Map<String, java.util.Set<String>> groupMembersMap = new Hashtable<>();
     private final Logger logger = LoggerFactory.getLogger(Notifications.class);
+    private String currentGroup;
 
     @OnOpen
     public void onOpen(Session session, @PathParam("name") String name) throws IOException {
@@ -50,7 +53,9 @@ public class Notifications {
 
         //Friend Request: FriendReq <username>
         //Friend Request Accepted: FriendAcc <username>
-        //Multiplayer Invite: Invite <username> <groupId>
+        //Multiplayer Invite: Invite <username> <groupId> //GroupId "N" if none currently. Will return a groupId.
+        //Multiplayer Invite Accept: AcceptInvite <groupId>
+        //Multiplayer leave group: Leave <groupId>
         if (message.startsWith("FriendReq")) {
             String[] splitMsg = message.split(" ");
             if (splitMsg.length < 2) return;
@@ -71,15 +76,53 @@ public class Notifications {
 
             String targetUser = splitMsg[1];
             String groupId = splitMsg[2];
-            String msg = username + " invited you to join their group!";
-            broadcastInGroup(msg, groupId, targetUser);
-        } else if(message.startsWith("InviteAccepted")) {
-            String[] splitMsg = message.split(" ");
-            if (splitMsg.length < 3) return;
 
-            String targetUser = splitMsg[1];
-            String groupId = splitMsg[2];
-            String msg = username + " accepted your group invite!"; //ToFinish
+            if (groupId.equals("N")) {
+                String newId = username + "sGrp";
+                groupMembersMap.put(newId, new HashSet<>());
+                groupMembersMap.get(newId).add(username);
+                sendMessageToParticularUser(username, "Your new groupId is: " + newId);
+                currentGroup = newId;
+                groupId = newId; // update for next steps
+            }
+
+            String msg = username + " invited you to join their group (" + groupId + ")";
+            sendMessageToParticularUser(targetUser, msg);
+        }
+
+        else if (message.startsWith("AcceptInvite")) {
+            String[] splitMsg = message.split(" ");
+            if (splitMsg.length < 2) return;
+
+            String groupId = splitMsg[1];
+            if (!groupMembersMap.containsKey(groupId)) {
+                sendMessageToParticularUser(username, "Group does not exist.");
+                return;
+            }
+
+            boolean alreadyIn = !groupMembersMap.get(groupId).add(username);
+            if (alreadyIn) {
+                sendMessageToParticularUser(username, "You are already in this group.");
+                return;
+            }
+
+            currentGroup = groupId;
+            sendMessageToParticularUser(username, "You have been added to the group!");
+            broadcastInGroup(username + " has joined your group!", groupId, username);
+        } else if(message.startsWith("Leave")){
+            String[] splitMsg = message.split(" ");
+            if (splitMsg.length < 2) return;
+            String groupId = splitMsg[1];
+            String msg = username + " left the group!";
+            boolean didRemove = groupMembersMap.get(groupId).remove(username);
+            if (didRemove) {
+                broadcastInGroup(msg, groupId, username);
+            } else {
+                sendMessageToParticularUser(username, "That group does not exist or you are not in that group.");
+            }
+
+
+
         }
 
     }
@@ -97,40 +140,38 @@ public class Notifications {
         sessionUsernameMap.remove(session);
         usernameSessionMap.remove(username);
 
-        // send the message to chat
-        broadcast(username + " disconnected");
+        // send the message to the group
+
+        if(currentGroup != null) {
+            broadcastInGroup(username + " has disconnected.", currentGroup, username);
+            groupMembersMap.get(currentGroup).remove(username);
+            if(groupMembersMap.get(currentGroup).size() == 0) {
+                groupMembersMap.remove(currentGroup);
+            }
+        }
+        sendMessageToParticularUser(username, "You have been disconnected.");
     }
 
-    private void broadcast(String message) {
-        sessionUsernameMap.forEach((session, username) -> {
-            try {
-                session.getBasicRemote().sendText(message);
-            } catch (IOException e) {
-                logger.info("[Broadcast Exception] " + e.getMessage());
-            }
-        });
-    }
+
 
     private boolean broadcastInGroup(String message, String groupId, String avoid) {
-        if( groupMembersMap.get(groupId) != null ) {
-            for(String a: groupMembersMap.get(groupId)) {
-                if(!a.equals(avoid)) {
-                    Session userSession = usernameSessionMap.get(a);
-                    if (userSession != null) {
-                        try{
-                            userSession.getBasicRemote().sendText(message);
-                        } catch (IOException e) {
-                            logger.info("[Broadcast Exception] " + e.getMessage());
-                        }
+        if (!groupMembersMap.containsKey(groupId)) return false;
+
+        for (String a : groupMembersMap.get(groupId)) {
+            if (!a.equals(avoid)) {
+                Session userSession = usernameSessionMap.get(a);
+                if (userSession != null) {
+                    try {
+                        userSession.getBasicRemote().sendText(message);
+                    } catch (IOException e) {
+                        logger.info("[Broadcast Exception] " + e.getMessage());
                     }
                 }
-                return true;
             }
-        } else {
-            return false;
         }
-
+        return true;
     }
+
 
 
     private void sendMessageToParticularUser(String username, String message) {
