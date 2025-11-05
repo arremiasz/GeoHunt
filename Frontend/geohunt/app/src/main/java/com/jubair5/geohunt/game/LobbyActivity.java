@@ -12,7 +12,7 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.slider.Slider;
@@ -55,7 +55,7 @@ public class LobbyActivity extends AppCompatActivity {
         setContentView(R.layout.lobby_activity);
 
         RecyclerView playerRecyclerView = findViewById(R.id.player_recycler_view);
-        playerRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        playerRecyclerView.setLayoutManager(new GridLayoutManager(this, 2));
         playerAdapter = new PlayerAdapter(playerList);
         playerRecyclerView.setAdapter(playerAdapter);
         prefs = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
@@ -136,18 +136,18 @@ public class LobbyActivity extends AppCompatActivity {
             setLobbyLeader(true);
             // Add self to player list
             playerList.clear();
-            playerList.add(new Player(String.valueOf(userId), username, false)); // isReady is not used
+            playerList.add(new Player(String.valueOf(userId), username));
             playerAdapter.notifyDataSetChanged();
         } else if (message.startsWith("User ") && message.endsWith(" joined the lobby")) {
             // e.g., "User Player2 joined the lobby"
             String joinedUser = message.substring(5, message.indexOf(" joined the lobby"));
             Toast.makeText(this, joinedUser + " has joined!", Toast.LENGTH_SHORT).show();
             // We need a way to get the user ID for the new player, for now, we use a placeholder
-            playerList.add(new Player("-1", joinedUser, false)); // isReady is not used
+            playerList.add(new Player("-1", joinedUser));
             playerAdapter.notifyDataSetChanged();
         } else if (message.equals("cannot join lobby")){
             Toast.makeText(this, "Failed to join lobby. It might be full or invalid.", Toast.LENGTH_LONG).show();
-            finish(); // Close activity if join fails
+            finish();
         }
     }
 
@@ -193,9 +193,14 @@ public class LobbyActivity extends AppCompatActivity {
     private void setupMockMode() {
         Log.d(TAG, "Running in Mock Mode");
         playerList.clear();
-        playerList.add(new Player(String.valueOf(userId), username, false)); // isReady is not used
-        playerList.add(new Player("2", "Player 2", false)); // isReady is not used
-        playerList.add(new Player("3", "Player 3", false)); // isReady is not used
+        playerList.add(new Player(String.valueOf(userId), username));
+        playerList.add(new Player("2", "Player 2"));
+        playerList.add(new Player("3", "Player 3"));
+        playerList.add(new Player("4", "Player 4"));
+        playerList.add(new Player("5", "Player 5"));
+        playerList.add(new Player("6", "Player 6"));
+        playerList.add(new Player("7", "Player 7"));
+        playerList.add(new Player("8", "Player 8"));
         playerAdapter.notifyDataSetChanged();
         setLobbyLeader(true);
     }

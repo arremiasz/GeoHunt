@@ -13,7 +13,6 @@ import org.java_websocket.client.WebSocketClient;
 public class MultiplayerGameActivity extends GameActivity {
 
     private static final String TAG = "MultiplayerGameActivity";
-    private WebSocketClient webSocketClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
