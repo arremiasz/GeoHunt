@@ -14,12 +14,14 @@ public class signupController {
 
     @PostMapping(value = "/signup")
     public ResponseEntity<String> signup(@RequestBody Account account) {
-        try {
-            accountService.createAccount(account);
-            return ResponseEntity.ok("Account created");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Username Already Exists");
+        long id = accountService.createAccount(account);
+        if(id == -1){
+            return ResponseEntity.badRequest().body("username exists");
+        } else if(id == -2){
+            return ResponseEntity.badRequest().body("email exists");
         }
+
+        return ResponseEntity.ok(String.format("{\"id\":%d}", id));
     }
 
     @GetMapping("/account/byName")
@@ -65,12 +67,7 @@ public class signupController {
     @PutMapping("/account/update")
     public ResponseEntity<String> updateName(@RequestParam Long id, @RequestBody Account account) {
         try{
-            if(accountService.updatedAccount(id, account)){
-                return ResponseEntity.ok("Account updated successfully");
-            } else {
-                return ResponseEntity.status(404).build();
-            }
-
+            return accountService.updatedAccount(id, account);
         } catch(IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }

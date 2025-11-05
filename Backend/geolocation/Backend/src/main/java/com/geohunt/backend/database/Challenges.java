@@ -1,5 +1,6 @@
 package com.geohunt.backend.database;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -21,9 +22,11 @@ public class Challenges {
     String streetviewurl;
     @ManyToOne
     @JoinColumn(name="account_id")
-    @JsonManagedReference
+    @JsonBackReference("account-challenges")
     private Account creator;
-    LocalDate creationdate;
+
     @OneToMany(mappedBy="challenge")
+    @JsonManagedReference("challenge-submissions")
     private List<Submissions> submissions;
+
 }
