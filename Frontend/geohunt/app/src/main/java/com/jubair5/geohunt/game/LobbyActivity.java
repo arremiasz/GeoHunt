@@ -7,11 +7,13 @@ package com.jubair5.geohunt.game;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Looper;
 import android.util.Log;
@@ -26,6 +28,8 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -43,6 +47,7 @@ import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.material.slider.Slider;
 import com.jubair5.geohunt.R;
 import com.jubair5.geohunt.network.ApiConstants;
+import com.jubair5.geohunt.network.VolleySingleton;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -147,7 +152,11 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
         Button inviteButton = findViewById(R.id.invite_button);
         inviteButton.setOnClickListener(v -> inviteFriends());
 
-        startGameButton.setOnClickListener(v -> sendLobbyMessage("start")); // Updated to match server
+        startGameButton.setOnClickListener(v -> {
+            if (startGameButton.isEnabled()) {
+                fetchChallengeAndBroadcast();
+            }
+        });
 
         if (MOCK_MODE) {
             setupMockMode();
@@ -178,10 +187,85 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
             if (!startGameButton.isEnabled()) return;
             lobbyCenter = googleMap.getCameraPosition().target;
             updateCircleRadius(false);
-            if (startGameButton.isEnabled()) { // User is the lobby leader
-                sendLobbyMessage(String.format(Locale.US, "center %f %f", lobbyCenter.latitude, lobbyCenter.longitude));
-            }
+            sendLobbyMessage(String.format(Locale.US, "center %f %f", lobbyCenter.latitude, lobbyCenter.longitude));
         });
+    }
+
+    /**
+     * Fetches a new challenge from the server and broadcasts its ID to the lobby.
+     * This method should only be called by the lobby leader.
+     */
+    private void fetchChallengeAndBroadcast() {
+        if (lobbyCenter == null) {
+            Toast.makeText(this, "Please set a center for the game area.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String url = Uri.parse(ApiConstants.BASE_URL + ApiConstants.GET_GENERATED_LOCATIONS_ENDPOINT)
+                .buildUpon()
+                .appendQueryParameter("lat", String.valueOf(lobbyCenter.latitude))
+                .appendQueryParameter("lng", String.valueOf(lobbyCenter.longitude))
+                .appendQueryParameter("radius", String.valueOf(radius))
+                .build().toString();
+
+        Log.d(TAG, "Requesting challenge from: " + url);
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
+                response -> {
+                    try {
+                        int challengeId = response.getInt("id");
+                        Log.d(TAG, "Fetched challenge ID: " + challengeId);
+                        // Now broadcast this to all users via WebSocket
+                        sendLobbyMessage("start " + challengeId);
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Error parsing challenge response", e);
+                        Toast.makeText(LobbyActivity.this, "Failed to parse challenge from server.", Toast.LENGTH_SHORT).show();
+                    }
+                },
+                error -> {
+                    Log.e(TAG, "Failed to fetch challenge", error);
+                    Toast.makeText(LobbyActivity.this, "Error fetching challenge from server.", Toast.LENGTH_SHORT).show();
+                }
+        );
+
+        VolleySingleton.getInstance(this).addToRequestQueue(request);
+    }
+
+    /**
+     * Fetches the full details of a challenge using its ID and launches the game activity.
+     * @param challengeId The ID of the challenge to fetch.
+     */
+    private void fetchChallengeDetailsAndLaunch(String challengeId) {
+        String url = Uri.parse(ApiConstants.BASE_URL + ApiConstants.GET_CHALLENGE_BY_ID_ENDPOINT)
+                .buildUpon()
+                .appendQueryParameter("id", challengeId)
+                .build().toString();
+
+        Log.d(TAG, "Requesting challenge details from: " + url);
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
+                response -> {
+                    try {
+                        int id = response.getInt("id");
+                        String imageUrl = response.getString("streetviewurl");
+                        Log.d(TAG, "Successfully fetched challenge details. Launching game.");
+
+                        // Launch the game activity
+                        Intent intent = new Intent(LobbyActivity.this, MultiplayerGameActivity.class);
+                        intent.putExtra("challengeId", id);
+                        intent.putExtra("imageUrl", imageUrl);
+                        startActivity(intent);
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Error parsing challenge details response", e);
+                        Toast.makeText(LobbyActivity.this, "Failed to parse game details.", Toast.LENGTH_SHORT).show();
+                    }
+                },
+                error -> {
+                    Log.e(TAG, "Failed to fetch challenge details", error);
+                    Toast.makeText(LobbyActivity.this, "Error fetching game details.", Toast.LENGTH_SHORT).show();
+                }
+        );
+
+        VolleySingleton.getInstance(this).addToRequestQueue(request);
     }
 
     /**
@@ -328,6 +412,7 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
             public void onClose(int code, String reason, boolean remote) {
                 Log.i(TAG, "WebSocket connection closed: " + reason);
                 runOnUiThread(() -> Toast.makeText(LobbyActivity.this, "Disconnected: " + reason, Toast.LENGTH_SHORT).show());
+                finish();
             }
 
             @Override
@@ -399,6 +484,9 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
             Toast.makeText(this, disconnectedUser + " has disconnected.", Toast.LENGTH_SHORT).show();
             playerList.removeIf(player -> player.getUsername().equals(disconnectedUser));
             playerAdapter.notifyDataSetChanged();
+            if (playerList.get(0).getUsername().equals(username)) {
+                setLobbyLeader(true);
+            }
         } else if (message.startsWith("radius ")) {
             if (!startGameButton.isEnabled()) { // Only non-leaders should react to this message
                 try {
@@ -434,6 +522,14 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
             }
             playerAdapter.notifyDataSetChanged();
             Log.d(TAG, "Lobby user list updated.");
+        } else if (message.startsWith("start ")) {
+            try {
+                String challengeId = message.substring(6);
+                Log.d(TAG, "Received start game command with challenge ID: " + challengeId);
+                fetchChallengeDetailsAndLaunch(challengeId);
+            } catch (Exception e) {
+                Log.e(TAG, "Could not parse challenge ID from start message", e);
+            }
         } else if (message.equals("cannot join lobby")){
             Toast.makeText(this, "Failed to join lobby. It might be full or invalid.", Toast.LENGTH_LONG).show();
             finish(); // Close activity if join fails
@@ -443,6 +539,9 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
     private void sendLobbyMessage(String message) {
         if (MOCK_MODE) {
             Log.d(TAG, "Mock mode: Pretending to send message: " + message);
+            if (message.startsWith("start ")) {
+                handleWebSocketMessage(message);
+            }
             return; // In mock mode, we don't send real messages
         }
 
