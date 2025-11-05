@@ -2,8 +2,10 @@ package com.geohunt.backend;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
+@ComponentScan(basePackages = {"com.geohunt.backend.WebSockets"})
 public class BackendApplication {
 
     public static void main(String[] args) {
