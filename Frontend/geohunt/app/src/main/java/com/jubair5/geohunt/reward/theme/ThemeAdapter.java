@@ -16,7 +16,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 
 import com.jubair5.geohunt.R;
-import com.jubair5.geohunt.friends.Friend;
 
 import java.util.List;
 
@@ -52,7 +51,7 @@ public class ThemeAdapter extends RecyclerView.Adapter<ThemeAdapter.ViewHolder> 
         Theme theme = themes.get(position);
 
         // Name and state
-        holder.friendNameTextView.setText(theme.getName());
+        holder.themeTextView.setText(theme.getName());
         holder.itemView.setOnClickListener(v -> listener.onThemeClick(theme));
 
     }
@@ -63,12 +62,11 @@ public class ThemeAdapter extends RecyclerView.Adapter<ThemeAdapter.ViewHolder> 
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView friendNameTextView;
-        TextView friendState;
+        TextView themeTextView;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            friendNameTextView = itemView.findViewById(R.id.username_label);
+            themeTextView = itemView.findViewById(R.id.theme_name);
         }
     }
 }
