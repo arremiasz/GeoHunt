@@ -9,23 +9,30 @@ import org.json.JSONObject;
 public class Friend {
     private int id;
     private String username;
-    private String photoUrl;
+    private String state;
+
+    // Future Use
+    //private String photoUrl;
+
 
     public Friend(JSONObject json) {
         id = json.optInt("id");
         username = json.optString("username");
-        photoUrl = json.optString("photourl");
+        state = json.optString("state");
+
+        // Future Use
+        //photoUrl = json.optString("photourl");
     }
 
     public int getId() {
         return id;
     }
 
-    public String getImageUrl() {
-        return photoUrl;
-    }
-
     public String getUsername() {
         return username;
+    }
+
+    public String getState() {
+        return state;
     }
 }

@@ -23,6 +23,12 @@
             android:layout_marginTop="100dp"
             android:hint="@string/search_for_friends" />
 
+        <Button
+            android:id="@+id/request_and_send_button"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="@string/enter"/>
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/friends_recycler_view"
             android:layout_width="match_parent"

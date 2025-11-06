@@ -5,7 +5,6 @@
 package com.jubair5.geohunt.network;
 
 public final class ApiConstants {
-
     private ApiConstants() {}
 
     // Base URL for all API calls
@@ -25,5 +24,6 @@ public final class ApiConstants {
     public static final String GET_SUBMITTED_PLACES_ENDPOINT = "/geohunt/submission"; // TODO: Set this endpoint to the correct one and adjust query
     public static final String DEL_SUBMITTED_PLACE_ENDPOINT = "/geohunt/submission/delete"; // TODO: Set this endpoint to the correct one and adjust query
 
+    
 
 }
