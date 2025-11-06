@@ -54,7 +54,7 @@ public class geohuntController {
     public ResponseEntity createChallenge(@RequestParam double lat, @RequestParam double lng, @RequestParam double radius) {
         try{
             List<Challenges> c = geohuntService.generateChallenges(lat, lng, radius, 1);
-            return ResponseEntity.ok().body(c.getFirst());
+            return ResponseEntity.ok().body(c.get(c.size() - 1));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }

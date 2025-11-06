@@ -60,7 +60,7 @@ public class GeohuntService {
 
     public List<Challenges> generateChallenges(double lat, double lon, double rad, int count) {
         List<Challenges> generated = new ArrayList<>();
-        String apiKey = "AIzaSyA4cGMdtzfM4Ub-1agmFLqKP5WLWLLwLLg";
+        String apiKey = "YOUR_API_KEY"; // TODO: move this to an environment variable
         ObjectMapper mapper = new ObjectMapper();
         HttpClient client = HttpClient.newHttpClient();
 
@@ -95,6 +95,7 @@ public class GeohuntService {
                 JsonNode location = place.path("geometry").path("location");
                 double newLat = location.path("lat").asDouble();
                 double newLon = location.path("lng").asDouble();
+                String name = place.path("name").asText("Unknown Landmark");
 
                 String streetviewUrl = String.format(
                         "https://maps.googleapis.com/maps/api/streetview?size=600x400&location=%f,%f&key=%s",
@@ -106,6 +107,7 @@ public class GeohuntService {
                 challenge.setLongitude(newLon);
                 challenge.setStreetviewurl(streetviewUrl);
                 challenge.setCreationdate(LocalDate.now());
+                challengesRepository.save(challenge);
 
                 generated.add(challenge);
                 added++;
