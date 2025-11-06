@@ -62,6 +62,8 @@ public class NotificationsService {
     public ResponseEntity<Void> editNotification(long notifId, String message) {
         notificationsRepository.findById(notifId).ifPresent(notif -> {
             notif.setMessage(message);
+            notif.setReadStatus(false);
+            notif.setSentAt(LocalDateTime.now());
             notificationsRepository.save(notif);
         }
         );

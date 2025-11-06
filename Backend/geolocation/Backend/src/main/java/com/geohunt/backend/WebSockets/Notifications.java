@@ -42,18 +42,24 @@ public class Notifications {
     @OnOpen
     public void onOpen(Session session, @PathParam("name") String name) throws IOException {
         logger.info("[onOpen]: {}", name);
+        try{
+            if (usernameSessionMap.containsKey(name) || accountService.getAccountByUsername(name) == null) {
+                session.getBasicRemote().sendText("Check your username.");
+                session.close();
+            } else {
+                // map current session with username
+                sessionUsernameMap.put(session, name);
 
-        if (usernameSessionMap.containsKey(name)) {
-            session.getBasicRemote().sendText("Username already exists");
+                // map current username with session
+                usernameSessionMap.put(name, session);
+
+            }
+        } catch(IllegalArgumentException e){
+            session.getBasicRemote().sendText("Check your username.");
             session.close();
-        } else {
-            // map current session with username
-            sessionUsernameMap.put(session, name);
-
-            // map current username with session
-            usernameSessionMap.put(name, session);
-
         }
+
+
     }
 
     @OnMessage
@@ -114,7 +120,7 @@ public class Notifications {
                 groupMembersMap.get(newId).add(username);
                 sendMessageToParticularUser(username, "Your new groupId is: " + newId);
                 currentGroup = newId;
-                groupId = newId; // update for next steps
+                groupId = newId;
             }
 
             String msg = username + " invited you to join their group (" + groupId + ")";
@@ -155,6 +161,7 @@ public class Notifications {
 
             if (didRemove) {
                 broadcastInGroup(username + " left the group!", groupId, username);
+                sendMessageToParticularUser(username, "You have left the group!");
             } else {
                 sendMessageToParticularUser(username, "You are not in that group.");
 
@@ -167,16 +174,15 @@ public class Notifications {
             String groupId = splitMsg[1];
             if (!groupMembersMap.containsKey(groupId)) {
                 sendMessageToParticularUser(username, "Group does not exist.");
-
-
                 return;
             }
 
             String msg = username + " has finished the challenge!";
             broadcastInGroup(msg, groupId, username);
+            sendMessageToParticularUser(username, "You have finished the challenge!");
 
         } else if (message.startsWith("ChallComplete")) {
-            // no args expected — simply acknowledge
+
             sendMessageToParticularUser(username, "You have completed the challenge!");
 
 
@@ -260,8 +266,13 @@ public class Notifications {
         logger.info("[onClose] " + username);
 
         // remove user from memory mappings
-        sessionUsernameMap.remove(session);
-        usernameSessionMap.remove(username);
+        try{
+            sessionUsernameMap.remove(session);
+            usernameSessionMap.remove(username);
+        }catch (NullPointerException e){
+            ;
+        }
+
 
         // send the message to the group
 

@@ -9,6 +9,8 @@ import java.util.Optional;
 public interface FriendsRepository extends JpaRepository<Friends, FriendKey> {
     List<Friends> findByPrimary(Account primary);
 
+    List<Friends> findByTarget(Account target);
+
     List<Friends> findByTargetAndIsAcceptedTrue(Account target);
 
     List<Friends> findByPrimaryAndIsAcceptedTrue(Account target);
