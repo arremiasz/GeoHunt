@@ -32,7 +32,7 @@ public class LauncherActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate called");
 
-//        clearSessionOnLaunch(); // TODO: Remove this line in production
+        clearSessionOnLaunch(); // TODO: Remove this line in production
 
         if (checkActiveSession()) {
             Log.d(TAG, "Active session found and refreshed. Launching MainActivity.");
@@ -142,7 +142,7 @@ public class LauncherActivity extends AppCompatActivity {
      * Clears the login session for testing purposes.
      * This method should be removed or disabled in production.
      */
-    private void clearSessionOnLaunch() { // TODO: Remove this method in production
+    private void clearSessionOnLaunch() {
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
         clearLoginSession(sharedPreferences);
         Log.d(TAG, "Session cleared on launch for testing purposes.");

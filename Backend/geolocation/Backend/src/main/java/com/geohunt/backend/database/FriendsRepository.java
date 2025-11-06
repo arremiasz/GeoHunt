@@ -17,3 +17,5 @@ public interface FriendsRepository extends JpaRepository<Friends, FriendKey> {
     Optional<Friends> findByPrimaryAndTarget(Account primary, Account target);
 
 }
+
+

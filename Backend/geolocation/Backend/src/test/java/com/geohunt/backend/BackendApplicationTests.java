@@ -1,10 +1,10 @@
-package com.speedy.chat;
+package com.geohunt.backend;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class ChatApplicationTests {
+class BackendApplicationTests {
 
     @Test
     void contextLoads() {

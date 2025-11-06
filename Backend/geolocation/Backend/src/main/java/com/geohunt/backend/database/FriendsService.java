@@ -149,4 +149,3 @@ public class FriendsService {
         return ResponseEntity.status(HttpStatus.OK).body("Friend removed.");
     }
 }
-
