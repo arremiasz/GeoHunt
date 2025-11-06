@@ -25,5 +25,9 @@ public final class ApiConstants {
     public static final String GET_SUBMITTED_PLACES_ENDPOINT = "/geohunt";
     public static final String DEL_SUBMITTED_PLACE_ENDPOINT = "/geohunt/mySubmissions";
 
+    // Location Endpoints
+    public static final String GET_GENERATED_LOCATIONS_ENDPOINT = "/geohunt/getLocation";
+    public static final String POST_SUBMISSION_ENDPOINT = "/geohunt/submission";
+
 
 }
