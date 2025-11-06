@@ -124,11 +124,17 @@ public class Lobby {
     }
 
     public void startMatch(){
+        // Generate Challenge
 
+        // Assign Challenge
+
+        // send message to clients
     }
 
     public void endMatch(){
+        // save challenge and submissions
 
+        // send message to clients
     }
 
     private void sendWSMessageToAllUsers(String message){
