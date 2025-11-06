@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class signupController {
-
     @Autowired
     private AccountService accountService;
 
