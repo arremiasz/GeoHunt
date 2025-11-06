@@ -66,4 +66,19 @@ public class geohuntController {
         List<Challenges> l = geohuntService.fallbackGenerate(lat, lng, radius, 1);
         return ResponseEntity.ok().body(l.get(0));
     }
+
+    @PostMapping("/geohunt/customChallenge")
+    public ResponseEntity customChallenge(@RequestParam double lat, @RequestParam double lng, @RequestParam long uid, @RequestBody String url){
+        return geohuntService.customChallenge(lat, lng, uid, url);
+    }
+
+    @GetMapping("/geohunt")
+    public ResponseEntity getMyChallenges(@RequestParam long id) {
+        return geohuntService.getUsersChallenges(id);
+    }
+
+
+    @DeleteMapping("/geohunt/mySubmissions")
+    public ResponseEntity<String> deleteMySubmissions(@RequestParam long userId, @RequestParam long chalId){return geohuntService.deleteUsersChallenges(userId, chalId);}
+
 }

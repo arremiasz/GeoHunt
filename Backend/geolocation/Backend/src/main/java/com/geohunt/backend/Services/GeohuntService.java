@@ -1,10 +1,15 @@
 package com.geohunt.backend.Services;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.geohunt.backend.database.Account;
+import com.geohunt.backend.database.AccountRepository;
 import com.geohunt.backend.database.Challenges;
 import com.geohunt.backend.database.ChallengesRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,6 +28,9 @@ public class GeohuntService {
 
     @Autowired
     private ChallengesRepository challengesRepository;
+
+    @Autowired
+    private AccountService accountService;
 
     private double haversine(double lat1, double lon1, double lat2, double lon2) {
         double R = 3959; // miles
@@ -196,5 +204,48 @@ public class GeohuntService {
             generated.add(challenge);
         }
         return generated;
+    }
+
+    public ResponseEntity customChallenge(double lat, double lng, long uid, String url){
+        try{
+            Challenges challenge = new Challenges();
+            Account a = accountService.getAccountById(uid);
+            challenge.setLatitude(lat);
+            challenge.setLongitude(lng);
+            challenge.setStreetviewurl(url);
+            challenge.setCreationdate(LocalDate.now());
+            challenge.setCreator(a);
+            challengesRepository.save(challenge);
+            return ResponseEntity.ok(challenge);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+
+    }
+
+    public ResponseEntity getUsersChallenges(long id) {
+        try{
+            List<Challenges> returnable = challengesRepository.getChallengesByCreator(accountService.getAccountById(id));
+            return ResponseEntity.status(HttpStatus.OK).body(returnable);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
+    public ResponseEntity deleteUsersChallenges(long uid, long cid){
+        Account user;
+        try{
+            user = accountService.getAccountById(uid);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
+        }
+        List<Challenges> returnable = challengesRepository.getChallengesByCreator(user);
+        for(Challenges challenge : returnable){
+            if(challenge.getId() == cid){
+                challengesRepository.deleteById(challenge.getId());
+                return ResponseEntity.status(HttpStatus.OK).build();
+            }
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Challenge not found.");
     }
 }
