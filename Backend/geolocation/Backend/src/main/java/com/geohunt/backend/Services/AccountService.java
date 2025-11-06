@@ -14,6 +14,12 @@ public class AccountService {
     @Autowired
     private AccountRepository accountRepository;
 
+
+    public long getIdByUsername(String username) {
+        Account a = getAccountByUsername(username);
+        return a.getId();
+    }
+
     public long createAccount(Account account) {
         if(accountRepository.findByUsername(account.getUsername()).isPresent()){
             return -1;

@@ -1,13 +1,19 @@
 package com.geohunt.backend.WebSockets;
 
+import com.geohunt.backend.Config.SpringContext;
+import com.geohunt.backend.Services.AccountService;
+import com.geohunt.backend.Services.NotificationsService;
+import jakarta.annotation.PostConstruct;
 import jakarta.websocket.OnClose;
 import jakarta.websocket.OnMessage;
 import jakarta.websocket.OnOpen;
 import jakarta.websocket.Session;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -19,12 +25,19 @@ import java.util.Map;
 
 @ServerEndpoint("/notify/{name}")
 @Component
+@Setter
 public class Notifications {
     private static Map<Session, String> sessionUsernameMap = new Hashtable<>();
     private static Map<String, Session> usernameSessionMap = new Hashtable<>();
     private static Map<String, java.util.Set<String>> groupMembersMap = new Hashtable<>();
     private final Logger logger = LoggerFactory.getLogger(Notifications.class);
     private String currentGroup;
+
+    private AccountService accountService = SpringContext.getBean(AccountService.class);
+    private NotificationsService notificationsService = SpringContext.getBean(NotificationsService.class);
+
+
+
 
     @OnOpen
     public void onOpen(Session session, @PathParam("name") String name) throws IOException {
@@ -144,6 +157,7 @@ public class Notifications {
                 broadcastInGroup(username + " left the group!", groupId, username);
             } else {
                 sendMessageToParticularUser(username, "You are not in that group.");
+
             }
 
         } else if (message.startsWith("MultComplete")) {
@@ -153,6 +167,8 @@ public class Notifications {
             String groupId = splitMsg[1];
             if (!groupMembersMap.containsKey(groupId)) {
                 sendMessageToParticularUser(username, "Group does not exist.");
+
+
                 return;
             }
 
@@ -162,6 +178,7 @@ public class Notifications {
         } else if (message.startsWith("ChallComplete")) {
             // no args expected — simply acknowledge
             sendMessageToParticularUser(username, "You have completed the challenge!");
+
 
         } else if (message.startsWith("CustomDM")) {
             String[] splitMsg = message.split(" ");
@@ -272,6 +289,7 @@ public class Notifications {
                 if (userSession != null) {
                     try {
                         userSession.getBasicRemote().sendText(message);
+                        notificationsService.saveNotification(accountService.getAccountByUsername(sessionUsernameMap.get(userSession)), message);
                     } catch (IOException e) {
                         logger.info("[Broadcast Exception] " + e.getMessage());
                     }
@@ -288,8 +306,7 @@ public class Notifications {
             Session userSession = usernameSessionMap.get(username);
             if (userSession != null && userSession.isOpen()) {
                 userSession.getBasicRemote().sendText(message);
-            } else{
-                throw new IllegalArgumentException();
+                notificationsService.saveNotification(accountService.getAccountByUsername(username), message);
             }
         } catch (IOException e) {
             logger.info("[DM Exception] " + e.getMessage());

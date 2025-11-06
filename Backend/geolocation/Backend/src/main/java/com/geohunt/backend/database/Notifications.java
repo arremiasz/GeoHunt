@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -17,10 +18,10 @@ public class Notifications {
     private @Id long id;
 
     private String message;
-    private boolean is_read;
-    private LocalDate sentAt;
+    private boolean readStatus = false;
+    private LocalDateTime sentAt;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="account_id")
     @JsonBackReference("account-notifications")
     private Account target;

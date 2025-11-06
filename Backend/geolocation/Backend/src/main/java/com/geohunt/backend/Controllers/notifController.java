@@ -5,26 +5,39 @@ import com.geohunt.backend.database.Notifications;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
+@RequestMapping("/notifications")
 public class notifController {
 
     @Autowired
     private NotificationsService notificationsService;
 
-    @GetMapping("/notifications/name")
-    public ResponseEntity<List<Notifications>> getNotifs(@RequestParam long id) {
-
-        List<Notifications> notifs = notificationsService.getMyNotifs(id);
+    // Get all notifications for a user
+    @GetMapping
+    public ResponseEntity<List<Notifications>> getNotifs(@RequestParam long userId) {
+        List<Notifications> notifs = notificationsService.getMyNotifs(userId);
         if (notifs.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            return ResponseEntity.noContent().build();
         }
-        return new ResponseEntity<>(notifs, HttpStatus.OK);
+        return ResponseEntity.ok(notifs);
+    }
 
+    // Delete a notification by ID
+    @DeleteMapping("/{notifId}")
+    public ResponseEntity<Void> deleteNotif(@PathVariable Long notifId) {
+        notificationsService.deleteNotification(notifId);
+        return ResponseEntity.ok().build();
+    }
+
+    // (Optional) Mark as read
+    @PatchMapping("/{notifId}/read")
+    public ResponseEntity<Void> markAsRead(@PathVariable Long notifId) {
+        notificationsService.markAsRead(notifId);
+        return ResponseEntity.ok().build();
     }
 }
+
