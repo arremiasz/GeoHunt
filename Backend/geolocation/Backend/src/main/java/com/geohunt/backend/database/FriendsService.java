@@ -7,10 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class FriendsService {
@@ -120,26 +117,27 @@ public class FriendsService {
         return ResponseEntity.status(HttpStatus.OK).body("Friend accepted.");
     }
 
-    public ResponseEntity<List<FriendDTO>> getFriends(long id) {
+    public ResponseEntity<List<Account>> getFriends(long id) {
         Optional<Account> account = accountRepository.findById(id);
         if (account.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyList());
         }
 
-        List<Friends> sentFriends = friendsRepository.findByPrimary(account.get());
-        List<Friends> receivedFriends = friendsRepository.findByTarget(account.get());
+        List<Account> friends = new ArrayList<>();
 
-        List<FriendDTO> friendList = new ArrayList<>();
+        List<Friends> sentFriends = friendsRepository.findByPrimaryAndIsAcceptedTrue(account.get());
+        List<Friends> receivedFriends = friendsRepository.findByTargetAndIsAcceptedTrue(account.get());
+
 
         for (Friends f : sentFriends) {
-            friendList.add(new FriendDTO(f.getTarget(), f.isAccepted()));
+            friends.add(f.getTarget());
         }
 
         for (Friends f : receivedFriends) {
-            friendList.add(new FriendDTO(f.getPrimary(), f.isAccepted()));
+            friends.add(f.getPrimary());
         }
 
-        return ResponseEntity.ok(friendList);
+        return ResponseEntity.ok(friends);
     }
 
     @Transactional
@@ -172,5 +170,9 @@ public class FriendsService {
         if(friendship.isEmpty()) {return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Friend Request does not exist.");}
         friendsRepository.delete(friendship.get());
         return ResponseEntity.status(HttpStatus.OK).body("Friend removed.");
+    }
+
+    public ResponseEntity<Account> getFriendRequestsRecieved(long id) {
+        return null;
     }
 }
