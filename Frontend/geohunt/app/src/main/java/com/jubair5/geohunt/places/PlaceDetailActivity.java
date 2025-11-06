@@ -79,13 +79,16 @@ public class PlaceDetailActivity extends AppCompatActivity implements OnMapReady
      * Creates and sends a DELETE request to the server to delete the current place.
      */
     private void deletePlace() {
-        int id = getIntent().getIntExtra("ID", -1);
-        if (id == -1) {
+        int cid = getIntent().getIntExtra("CID", -1);
+        int uid = getIntent().getIntExtra("UID", -1);
+        if (cid == -1) {
             Toast.makeText(this, "Error: Place ID not found!", Toast.LENGTH_SHORT).show();
             return;
+        } else if (uid == -1) {
+            Toast.makeText(this, "Error: User ID not found!", Toast.LENGTH_SHORT).show();
         }
 
-        String url = ApiConstants.BASE_URL + ApiConstants.DEL_SUBMITTED_PLACE_ENDPOINT + "?id=" + id;
+        String url = ApiConstants.BASE_URL + ApiConstants.DEL_SUBMITTED_PLACE_ENDPOINT + "?id=" + uid + "&chalId=" + cid;
 
         StringRequest deleteRequest = new StringRequest(Request.Method.DELETE, url,
                 response -> {

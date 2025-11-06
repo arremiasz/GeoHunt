@@ -9,8 +9,8 @@ public final class ApiConstants {
     private ApiConstants() {}
 
     // Base URL for all API calls
-//    public static final String BASE_URL = "http://coms-3090-030.class.las.iastate.edu:8080";
-    public static final String BASE_URL = "https://6bfe1ae1-ae39-462f-910e-7d53b5da9867.mock.pstmn.io";
+    public static final String BASE_URL = "http://coms-3090-030.class.las.iastate.edu:8080";
+//    public static final String BASE_URL = "https://6bfe1ae1-ae39-462f-910e-7d53b5da9867.mock.pstmn.io";
 
     // Account Endpoints
     public static final String SIGNUP_ENDPOINT = "/signup";
@@ -21,9 +21,9 @@ public final class ApiConstants {
     public static final String UPDATE_ACCOUNT_ENDPOINT = "/account/update";
 
     // Place Endpoints
-    public static final String SUBMIT_PLACE_ENDPOINT = "/geohunt/submission"; // TODO: Set this endpoint to the correct one and adjust query
-    public static final String GET_SUBMITTED_PLACES_ENDPOINT = "/geohunt/submission"; // TODO: Set this endpoint to the correct one and adjust query
-    public static final String DEL_SUBMITTED_PLACE_ENDPOINT = "/geohunt/submission/delete"; // TODO: Set this endpoint to the correct one and adjust query
+    public static final String SUBMIT_PLACE_ENDPOINT = "/geohunt/customChallenge"; // TODO: Set this endpoint to the correct one and adjust query
+    public static final String GET_SUBMITTED_PLACES_ENDPOINT = "/geohunt"; // TODO: Set this endpoint to the correct one and adjust query
+    public static final String DEL_SUBMITTED_PLACE_ENDPOINT = "/geohunt/mySubmissions"; // TODO: Set this endpoint to the correct one and adjust query
 
 
 }

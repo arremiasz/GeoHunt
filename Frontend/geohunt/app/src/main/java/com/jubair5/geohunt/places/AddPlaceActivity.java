@@ -176,16 +176,13 @@ public class AddPlaceActivity extends AppCompatActivity implements OnMapReadyCal
 
         JSONObject requestBody = new JSONObject();
         try {
-            requestBody.put("uid", userId);
-            requestBody.put("latitude", latitude);
-            requestBody.put("longitude", longitude);
-            requestBody.put("photourl", imageString);
+            requestBody.put("url", imageString);
         } catch (JSONException e) {
             Log.e(TAG, "Failed to create JSON object for submission.", e);
             return;
         }
 
-        String url = ApiConstants.BASE_URL + ApiConstants.SUBMIT_PLACE_ENDPOINT;
+        String url = ApiConstants.BASE_URL + ApiConstants.SUBMIT_PLACE_ENDPOINT + "?lat=" + latitude + "&lng=" + longitude + "&uid=" + userId;
 
         StringRequest postRequest = new StringRequest(Request.Method.POST, url,
                 response -> {
