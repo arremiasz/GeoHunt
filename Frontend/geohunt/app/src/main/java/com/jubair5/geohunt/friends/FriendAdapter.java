@@ -53,12 +53,10 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
     public void onBindViewHolder(@NonNull FriendAdapter.ViewHolder holder, int position) {
         Friend friend = friends.get(position );
 
-        // Name and profile
+        // Name and state
         holder.friendNameTextView.setText(friend.getUsername());
-        Glide.with(context).load(friend.getImageUrl()).into(holder.profileImageView);
+        holder.friendState.setText(friend.getState());
 
-        // Click
-        holder.itemView.setOnClickListener(v -> listener.onFriendClick(friend));
     }
 
     @Override
@@ -68,12 +66,12 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView friendNameTextView;
-        ImageView profileImageView;
+        TextView friendState;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             friendNameTextView = itemView.findViewById(R.id.username_label);
-            profileImageView = itemView.findViewById(R.id.profile_icon);
+            friendState = itemView.findViewById(R.id.friendState);
         }
     }
 }
