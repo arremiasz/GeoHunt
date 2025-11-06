@@ -230,6 +230,7 @@ public class GeohuntService {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
-
     }
+
+    public ResponseEntity
 }
