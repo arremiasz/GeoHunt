@@ -1,7 +1,13 @@
+/**
+ * Activity responisble for handling multiplayer matches
+ * @author Alex Remiasz
+ */
 package com.jubair5.geohunt.game;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -9,9 +15,18 @@ import android.widget.Toast;
 
 import androidx.core.content.ContextCompat;
 
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.jubair5.geohunt.R;
+import com.jubair5.geohunt.network.ApiConstants;
+import com.jubair5.geohunt.network.VolleySingleton;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.nio.charset.StandardCharsets;
 
 /**
  * Activity for the multiplayer game screen. This activity extends the base GameActivity
@@ -77,6 +92,9 @@ public class MultiplayerGameActivity extends GameActivity {
                     // Animate camera to the user's location, now that the map is guaranteed to be ready.
                     googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLat, currentLng), 18f));
 
+                    // Call startLocationUpdates() to enable follow-user and center button functionality.
+                    startLocationUpdates();
+
                     // Immediately start the game
                     startGame(multiplayerChallengeId, streetViewUrl);
                 } else {
@@ -89,5 +107,60 @@ public class MultiplayerGameActivity extends GameActivity {
             // This case should not be hit in the multiplayer flow, but as a fallback, we call the parent.
             super.enableMyLocation();
         }
+    }
+
+    /**
+     * Submits the player's guess to the server and navigates to the multiplayer results screen.
+     * This is overridden to ensure the correct results activity is launched for multiplayer games.
+     * @param imageString The Base64 encoded string of the guess image.
+     */
+    @Override
+    protected void submitGuess(String imageString) {
+        SharedPreferences prefs = getSharedPreferences("GeoHuntPrefs", Context.MODE_PRIVATE);
+        int userId = prefs.getInt("userId", -1);
+
+        if (userId == -1) {
+            Toast.makeText(this, "Error: User not logged in.", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "User ID not found in shared preferences for submission.");
+            return;
+        }
+
+        JSONObject requestBody = new JSONObject();
+        try {
+            requestBody.put("latitude", currentLat);
+            requestBody.put("longitude", currentLng);
+            requestBody.put("photourl", imageString);
+        } catch (JSONException e) {
+            Log.e(TAG, "Failed to create JSON object for submission.", e);
+        }
+
+        String url = ApiConstants.BASE_URL + ApiConstants.POST_SUBMISSION_ENDPOINT;
+
+        JsonObjectRequest submissionRequest = new JsonObjectRequest(Request.Method.POST, url, requestBody,
+                response -> {
+                    Log.d(TAG, "Submission successful: " + response.toString());
+                    // For multiplayer, navigate to the multiplayer-specific results screen
+                    Intent intent = new Intent(MultiplayerGameActivity.this, MultiplayerResultsActivity.class);
+                    intent.putExtra("results", response.toString());
+                    startActivity(intent);
+                    finish();
+                },
+                error -> {
+                    Log.e(TAG, "Submission failed.", error);
+                    Toast.makeText(this, "Error submitting guess. Please try again.", Toast.LENGTH_LONG).show();
+                }
+        ) {
+            @Override
+            public byte[] getBody() {
+                return requestBody.toString().getBytes(StandardCharsets.UTF_8);
+            }
+
+            @Override
+            public String getBodyContentType() {
+                return "application/json; charset=utf-8";
+            }
+        };
+
+        VolleySingleton.getInstance(this).addToRequestQueue(submissionRequest);
     }
 }

@@ -1,8 +1,8 @@
-package com.jubair5.geohunt.game;
 /**
  * Class that handles each Player and displays their unique element
  * @author Alex Remiasz
  */
+package com.jubair5.geohunt.game;
 
 import android.view.LayoutInflater;
 import android.view.View;
