@@ -1,5 +1,7 @@
-package com.geohunt.backend.database;
+package com.geohunt.backend.Services;
 
+import com.geohunt.backend.database.Account;
+import com.geohunt.backend.database.AccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +13,12 @@ import java.util.Optional;
 public class AccountService {
     @Autowired
     private AccountRepository accountRepository;
+
+
+    public long getIdByUsername(String username) {
+        Account a = getAccountByUsername(username);
+        return a.getId();
+    }
 
     public long createAccount(Account account) {
         if(accountRepository.findByUsername(account.getUsername()).isPresent()){

@@ -6,7 +6,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface ChallengesRepository extends JpaRepository<Challenges, Long> {
-    List<Challenges> findByCreator_Id(Long accountId);
-
+public interface NotificationsRepository extends JpaRepository<Notifications, Long> {
+    List<Notifications> findAllByTargetId(Long targetId);
 }
+
