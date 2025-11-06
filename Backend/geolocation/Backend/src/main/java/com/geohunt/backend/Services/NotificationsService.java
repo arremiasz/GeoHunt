@@ -5,6 +5,7 @@ import com.geohunt.backend.database.AccountRepository;
 import com.geohunt.backend.database.Notifications;
 import com.geohunt.backend.database.NotificationsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -56,6 +57,15 @@ public class NotificationsService {
         n.setReadStatus(false);
         n.setSentAt(LocalDateTime.now());
         notificationsRepository.save(n);
+    }
+
+    public ResponseEntity<Void> editNotification(long notifId, String message) {
+        notificationsRepository.findById(notifId).ifPresent(notif -> {
+            notif.setMessage(message);
+            notificationsRepository.save(notif);
+        }
+        );
+        return ResponseEntity.ok().build();
     }
 
 }

@@ -34,10 +34,15 @@ public class notifController {
     }
 
     // (Optional) Mark as read
-    @PatchMapping("/{notifId}/read")
+    @PutMapping("/{notifId}/read")
     public ResponseEntity<Void> markAsRead(@PathVariable Long notifId) {
         notificationsService.markAsRead(notifId);
         return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/editMsg")
+    public ResponseEntity<Void> changeMessage(@RequestParam long notifId, @RequestParam String message) {
+        return notificationsService.editNotification(notifId, message);
     }
 }
 
