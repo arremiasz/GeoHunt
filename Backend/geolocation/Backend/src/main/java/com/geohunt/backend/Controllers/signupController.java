@@ -8,11 +8,10 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class signupController {
-
     @Autowired
     private AccountService accountService;
 
-    @PostMapping(value = "/signup", consumes = "application/json")
+    @PostMapping(value = "/signup")
     public ResponseEntity<String> signup(@RequestBody Account account) {
         long id = accountService.createAccount(account);
         if(id == -1){
