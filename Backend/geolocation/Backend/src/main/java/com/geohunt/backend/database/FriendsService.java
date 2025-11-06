@@ -1,5 +1,6 @@
 package com.geohunt.backend.database;
 
+import com.geohunt.backend.util.FriendDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -7,6 +8,7 @@ import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -118,21 +120,26 @@ public class FriendsService {
         return ResponseEntity.status(HttpStatus.OK).body("Friend accepted.");
     }
 
-    public ResponseEntity<ArrayList<Account>> getFriends(long id){
+    public ResponseEntity<List<FriendDTO>> getFriends(long id) {
         Optional<Account> account = accountRepository.findById(id);
-        if(account.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ArrayList<>());
+        if (account.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyList());
         }
-        List<Friends> friends = friendsRepository.findByPrimaryAndIsAcceptedTrue(account.get());
-        List<Friends> incomingFriends = friendsRepository.findByTargetAndIsAcceptedTrue(account.get());
-        ArrayList<Account> accounts = new ArrayList<>();
-        for(Friends friend : friends) {
-            accounts.add(friend.getTarget());
+
+        List<Friends> sentFriends = friendsRepository.findByPrimary(account.get());
+        List<Friends> receivedFriends = friendsRepository.findByTarget(account.get());
+
+        List<FriendDTO> friendList = new ArrayList<>();
+
+        for (Friends f : sentFriends) {
+            friendList.add(new FriendDTO(f.getTarget(), f.isAccepted()));
         }
-        for(Friends f : incomingFriends){
-            accounts.add(f.getPrimary());
+
+        for (Friends f : receivedFriends) {
+            friendList.add(new FriendDTO(f.getPrimary(), f.isAccepted()));
         }
-        return ResponseEntity.status(HttpStatus.OK).body(accounts);
+
+        return ResponseEntity.ok(friendList);
     }
 
     @Transactional
