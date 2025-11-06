@@ -1,5 +1,5 @@
 /**
- * Adapter class that handles the list of places.
+ * Adapter class that handles the list of accounts searched.
  * @author Nathan Imig
  */
 package com.jubair5.geohunt.friends;
@@ -55,7 +55,7 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
 
         // Name and state
         holder.friendNameTextView.setText(friend.getUsername());
-        holder.friendState.setText(friend.getState());
+        holder.itemView.setOnClickListener(v -> listener.onFriendClick(friend));
 
     }
 
@@ -71,7 +71,6 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             friendNameTextView = itemView.findViewById(R.id.username_label);
-            friendState = itemView.findViewById(R.id.friendState);
         }
     }
 }

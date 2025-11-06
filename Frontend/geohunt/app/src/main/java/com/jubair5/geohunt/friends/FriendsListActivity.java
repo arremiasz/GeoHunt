@@ -4,32 +4,27 @@
  */
 package com.jubair5.geohunt.friends;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.Request;
-import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.StringRequest;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.jubair5.geohunt.R;
 import com.jubair5.geohunt.network.ApiConstants;
 import com.jubair5.geohunt.network.VolleySingleton;
-import com.jubair5.geohunt.places.AddPlaceActivity;
 import com.jubair5.geohunt.places.Place;
-import com.jubair5.geohunt.places.PlaceDetailActivity;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -37,7 +32,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FriendsListActivity extends AppCompatActivity {
+public class FriendsListActivity extends AppCompatActivity implements FriendAdapter.OnFriendClickListener{
 
     private static final String TAG = "FriendsList";
     private static final String SHARED_PREFS_NAME = "GeoHuntPrefs";
@@ -46,6 +41,8 @@ public class FriendsListActivity extends AppCompatActivity {
 
     private EditText searchBar;
     private Button searchButton;
+    private TextView friendUsername;
+    private Friend freind;
 
 
     // Set up for the actual list
@@ -72,11 +69,7 @@ public class FriendsListActivity extends AppCompatActivity {
         friendsRecycleViewer.setLayoutManager(new LinearLayoutManager(this));
 
         friendList = new ArrayList<>();
-        friendAdapter = new FriendAdapter(getBaseContext(), friendList, friend ->{
-            Intent intent = new Intent(FriendsListActivity.this, SingleFriendActivity.class);
-            intent.putExtra("FRIEND_USERNAME", friend.getUsername());
-            startActivity(intent);
-        });
+        friendAdapter = new FriendAdapter(getBaseContext(), friendList, this);
 
         friendsRecycleViewer.setAdapter(friendAdapter);
 
@@ -88,40 +81,42 @@ public class FriendsListActivity extends AppCompatActivity {
     private void searchForFriends(String name){
 
 
-        /** Removed for testing purposes
-        int userId = prefs.getInt(KEY_USER_ID, -1);
-        if (userId == -1) {
-            Log.e(TAG, "User ID not found in shared preferences.");
-            return;
-        }
-         */
+        String searchURL = ApiConstants.BASE_URL + ApiConstants.GET_ACCOUNT_BY_USERNAME_ENDPOINT + "?name=" + name;
 
-        String url = ApiConstants.BASE_URL + ApiConstants.GET_SUBMITTED_PLACES_ENDPOINT + "?id=" + name;
-        StringRequest userDetailsRequest = new StringRequest(Request.Method.GET, url,
-                userDetailsResponse -> {
-                    try {
-                        JSONObject userJson = new JSONObject(userDetailsResponse);
-                        String email = userJson.getString("email");
-                        String pfp = userJson.getString("pfp");
-                    } catch (JSONException e) {
-                        Log.e(TAG, "Error parsing user details from GET request", e);
-                        Toast.makeText(getBaseContext(), "Login successful, but failed to parse user details.", Toast.LENGTH_LONG).show();
-                    }
-                });
+        JsonObjectRequest jsonObjReq = new JsonObjectRequest(
+                Request.Method.GET,
+                searchURL,
+                null,
+                response -> {
+                    Log.d(TAG, "Response: "+ response.toString());
+
+                    // Display Friends
+                    friendList.clear();
+                    friendList.add(new Friend(response));
+                    friendAdapter.notifyDataSetChanged();
+                },
+                volleyError -> {
+                    Log.e(TAG, "Error getting friends", volleyError);
+                }
+        );
+        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(jsonObjReq);
+
+
+
+
 
     }
 
-    public void onFriend(Friend friend) {
-        Intent intent = new Intent(FriendsListActivity.this, PlaceDetailActivity.class);
+    @Override
+    public void onFriendClick(Friend friend) {
+        Intent intent = new Intent(FriendsListActivity.this, SingleFriendActivity.class);
         int uid = prefs.getInt(KEY_USER_ID, -1);
         if (uid == -1) {
             Log.e(TAG, "User ID not found in shared preferences.");
             return;
         }
-        intent.putExtra("UID", uid);
         intent.putExtra("FID", friend.getId());
         intent.putExtra("USERNAME", friend.getUsername());
-        intent.putExtra("STATE", friend.getState());
         startActivity(intent);
     }
 
