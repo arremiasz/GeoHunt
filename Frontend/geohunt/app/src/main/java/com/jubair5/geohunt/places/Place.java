@@ -14,7 +14,7 @@ public class Place {
 
     public Place(JSONObject json) {
         id = json.optInt("id");
-        photoUrl = json.optString("photourl");
+        photoUrl = json.optString("streetviewurl");
         latitude = json.optDouble("latitude");
         longitude = json.optDouble("longitude");
     }
