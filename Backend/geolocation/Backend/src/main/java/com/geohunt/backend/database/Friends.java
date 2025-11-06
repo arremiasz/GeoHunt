@@ -18,11 +18,13 @@ public class Friends {
     @ManyToOne
     @MapsId("primaryId")
     @JoinColumn(name = "primary_id")
+    @JsonBackReference("primary-friends")
     private Account primary;
 
     @ManyToOne
     @MapsId("targetId")
     @JoinColumn(name = "target_id")
+    @JsonBackReference("target-friends")
     private Account target;
 
     @Column(nullable = false)

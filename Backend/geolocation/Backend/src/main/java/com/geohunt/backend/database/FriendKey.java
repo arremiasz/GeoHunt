@@ -2,10 +2,14 @@ package com.geohunt.backend.database;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.Objects;
 
+@Getter
+@Setter
 @Embeddable
 class FriendKey implements Serializable {
     @Column(name="primary_id")
