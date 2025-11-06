@@ -47,20 +47,47 @@ public class GeohuntService {
     public Challenges getChallenge(double lat, double lon, double rad) {
         List<Challenges> possible = getPossibleChallenges(lat, lon, rad);
 
-        if (possible.size() < 2) {
-            List<Challenges> generated = generateChallenges(lat, lon, rad, 3);
-            challengesRepository.saveAll(generated);
-            possible.addAll(generated);
-        }
+        List<Challenges> generated = generateChallenges(lat, lon, rad, 3);
+        challengesRepository.saveAll(generated);
+        possible.addAll(generated);
+
         Random random = new Random();
         Challenges r = possible.get(random.nextInt(possible.size()));
         return r;
 
     }
 
+    public boolean doChallengesExist(double lat, double lon) {
+        String key = "AIzaSyA4cGMdtzfM4Ub-1agmFLqKP5WLWLLwLLg";
+        String placesUrl = String.format(
+                "https://maps.googleapis.com/maps/api/streetview/metadata?location=LAT=%f,LNG=%f&key=%s",
+                lat, lon, key
+        );
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(placesUrl))
+                .GET()
+                .build();
+        try{
+            HttpClient client = HttpClient.newHttpClient();
+            ObjectMapper mapper = new ObjectMapper();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            JsonNode root = mapper.readTree(response.body());
+            JsonNode results = root.get("status");
+            if(results.equals("OK")){
+                return true;
+            } else {
+                return false;
+            }
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+
+        return true;
+    }
+
     public List<Challenges> generateChallenges(double lat, double lon, double rad, int count) {
         List<Challenges> generated = new ArrayList<>();
-        String apiKey = "YOUR_API_KEY"; // TODO: move this to an environment variable
+        String apiKey = "AIzaSyA4cGMdtzfM4Ub-1agmFLqKP5WLWLLwLLg";
         ObjectMapper mapper = new ObjectMapper();
         HttpClient client = HttpClient.newHttpClient();
 
@@ -70,7 +97,7 @@ public class GeohuntService {
 
             // Example query: “tourist attractions”, “landmarks”, “parks”, etc.
             String placesUrl = String.format(
-                    "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=%f,%f&radius=%d&type=tourist_attraction&key=%s",
+                    "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=%f,%f&radius=%d,&key=%s",
                     lat, lon, radiusMeters, apiKey
             );
 
@@ -147,7 +174,7 @@ public class GeohuntService {
         challengesRepository.deleteById(id);
     }
 
-    private List<Challenges> fallbackGenerate(double lat, double lon, double rad, int count) {
+    public List<Challenges> fallbackGenerate(double lat, double lon, double rad, int count) {
         List<Challenges> generated = new ArrayList<>();
         String apiKey = "AIzaSyA4cGMdtzfM4Ub-1agmFLqKP5WLWLLwLLg";
         for (int i = 0; i < count; i++) {
@@ -165,6 +192,7 @@ public class GeohuntService {
             challenge.setLongitude(newLon);
             challenge.setStreetviewurl(streetviewUrl);
             challenge.setCreationdate(LocalDate.now());
+            challengesRepository.save(challenge);
             generated.add(challenge);
         }
         return generated;

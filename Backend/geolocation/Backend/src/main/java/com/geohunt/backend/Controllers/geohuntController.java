@@ -21,7 +21,7 @@ public class geohuntController {
 
     @GetMapping("/geohunt/getLocation")
     public ResponseEntity<Challenges> getLocation(@RequestParam double lat, @RequestParam double lng, @RequestParam double radius) {
-        try{
+        try {
             Challenges c = geohuntService.getChallenge(lat, lng, radius);
             return ResponseEntity.ok().body(c);
         } catch (Exception e) {
@@ -31,7 +31,7 @@ public class geohuntController {
 
     @GetMapping("/geohunt/getChallengeByID")
     public ResponseEntity<Challenges> getChallengeByID(@RequestParam long id) {
-        try{
+        try {
             Challenges c = challengesRepository.findById(id);
             return ResponseEntity.ok().body(c);
         } catch (Exception e) {
@@ -42,7 +42,7 @@ public class geohuntController {
 
     @DeleteMapping("/geohunt/deleteByID")
     public ResponseEntity deleteChallengeByID(@RequestParam long id) {
-        try{
+        try {
             challengesRepository.deleteById(id);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
@@ -52,11 +52,17 @@ public class geohuntController {
 
     @PostMapping("/geohunt/createChallenge")
     public ResponseEntity createChallenge(@RequestParam double lat, @RequestParam double lng, @RequestParam double radius) {
-        try{
+        try {
             List<Challenges> c = geohuntService.generateChallenges(lat, lng, radius, 1);
             return ResponseEntity.ok().body(c.get(c.size() - 1));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    @PostMapping("/geohunt/randomChallenge")
+    public ResponseEntity randChallenge(@RequestParam double lat, @RequestParam double lng, @RequestParam double radius) {
+        List<Challenges> l = geohuntService.fallbackGenerate(lat, lng, radius, 1);
+        return ResponseEntity.ok().body(l.get(0));
     }
 }
