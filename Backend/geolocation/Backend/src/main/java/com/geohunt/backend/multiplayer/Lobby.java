@@ -2,7 +2,7 @@ package com.geohunt.backend.multiplayer;
 
 
 import com.geohunt.backend.database.Account;
-import com.geohunt.backend.database.AccountService;
+import com.geohunt.backend.Services.AccountService;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
