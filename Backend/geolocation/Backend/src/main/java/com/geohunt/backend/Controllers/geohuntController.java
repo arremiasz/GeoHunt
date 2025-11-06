@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 public class geohuntController {
@@ -32,8 +33,8 @@ public class geohuntController {
     @GetMapping("/geohunt/getChallengeByID")
     public ResponseEntity<Challenges> getChallengeByID(@RequestParam long id) {
         try {
-            Challenges c = challengesRepository.findById(id).get();
-            return ResponseEntity.ok().body(c);
+            Optional<Challenges> c = challengesRepository.findById(id);
+            return ResponseEntity.ok().body(c.get());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
