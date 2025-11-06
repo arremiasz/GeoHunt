@@ -14,9 +14,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.jubair5.geohunt.R;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.Locale;
 
 import nl.dionsegijn.konfetti.KonfettiView;
@@ -61,26 +58,21 @@ public class ResultsActivity extends AppCompatActivity {
      * Parses the results from the intent and updates the UI.
      */
     protected void displayResults() {
-        String results = getIntent().getStringExtra("results");
-        if (results != null) {
-            try {
-                JSONObject json = new JSONObject(results);
-                double distance = json.getDouble("distance");
-
-                if (distance <= 0.1) {
-                    double distanceInFeet = distance * 5280;
-                    distanceText.setText(String.format(Locale.getDefault(), "%.0f", distanceInFeet));
-                    distanceUnitLabel.setText("feet");
-                } else {
-                    distanceText.setText(String.format(Locale.getDefault(), "%.2f", distance));
-                    distanceUnitLabel.setText("miles");
-                }
-
-                distanceUnitLabel.append(" from target");
-            } catch (JSONException e) {
-                distanceText.setText("?");
-                distanceUnitLabel.setText("Error");
+        double results = getIntent().getDoubleExtra("results", -1);
+        if (results != -1) {
+            if (results <= 0.1) {
+                double distanceInFeet = results * 5280;
+                distanceText.setText(String.format(Locale.getDefault(), "%.0f", distanceInFeet));
+                distanceUnitLabel.setText("feet");
+            } else {
+                distanceText.setText(String.format(Locale.getDefault(), "%.2f", results));
+                distanceUnitLabel.setText("miles");
             }
+
+            distanceUnitLabel.append(" from target");
+        } else {
+            distanceText.setText("?");
+            distanceUnitLabel.setText("Error");
         }
     }
 

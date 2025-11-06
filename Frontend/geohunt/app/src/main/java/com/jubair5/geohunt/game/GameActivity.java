@@ -44,6 +44,7 @@ import androidx.transition.TransitionManager;
 
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -346,11 +347,11 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         String url = ApiConstants.BASE_URL + ApiConstants.POST_SUBMISSION_ENDPOINT + "?uid=" + userId + "&cid=" + challengeId;
 
-        JsonObjectRequest submissionRequest = new JsonObjectRequest(Request.Method.POST, url, requestBody,
+        StringRequest submissionRequest = new StringRequest(Request.Method.POST, url,
                 response -> {
-                    Log.d(TAG, "Submission successful: " + response.toString());
+                    Log.d(TAG, "Submission successful: " + response);
                     Intent intent = new Intent(GameActivity.this, ResultsActivity.class);
-                    intent.putExtra("results", response.toString());
+                    intent.putExtra("results", Double.parseDouble(response));
                     startActivity(intent);
                     finish();
                 },
@@ -461,8 +462,21 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void showHint(String imageUrl) {
         fullscreenPreview.setVisibility(View.VISIBLE);
         hintContainer.post(() -> snapToCorner(hintContainer));
-        Glide.with(this).load(imageUrl).into(hintImage);
-        Glide.with(this).load(imageUrl).into(fullscreenPreview);
+        if (imageUrl != null) {
+            if (imageUrl.startsWith("http")) {
+                Glide.with(this).load(imageUrl).into(hintImage);
+                Glide.with(this).load(imageUrl).into(fullscreenPreview);
+            } else {
+                try {
+                    byte[] imageData = Base64.decode(imageUrl, Base64.DEFAULT);
+                    Glide.with(this).load(imageData).into(hintImage);
+                    Glide.with(this).load(imageData).into(fullscreenPreview);
+                } catch (IllegalArgumentException e) {
+                    Log.e(TAG, "Bad Base64 string for hint image.", e);
+                    Toast.makeText(this, "Failed to load hint image.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
     }
 
     /**
