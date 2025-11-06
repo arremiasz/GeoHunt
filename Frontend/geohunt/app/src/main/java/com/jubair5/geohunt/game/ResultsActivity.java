@@ -25,6 +25,12 @@ import nl.dionsegijn.konfetti.models.Size;
 
 public class ResultsActivity extends AppCompatActivity {
 
+    protected TextView distanceText;
+    protected TextView distanceUnitLabel;
+    protected Button playAgainButton;
+    protected Button goHomeButton;
+    protected KonfettiView konfettiView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,12 +40,27 @@ public class ResultsActivity extends AppCompatActivity {
             getSupportActionBar().setTitle("Results");
         }
 
-        TextView distanceText = findViewById(R.id.distance_text);
-        TextView distanceUnitLabel = findViewById(R.id.distance_unit_label);
-        Button playAgainButton = findViewById(R.id.play_again_button);
-        Button goHomeButton = findViewById(R.id.go_home_button);
-        KonfettiView konfettiView = findViewById(R.id.konfetti_view);
+        setupViews();
+        displayResults();
+        setupButtons();
+        startConfetti();
+    }
 
+    /**
+     * Initializes the views from the layout file.
+     */
+    protected void setupViews() {
+        distanceText = findViewById(R.id.distance_text);
+        distanceUnitLabel = findViewById(R.id.distance_unit_label);
+        playAgainButton = findViewById(R.id.play_again_button);
+        goHomeButton = findViewById(R.id.go_home_button);
+        konfettiView = findViewById(R.id.konfetti_view);
+    }
+
+    /**
+     * Parses the results from the intent and updates the UI.
+     */
+    protected void displayResults() {
         String results = getIntent().getStringExtra("results");
         if (results != null) {
             try {
@@ -61,7 +82,36 @@ public class ResultsActivity extends AppCompatActivity {
                 distanceUnitLabel.setText("Error");
             }
         }
+    }
 
+    /**
+     * Sets up the click listeners for the buttons.
+     */
+    protected void setupButtons() {
+        playAgainButton.setOnClickListener(v -> onPlayAgainClicked());
+        goHomeButton.setOnClickListener(v -> onGoHomeClicked());
+    }
+
+    /**
+     * Navigates to the GameActivity when the "Play Again" button is clicked.
+     */
+    protected void onPlayAgainClicked() {
+        Intent intent = new Intent(ResultsActivity.this, GameActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
+    /**
+     * Finishes the activity when the "Go Home" button is clicked.
+     */
+    protected void onGoHomeClicked() {
+        finish();
+    }
+
+    /**
+     * Configures and starts the confetti animation.
+     */
+    protected void startConfetti() {
         konfettiView.build()
                 .addColors(Color.rgb(168, 100, 253),
                         Color.rgb(41, 205, 255),
@@ -76,16 +126,5 @@ public class ResultsActivity extends AppCompatActivity {
                 .addSizes(new Size(12, 5f))
                 .setPosition(getResources().getDisplayMetrics().widthPixels / 2f, 20)
                 .streamFor(150, 1600L);
-
-
-        playAgainButton.setOnClickListener(v -> {
-            Intent intent = new Intent(ResultsActivity.this, GameActivity.class);
-            startActivity(intent);
-            finish();
-        });
-
-        goHomeButton.setOnClickListener(v -> {
-            finish();
-        });
     }
 }
