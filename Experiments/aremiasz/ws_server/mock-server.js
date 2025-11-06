@@ -5,13 +5,13 @@ const url = require('url');
 const { v4: uuidv4 } = require('uuid');
 
 // --- Server State ---
-
 // --- MODIFIED ---
-// lobbies: Map<lobbyId, { members: Set<WebSocket>, leaderUsername: string | null }>
-// We now store the leader's USERNAME, not their WS object.
+// lobbies: Map<lobbyId, { 
+//   members: Set<WebSocket>, 
+//   leaderUsername: string | null,
+//   gameState: 'lobby' | 'in-game' // <-- NEW STATE
+// }>
 const lobbies = new Map();
-
-// clients: Map<WebSocket, { username: string, currentLobbyId: string | null }>
 const clients = new Map();
 
 // --- 1. Create HTTP server ---
@@ -51,7 +51,7 @@ wss.on('connection', (ws, username) => {
 
   ws.send('Connection Success');
 
-  // --- 5. Handle messages ---
+  // --- 5. Handle messages (NOW STATE-AWARE) ---
   ws.on('message', (rawMessage) => {
     const message = rawMessage.toString().trim();
     const senderInfo = clients.get(ws);
@@ -62,10 +62,11 @@ wss.on('connection', (ws, username) => {
       if (message === 'create') {
         const lobbyId = `lobby-${uuidv4().substring(0, 6)}`;
         
-        // --- MODIFIED ---
         const newLobby = {
           members: new Set(),
-          leaderUsername: senderInfo.username // Set leader by username
+          leaderUsername: senderInfo.username,
+          gameState: 'lobby',
+          results: new Map()
         };
         
         newLobby.members.add(ws);
@@ -85,20 +86,27 @@ wss.on('connection', (ws, username) => {
           return;
         }
 
+        if (lobby.gameState === 'in-game') {
+          console.log(`User ${senderInfo.username} joining in-progress game...`);
+        }
+
         const joinMsg = `User ${senderInfo.username} joined the lobby`;
         broadcast(lobby.members, joinMsg, ws);
 
         lobby.members.add(ws);
         senderInfo.currentLobbyId = lobbyId;
         
-        // --- NEW RECONNECT LOGIC ---
-        // Check if this user is the "true leader" who is rejoining
         if (senderInfo.username === lobby.leaderUsername) {
             console.log(`Leader ${senderInfo.username} has reconnected to lobby ${lobbyId}`);
             ws.send(`Welcome back, leader. You have reclaimed your role.`);
             broadcast(lobby.members, `Leader ${senderInfo.username} has reconnected.`, ws);
         } else {
             ws.send(`Successfully joined lobby ${lobbyId}`);
+        }
+        
+        if (lobby.gameState === 'in-game' && lobby.results.size > 0) {
+            console.log(`Sending current leaderboard to reconnecting user ${senderInfo.username}`);
+            sendCurrentLeaderboard(lobby, ws);
         }
       }
       
@@ -111,27 +119,70 @@ wss.on('connection', (ws, username) => {
     else {
       const lobby = lobbies.get(currentLobbyId);
 
-      // --- NEW COMMAND: leave ---
       if (message === 'leave') {
         handleLeave(ws, senderInfo, lobby, currentLobbyId);
-        return; // handleLeave will do the rest
+        return;
       }
 
-      // --- MODIFIED LEADER CHECK ---
-      // We check against the stored username, not the ws object.
-      if (senderInfo.username === lobby.leaderUsername) {
-        // If sender is leader, broadcast *any* message they send.
-        console.log(`Broadcasting leader message from ${senderInfo.username}: "${message}"`);
-        broadcast(lobby.members, message);
-      } 
-      else {
-        // Sender is in a lobby, but is NOT the leader
-        ws.send('Error: Only the lobby leader can send commands.');
+      // --- Sub-Case 2a: GAME IS IN 'LOBBY' STATE ---
+      if (lobby.gameState === 'lobby') {
+        if (senderInfo.username === lobby.leaderUsername) {
+          
+          // --- THIS IS THE MODIFIED BLOCK ---
+          if (message.startsWith('start ')) {
+            const gameId = message.substring(6).trim(); // "start " is 6 chars
+
+            if (gameId) {
+              lobby.gameState = 'in-game';
+              lobby.results.clear(); // Clear results for the new round
+              
+              // Broadcast the *full* command to all clients
+              broadcast(lobby.members, message); 
+              console.log(`Lobby ${currentLobbyId} has started with game ${gameId}.`);
+            } else {
+              // Send error *only* to the leader
+              ws.send("Error: 'start' command must include an ID. (e.g., 'start 12345')");
+            }
+          } 
+          // --- END OF MODIFIED BLOCK ---
+          
+          else {
+            // This is the "leader broadcasts anything" rule (e.g., 'radius 5.0')
+            broadcast(lobby.members, message);
+          }
+        } else {
+          // Non-leader in 'lobby' state
+          ws.send('Error: Only the lobby leader can send commands.');
+        }
+      }
+      
+      // --- Sub-Case 2b: GAME IS IN 'IN-GAME' STATE ---
+      else if (lobby.gameState === 'in-game') {
+        
+        if (message.startsWith('result ')) {
+          const result = message.substring(7);
+          lobby.results.set(senderInfo.username, result);
+          console.log(`Lobby ${currentLobbyId}: Broadcasting leaderboard update from ${senderInfo.username}`);
+          broadcastLeaderboardUpdate(lobby);
+        }
+        
+        else if (senderInfo.username === lobby.leaderUsername) {
+          if (message === 'end_game') {
+            lobby.gameState = 'lobby';
+            broadcast(lobby.members, 'GAME_ENDED. Returning to lobby.');
+          } else {
+            ws.send('Error: Cannot send that command while in-game. (Try "end_game")');
+          }
+        }
+        
+        else {
+          ws.send("Error: Game is in progress. (Try 'result {your_result}' or 'leave')");
+        }
       }
     }
   });
 
-  // --- 6. Handle disconnections (UPDATED: Lobby Persists) ---
+  // --- 6. Handle disconnections ---
   ws.on('close', () => {
     const disconnectedClient = clients.get(ws);
     if (!disconnectedClient) return;
@@ -142,15 +193,10 @@ wss.on('connection', (ws, username) => {
     if (lobbyId) {
       const lobby = lobbies.get(lobbyId);
       if (lobby) {
-        // 1. Remove the client's connection
         lobby.members.delete(ws); 
-        
-        // 2. Announce their departure
         const disconnectMsg = `User ${disconnectedClient.username} disconnected`;
         broadcast(lobby.members, disconnectMsg);
-
-        // 3. (REMOVED) We no longer check if the lobby is empty.
-        // The lobby will persist with 0 members, waiting for a reconnect.
+        // Lobby persists even if empty
       }
     }
     clients.delete(ws);
@@ -159,37 +205,27 @@ wss.on('connection', (ws, username) => {
   ws.on('error', console.error);
 });
 
-// --- 7. (UPDATED) Handler for "leave" command ---
+// --- 7. Handler for "leave" command ---
 function handleLeave(ws, senderInfo, lobby, lobbyId) {
     console.log(`User ${senderInfo.username} is leaving lobby ${lobbyId}`);
     
-    // Remove them from the lobby
     lobby.members.delete(ws);
     senderInfo.currentLobbyId = null;
-    ws.send("You have left the lobby."); // Confirm to the user
+    ws.send("You have left the lobby.");
     
-    // Announce their departure
     broadcast(lobby.members, `User ${senderInfo.username} left the lobby`);
     
-    // Check if the leader is leaving
     if (senderInfo.username === lobby.leaderUsername) {
         console.log(`Leader ${senderInfo.username} deliberately left lobby ${lobbyId}.`);
-        
-        // If members are left, promote the next one
         if (lobby.members.size > 0) {
             const newLeader = lobby.members.values().next().value;
             const newLeaderInfo = clients.get(newLeader);
-            
-            lobby.leaderUsername = newLeaderInfo.username; // Assign new leader by USERNAME
-            
+            lobby.leaderUsername = newLeaderInfo.username;
             console.log(`New leader for ${lobbyId} is ${newLeaderInfo.username}`);
             broadcast(lobby.members, `User ${newLeaderInfo.username} is now the lobby leader`);
         }
     }
     
-    // --- THIS IS THE NEW LOGIC ---
-    // After all other logic, check if the lobby is now empty.
-    // This block only runs on a deliberate "leave" command.
     if (lobby.members.size === 0) {
         lobbies.delete(lobbyId);
         console.log(`Lobby ${lobbyId} is empty after 'leave' command and has been deleted.`);
@@ -205,9 +241,39 @@ function broadcast(membersSet, message, excludeClient) {
   });
 }
 
+/**
+ * Constructs and broadcasts the current leaderboard to all lobby members.
+ * @param {object} lobby - The lobby object.
+ */
+function broadcastLeaderboardUpdate(lobby) {
+  // 1. Convert the results Map to a plain object: { "Player1": "12345", ... }
+  const board = Object.fromEntries(lobby.results);
+  
+  // 2. Create the message
+  const message = `LEADERBOARD_UPDATE ${JSON.stringify(board)}`;
+
+  // 3. Broadcast it to everyone
+  broadcast(lobby.members, message);
+}
+
+/**
+ * Constructs and sends the current leaderboard to a *single* client.
+ * Used for reconnecting.
+ * @param {object} lobby - The lobby object.
+ * @param {WebSocket} ws - The client to send to.
+ */
+function sendCurrentLeaderboard(lobby, ws) {
+  const board = Object.fromEntries(lobby.results);
+  const message = `LEADERBOARD_UPDATE ${JSON.stringify(board)}`;
+  
+  if (ws.readyState === WebSocket.OPEN) {
+    ws.send(message);
+  }
+}
+
 // --- 9. Start the HTTP server ---
 httpServer.listen(8080, () => {
-  console.log('🚀 Resilient Leader Server (with Heartbeat) listening on ws://localhost:8080');
+  console.log('🚀 State-Aware Server (with Heartbeat) listening on ws://localhost:8080');
 });
 
 // --- 10. HEARTBEAT INTERVAL ---

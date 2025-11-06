@@ -16,16 +16,20 @@ import android.widget.Toast;
 import androidx.core.content.ContextCompat;
 
 import com.android.volley.Request;
-import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.jubair5.geohunt.R;
 import com.jubair5.geohunt.network.ApiConstants;
 import com.jubair5.geohunt.network.VolleySingleton;
 
+import org.java_websocket.client.WebSocketClient;
+import org.java_websocket.handshake.ServerHandshake;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -40,6 +44,11 @@ public class MultiplayerGameActivity extends GameActivity {
     private String streetViewUrl;
     private boolean isMultiplayerReady = false;
 
+    private WebSocketClient webSocketClient;
+    private String lobbyId;
+    private String username;
+    private SharedPreferences prefs;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Use the custom onCreate from GameActivity to set the correct layout and run setup
@@ -49,11 +58,15 @@ public class MultiplayerGameActivity extends GameActivity {
         Intent intent = getIntent();
         multiplayerChallengeId = intent.getIntExtra("challengeId", -1);
         streetViewUrl = intent.getStringExtra("imageUrl");
+        lobbyId = intent.getStringExtra("lobbyId");
+
+        prefs = getSharedPreferences("GeoHuntPrefs", Context.MODE_PRIVATE);
+        username = prefs.getString("userName", "User");
 
         // Validate that we have the necessary data to start
-        if (multiplayerChallengeId == -1 || streetViewUrl == null) {
+        if (multiplayerChallengeId == -1 || streetViewUrl == null || lobbyId == null) {
             Toast.makeText(this, "Error: Missing multiplayer game data.", Toast.LENGTH_LONG).show();
-            Log.e(TAG, "Missing challengeId or imageUrl in intent.");
+            Log.e(TAG, "Missing challengeId, imageUrl, or lobbyId in intent.");
             finish();
             return;
         }
@@ -61,6 +74,31 @@ public class MultiplayerGameActivity extends GameActivity {
         // Set a flag that we are ready to start. The game will be started from our
         // overridden enableMyLocation() method, which is called by the parent's onMapReady().
         isMultiplayerReady = true;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        createWebSocketClient();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (isFinishing()) {
+            sendLobbyMessage("leave");
+            if (webSocketClient != null) {
+                webSocketClient.close();
+            }
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (webSocketClient != null && !webSocketClient.isClosed()) {
+            webSocketClient.close();
+        }
     }
 
     /**
@@ -134,14 +172,16 @@ public class MultiplayerGameActivity extends GameActivity {
             Log.e(TAG, "Failed to create JSON object for submission.", e);
         }
 
-        String url = ApiConstants.BASE_URL + ApiConstants.POST_SUBMISSION_ENDPOINT;
+        String url = ApiConstants.BASE_URL + ApiConstants.POST_SUBMISSION_ENDPOINT + "?uid=" + userId + "&cid=" + challengeId;
 
-        JsonObjectRequest submissionRequest = new JsonObjectRequest(Request.Method.POST, url, requestBody,
+        StringRequest submissionRequest = new StringRequest(Request.Method.POST, url,
                 response -> {
-                    Log.d(TAG, "Submission successful: " + response.toString());
+                    Log.d(TAG, "Submission successful: " + response);
                     // For multiplayer, navigate to the multiplayer-specific results screen
+                    sendLobbyMessage("result " + response);
                     Intent intent = new Intent(MultiplayerGameActivity.this, MultiplayerResultsActivity.class);
-                    intent.putExtra("results", response.toString());
+                    intent.putExtra("results", response);
+                    intent.putExtra("lobbyId", lobbyId);
                     startActivity(intent);
                     finish();
                 },
@@ -162,5 +202,55 @@ public class MultiplayerGameActivity extends GameActivity {
         };
 
         VolleySingleton.getInstance(this).addToRequestQueue(submissionRequest);
+    }
+
+    private void createWebSocketClient() {
+        if (webSocketClient != null && !webSocketClient.isClosed()) return;
+
+        URI uri;
+        try {
+            String url = ApiConstants.WEBSOCKET_URL + "/multiplayer/" + username;
+            Log.d(TAG, "Connecting to WebSocket: " + url);
+            uri = new URI(url);
+        } catch (URISyntaxException e) {
+            Log.e(TAG, "URISyntaxException: " + e.getMessage());
+            Toast.makeText(this, "Error connecting to the server.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        webSocketClient = new WebSocketClient(uri) {
+            @Override
+            public void onOpen(ServerHandshake handshakedata) {
+                Log.i(TAG, "WebSocket connection opened.");
+                sendLobbyMessage("join " + lobbyId);
+            }
+
+            @Override
+            public void onMessage(String message) {
+                Log.i(TAG, "Received message: " + message);
+                // Game activity does not need to handle incoming messages, only results activity
+            }
+
+            @Override
+            public void onClose(int code, String reason, boolean remote) {
+                Log.i(TAG, "WebSocket connection closed: " + reason);
+            }
+
+            @Override
+            public void onError(Exception ex) {
+                Log.e(TAG, "WebSocket error: " + ex.getMessage());
+            }
+        };
+        webSocketClient.setConnectionLostTimeout(60);
+        webSocketClient.connect();
+    }
+
+    private void sendLobbyMessage(String message) {
+        if (webSocketClient != null && webSocketClient.isOpen()) {
+            Log.d(TAG, "Sending message: " + message);
+            webSocketClient.send(message);
+        } else {
+            Log.d(TAG, "Cannot send message, WebSocket is not open.");
+        }
     }
 }

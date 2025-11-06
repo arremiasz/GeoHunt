@@ -36,7 +36,7 @@ public class Player {
     private void fetchUserId(Context context) {
         String url = Uri.parse(ApiConstants.BASE_URL + ApiConstants.GET_ACCOUNT_BY_USERNAME_ENDPOINT)
                 .buildUpon()
-                .appendQueryParameter("username", this.username)
+                .appendQueryParameter("name", this.username)
                 .build().toString();
 
         Log.d("Player", "Fetching user ID from: " + url);

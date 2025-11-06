@@ -251,6 +251,7 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
                         Intent intent = new Intent(LobbyActivity.this, MultiplayerGameActivity.class);
                         intent.putExtra("challengeId", id);
                         intent.putExtra("imageUrl", imageUrl);
+                        intent.putExtra("lobbyId", lobbyId);
                         startActivity(intent);
                     } catch (JSONException e) {
                         Log.e(TAG, "Error parsing challenge details response", e);
@@ -426,6 +427,10 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
         webSocketClient.connect();
     }
 
+    /**
+     * Handles all incoming WebSocket messages and updates the UI accordingly.
+     * @param message The raw message received from the server.
+     */
     private void handleWebSocketMessage(String message) {
         if (message.equals("Connection Success")) {
             Toast.makeText(this, "Connected to server!", Toast.LENGTH_SHORT).show();
@@ -440,7 +445,7 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
             this.lobbyId = parts[parts.length - 1];
             Toast.makeText(this, "Lobby created! ID: " + this.lobbyId, Toast.LENGTH_SHORT).show();
             setLobbyLeader(true);
-            // Add self to player list
+            // Add self to player list, clearing any previous state.
             playerList.clear();
             playerList.add(new Player(username, getApplicationContext()));
             playerAdapter.notifyDataSetChanged();
@@ -450,9 +455,6 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
         } else if (message.startsWith("User ") && message.endsWith(" joined the lobby")) {
             // e.g., "User Player2 joined the lobby"
             String joinedUser = message.substring(5, message.indexOf(" joined the lobby"));
-            Toast.makeText(this, joinedUser + " has joined!", Toast.LENGTH_SHORT).show();
-            playerList.add(new Player(joinedUser, getApplicationContext()));
-            playerAdapter.notifyDataSetChanged();
 
             boolean userExists = false;
             for (Player p : playerList) {
@@ -461,9 +463,13 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
                     break;
                 }
             }
+            // Only add the user if they are not already in the list to prevent duplicates.
             if (!userExists) {
+                Toast.makeText(this, joinedUser + " has joined!", Toast.LENGTH_SHORT).show();
                 playerList.add(new Player(joinedUser, getApplicationContext()));
                 playerAdapter.notifyDataSetChanged();
+            } else {
+                Toast.makeText(this, joinedUser + " reconnected.", Toast.LENGTH_SHORT).show();
             }
 
             if (startGameButton.isEnabled()) { // User is the lobby leader
@@ -480,11 +486,17 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
                 sendLobbyMessage(userListMessage.toString());
             }
         } else if (message.startsWith("User ") && message.endsWith(" disconnected")) {
+            // This is a temporary disconnect (e.g. app in background), user can rejoin.
             String disconnectedUser = message.substring(5, message.indexOf(" disconnected"));
-            Toast.makeText(this, disconnectedUser + " has disconnected.", Toast.LENGTH_SHORT).show();
-            playerList.removeIf(player -> player.getUsername().equals(disconnectedUser));
+            Toast.makeText(this, disconnectedUser + " disconnected.", Toast.LENGTH_SHORT).show();
+            // We don't remove the user from the list, just acknowledge the temporary disconnect.
+        } else if (message.startsWith("User ") && message.endsWith(" left the lobby")) {
+            // This is a permanent leave. Remove the user from the lobby.
+            String leftUser = message.substring(5, message.indexOf(" left the lobby"));
+            Toast.makeText(this, leftUser + " has left the lobby.", Toast.LENGTH_SHORT).show();
+            playerList.removeIf(player -> player.getUsername().equals(leftUser));
             playerAdapter.notifyDataSetChanged();
-            if (playerList.get(0).getUsername().equals(username)) {
+            if (!playerList.isEmpty() && playerList.get(0).getUsername().equals(username)) {
                 setLobbyLeader(true);
             }
         } else if (message.startsWith("radius ")) {
@@ -635,7 +647,7 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
         playerList.add(new Player(username, getApplicationContext()));
         playerList.add(new Player("Player 2", getApplicationContext()));
         playerList.add(new Player("Player 3", getApplicationContext()));
-        playerList.add(new Player("Player 4", getApplicationContext()));
+//        playerList.add(new Player("Player 4"));
         playerAdapter.notifyDataSetChanged();
         setLobbyLeader(true);
     }
