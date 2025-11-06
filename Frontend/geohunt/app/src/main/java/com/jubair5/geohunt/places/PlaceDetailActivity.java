@@ -31,6 +31,7 @@ import com.jubair5.geohunt.network.VolleySingleton;
 
 public class PlaceDetailActivity extends AppCompatActivity implements OnMapReadyCallback {
 
+    private static final String TAG = "PlaceDetailActivity";
     private MapView mapView;
     private GoogleMap googleMap;
 
@@ -49,7 +50,7 @@ public class PlaceDetailActivity extends AppCompatActivity implements OnMapReady
         Button deleteButton = findViewById(R.id.delete_button);
         mapView = findViewById(R.id.map_view);
 
-        String imageUrl = getIntent().getStringExtra("IMAGE_URL");
+        byte[] imageUrl = getIntent().getByteArrayExtra("IMAGE_URL");
         double latitude = getIntent().getDoubleExtra("LATITUDE", 0);
         double longitude = getIntent().getDoubleExtra("LONGITUDE", 0);
 
@@ -61,6 +62,8 @@ public class PlaceDetailActivity extends AppCompatActivity implements OnMapReady
 
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
+
+        Log.d(TAG, "Viewing Challenge with ID: " + getIntent().getIntExtra("CID", -1));
     }
 
     /**
@@ -79,13 +82,16 @@ public class PlaceDetailActivity extends AppCompatActivity implements OnMapReady
      * Creates and sends a DELETE request to the server to delete the current place.
      */
     private void deletePlace() {
-        int id = getIntent().getIntExtra("ID", -1);
-        if (id == -1) {
+        int cid = getIntent().getIntExtra("CID", -1);
+        int uid = getIntent().getIntExtra("UID", -1);
+        if (cid == -1) {
             Toast.makeText(this, "Error: Place ID not found!", Toast.LENGTH_SHORT).show();
             return;
+        } else if (uid == -1) {
+            Toast.makeText(this, "Error: User ID not found!", Toast.LENGTH_SHORT).show();
         }
 
-        String url = ApiConstants.BASE_URL + ApiConstants.DEL_SUBMITTED_PLACE_ENDPOINT + "?id=" + id;
+        String url = ApiConstants.BASE_URL + ApiConstants.DEL_SUBMITTED_PLACE_ENDPOINT + "?userId=" + uid + "&chalId=" + cid;
 
         StringRequest deleteRequest = new StringRequest(Request.Method.DELETE, url,
                 response -> {
