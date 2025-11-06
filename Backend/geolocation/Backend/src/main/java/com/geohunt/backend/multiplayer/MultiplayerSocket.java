@@ -3,6 +3,7 @@ package com.geohunt.backend.multiplayer;
 
 import com.geohunt.backend.database.Account;
 import com.geohunt.backend.database.AccountService;
+import jakarta.persistence.Lob;
 import jakarta.websocket.*;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
@@ -62,8 +63,9 @@ public class MultiplayerSocket {
         // If the user is not in a lobby, they can create or join one.
         // If a user is in a lobby, the request is handled by the lobby.
         logger.info("OnMessage : Got Message: " + message);
+        String username = sessionUsernameMap.get(session);
 
-        sendStringToSession(session, "Received: " + message);
+        sendStringToSingleUser(username, "Received: " + message);
 
         String[] splitMsg = message.split("\\s+");
 
@@ -73,7 +75,23 @@ public class MultiplayerSocket {
         }
         else if (splitMsg[0].equals("create")) {
             // message starts with "create" - create lobby
-
+            createLobby(username);
+        }
+        else if (splitMsg[0].equals("join")){
+            long lobbyId = Long.parseLong(splitMsg[1]);
+            if(idLobbyMap.get((Long)lobbyId) == null){
+                sendStringToSingleUser(username,"cannot join lobby");
+                return;
+            }
+            joinLobby(username,lobbyId);
+        }
+        else if (splitMsg[0].equals("leave")){
+            leaveLobby(username);
+            sendStringToSingleUser(username, "Left lobby");
+        }
+        else if (splitMsg[0].equals("lobby")){
+            Lobby lobby = usernameLobbyMap.get(username);
+            lobby.processMessage(username,splitMsg);
         }
     }
 
@@ -82,6 +100,7 @@ public class MultiplayerSocket {
         // Remove player from lobby.
         String username = sessionUsernameMap.get(session);
         logger.info("OnClose : User " + username + " disconnected");
+        leaveLobby(username);
 
         sessionUsernameMap.remove(session);
         usernameSessionMap.remove(username);
@@ -101,15 +120,25 @@ public class MultiplayerSocket {
         if(usernameLobbyMap.get(username) != null){
             return;
         }
-        Lobby lobby = new Lobby(username);
+        Lobby lobby = new Lobby(accountService.getAccountByUsername(username), this, accountService);
         usernameLobbyMap.put(username, lobby);
-        idLobbyMap.put(lobby.getId(), lobby);
-        sendStringToSingleUser(username, "Successfully created lobby");
+        idLobbyMap.put((Long)lobby.getId(), lobby);
+        sendStringToSingleUser(username, "Successfully created lobby " + lobby.getId());
+        logger.info("Created Lobby: " + lobby.getId() + " Leader: " + username);
     }
 
     public void joinLobby(String username, long id){
-        Lobby lobby = idLobbyMap.get(id);
-        lobby.joinLobby(username);
+        Lobby lobby = idLobbyMap.get((Long)id);
+        lobby.joinLobby(accountService.getAccountByUsername(username));
+    }
+
+    public void leaveLobby(String username){
+        Lobby lobby = usernameLobbyMap.get(username);
+        if(lobby != null){
+            lobby.disconnectUser(username);
+            usernameLobbyMap.remove(username);
+            logger.info("User " + username + " left lobby");
+        }
     }
 
     public void closeLobby(Lobby lobby){
