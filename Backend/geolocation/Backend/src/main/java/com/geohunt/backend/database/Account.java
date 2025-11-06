@@ -1,5 +1,6 @@
 package com.geohunt.backend.database;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -14,13 +15,14 @@ import java.util.Set;
 @Getter
 @Setter
 @NoArgsConstructor
+@JsonIgnoreProperties({"challenges", "submissions", "sentFriendRequests", "receivedFriendRequests", "notifications"})
 public class Account {
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private @Id long id;
-    public String username;
-    public String pfp;
-    public String password;
-    public String email;
+    private String username;
+    private String pfp;
+    private String password;
+    private String email;
 
     @OneToMany(mappedBy = "creator")
     @JsonManagedReference("account-challenges")
