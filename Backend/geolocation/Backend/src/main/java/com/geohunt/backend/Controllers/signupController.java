@@ -15,9 +15,14 @@ public class signupController {
     public ResponseEntity<String> signup(@RequestBody Account account) {
         try {
             long id = accountService.createAccount(account);
+            if(id == -1){
+                return ResponseEntity.badRequest().body("username exists");
+            } else if (id == -2){
+                return ResponseEntity.badRequest().body("email exists");
+            }
             return ResponseEntity.ok(String.format("{\"id\":%d}", id));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Username Already Exists");
+            return ResponseEntity.badRequest().body("username exists");
         }
     }
 
