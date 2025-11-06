@@ -11,4 +11,5 @@ public interface ChallengesRepository extends JpaRepository<Challenges, Long> {
     List<Challenges> findByCreator_Id(Long accountId);
     Optional<Challenges> findById(long id);
     List<Challenges> getChallengesByCreator(Account account);
+    Optional<Challenges> findByLatitudeAndLongitude(double latitude, double longitude);
 }
