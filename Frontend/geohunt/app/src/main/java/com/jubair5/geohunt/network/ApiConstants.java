@@ -35,7 +35,7 @@ public final class ApiConstants {
 
     public static final String Reject_Friend_Request_ENDPOINT= "/friends/reject";
 
-    public static final String Remove_FRIENDS_Request= "/friends/remove";
+    public static final String Remove_FRIEND = "/friends/remove";
 
 
 }
