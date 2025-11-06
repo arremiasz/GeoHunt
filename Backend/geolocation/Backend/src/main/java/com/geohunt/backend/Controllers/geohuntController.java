@@ -32,7 +32,7 @@ public class geohuntController {
     @GetMapping("/geohunt/getChallengeByID")
     public ResponseEntity<Challenges> getChallengeByID(@RequestParam long id) {
         try {
-            Challenges c = challengesRepository.findById(id);
+            Challenges c = challengesRepository.findById(id).get();
             return ResponseEntity.ok().body(c);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
