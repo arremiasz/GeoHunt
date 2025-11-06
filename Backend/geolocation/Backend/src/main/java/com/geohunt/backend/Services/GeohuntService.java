@@ -196,7 +196,7 @@ public class GeohuntService {
             challengesRepository.save(challenge);
             return ResponseEntity.ok(challenge);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getStackTrace());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("User not found.");
         }
 
     }
