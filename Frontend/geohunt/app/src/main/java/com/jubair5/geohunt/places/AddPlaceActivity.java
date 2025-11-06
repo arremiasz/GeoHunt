@@ -30,6 +30,7 @@ import androidx.core.content.FileProvider;
 import com.android.volley.Request;
 import com.android.volley.toolbox.StringRequest;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -40,9 +41,6 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.jubair5.geohunt.R;
 import com.jubair5.geohunt.network.ApiConstants;
 import com.jubair5.geohunt.network.VolleySingleton;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -174,14 +172,6 @@ public class AddPlaceActivity extends AppCompatActivity implements OnMapReadyCal
             return;
         }
 
-        JSONObject requestBody = new JSONObject();
-        try {
-            requestBody.put("url", imageString);
-        } catch (JSONException e) {
-            Log.e(TAG, "Failed to create JSON object for submission.", e);
-            return;
-        }
-
         String url = ApiConstants.BASE_URL + ApiConstants.SUBMIT_PLACE_ENDPOINT + "?lat=" + latitude + "&lng=" + longitude + "&uid=" + userId;
 
         StringRequest postRequest = new StringRequest(Request.Method.POST, url,
@@ -198,12 +188,12 @@ public class AddPlaceActivity extends AppCompatActivity implements OnMapReadyCal
         ) {
             @Override
             public byte[] getBody() {
-                return requestBody.toString().getBytes(StandardCharsets.UTF_8);
+                return imageString.getBytes(StandardCharsets.UTF_8);
             }
 
             @Override
             public String getBodyContentType() {
-                return "application/json; charset=utf-8";
+                return "text/plain; charset=utf-8";
             }
         };
 
@@ -223,12 +213,12 @@ public class AddPlaceActivity extends AppCompatActivity implements OnMapReadyCal
     }
 
     /**
-     * Uses the FusedLocationProviderClient to get the last known location.
+     * Uses the FusedLocationProviderClient to get the current live location.
      */
     private void getCurrentLocation() {
         // Suppressing the permission check here because this method is only called after the permission has been granted.
         // noinspection MissingPermission
-        fusedLocationClient.getLastLocation()
+        fusedLocationClient.getCurrentLocation(LocationRequest.PRIORITY_HIGH_ACCURACY, null)
                 .addOnSuccessListener(this, location -> {
                     if (location != null) {
                         latitude = location.getLatitude();

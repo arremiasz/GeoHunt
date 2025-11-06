@@ -339,7 +339,6 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
                             Toast.makeText(getContext(), responseBody, Toast.LENGTH_LONG).show();
                             editUsernameLayout.setError("This email or username might already be taken.");
                             editEmailLayout.setError("This email or username might already be taken.");
-//                            emailEditText.requestFocus()
                         } else {
                             Toast.makeText(getContext(), "Signup failed. Server error: " + error.networkResponse.statusCode, Toast.LENGTH_LONG).show();
                         }
@@ -438,7 +437,7 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         }
         intent.putExtra("UID", uid);
         intent.putExtra("CID", place.getId());
-        intent.putExtra("IMAGE_URL", place.getImageUrl());
+        intent.putExtra("IMAGE_URL", place.getPhotoData());
         intent.putExtra("LATITUDE", place.getLatitude());
         intent.putExtra("LONGITUDE", place.getLongitude());
         activityLauncher.launch(intent);
