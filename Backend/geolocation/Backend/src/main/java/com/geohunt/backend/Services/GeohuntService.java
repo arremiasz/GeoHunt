@@ -218,7 +218,7 @@ public class GeohuntService {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
         }
         List<Challenges> returnable = challengesRepository.getChallengesByCreator(user);
-        submissionsRepository.deleteBySubmitter_Id(uid);
+        submissionsRepository.deleteByChallenge_Id(cid);
         for(Challenges challenge : returnable){
             if(challenge.getId() == cid){
                 challengesRepository.deleteById(challenge.getId());
