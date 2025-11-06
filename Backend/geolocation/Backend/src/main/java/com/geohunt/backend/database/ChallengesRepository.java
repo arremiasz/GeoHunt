@@ -4,10 +4,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ChallengesRepository extends JpaRepository<Challenges, Long> {
     List<Challenges> findByCreator_Id(Long accountId);
-    Challenges findById(long id);
+    Optional<Challenges> findById(long id);
     List<Challenges> getChallengesByCreator(Account account);
 }
