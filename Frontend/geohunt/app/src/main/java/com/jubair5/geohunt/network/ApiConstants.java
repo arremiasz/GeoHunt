@@ -26,9 +26,9 @@ public final class ApiConstants {
     public static final String UPDATE_ACCOUNT_ENDPOINT = "/account/update";
 
     // Place Endpoints
-    public static final String SUBMIT_PLACE_ENDPOINT = "/geohunt/places"; // TODO: Set this endpoint to the correct one and adjust query
-    public static final String GET_SUBMITTED_PLACES_ENDPOINT = "/geohunt/places"; // TODO: Set this endpoint to the correct one and adjust query
-    public static final String DEL_SUBMITTED_PLACE_ENDPOINT = "/geohunt/places/delete"; // TODO: Set this endpoint to the correct one and adjust query
+    public static final String SUBMIT_PLACE_ENDPOINT = "/geohunt/customChallenge";
+    public static final String GET_SUBMITTED_PLACES_ENDPOINT = "/geohunt";
+    public static final String DEL_SUBMITTED_PLACE_ENDPOINT = "/geohunt/mySubmissions";
 
     // Location Endpoints
     public static final String GET_GENERATED_LOCATIONS_ENDPOINT = "/geohunt/getLocation";

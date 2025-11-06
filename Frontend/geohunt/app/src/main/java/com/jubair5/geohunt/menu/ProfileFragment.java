@@ -142,7 +142,7 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
             return;
         }
 
-        String url = ApiConstants.BASE_URL + ApiConstants.GET_SUBMITTED_PLACES_ENDPOINT + "?uid=" + userId;
+        String url = ApiConstants.BASE_URL + ApiConstants.GET_SUBMITTED_PLACES_ENDPOINT + "?id=" + userId;
 
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null,
                 response -> {
@@ -339,7 +339,6 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
                             Toast.makeText(getContext(), responseBody, Toast.LENGTH_LONG).show();
                             editUsernameLayout.setError("This email or username might already be taken.");
                             editEmailLayout.setError("This email or username might already be taken.");
-//                            emailEditText.requestFocus()
                         } else {
                             Toast.makeText(getContext(), "Signup failed. Server error: " + error.networkResponse.statusCode, Toast.LENGTH_LONG).show();
                         }
@@ -431,8 +430,14 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
     @Override
     public void onPlaceClick(Place place) {
         Intent intent = new Intent(getActivity(), PlaceDetailActivity.class);
-        intent.putExtra("ID", place.getId());
-        intent.putExtra("IMAGE_URL", place.getImageUrl());
+        int uid = prefs.getInt(KEY_USER_ID, -1);
+        if (uid == -1) {
+            Log.e(TAG, "User ID not found in shared preferences.");
+            return;
+        }
+        intent.putExtra("UID", uid);
+        intent.putExtra("CID", place.getId());
+        intent.putExtra("IMAGE_URL", place.getPhotoData());
         intent.putExtra("LATITUDE", place.getLatitude());
         intent.putExtra("LONGITUDE", place.getLongitude());
         activityLauncher.launch(intent);
