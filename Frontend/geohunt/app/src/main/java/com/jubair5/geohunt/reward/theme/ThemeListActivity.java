@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -33,6 +34,7 @@ public class ThemeListActivity extends AppCompatActivity implements ThemeAdapter
     private static final String KEY_USER_ID = "userId";
 
     private int userId = 12345;
+    private int points = 200;
 
 
 
@@ -58,16 +60,37 @@ public class ThemeListActivity extends AppCompatActivity implements ThemeAdapter
         themesRecycleViewer = findViewById(R.id.theme_recycler_view);
         resetButton = findViewById(R.id.reset_button);
 
-        themesRecycleViewer.setLayoutManager(new LinearLayoutManager(this));
-
+        // Sets up list view
         themeList = new ArrayList<>();
+        themesRecycleViewer.setLayoutManager(new LinearLayoutManager(this));
         themeAdapter = new ThemeAdapter(getBaseContext(), themeList, this);
-
         themesRecycleViewer.setAdapter(themeAdapter);
+
+        resetButton.setOnClickListener(v->resetProgress());
 
         getThemes();
 
 
+    }
+
+    private void resetProgress() {
+        String friendsURL = ApiConstants.BASE_URL + ApiConstants.RESET_THEMES + "?Id=" + userId;
+
+        // Getting state
+        JsonObjectRequest jsonObjReq = new JsonObjectRequest(
+                Request.Method.DELETE,
+                friendsURL,
+                null,
+                response -> {
+                    Log.d(TAG, "Response: "+ response.toString());
+                    changeTheme("Android Studio");
+
+                },
+                volleyError -> {
+                    Log.e(TAG, "Error resetting theme progress", volleyError);
+                }
+        );
+        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(jsonObjReq);
     }
 
     private void getThemes(){
@@ -87,7 +110,7 @@ public class ThemeListActivity extends AppCompatActivity implements ThemeAdapter
                         }
                         themeAdapter.notifyDataSetChanged();
                     } catch (JSONException e) {
-                        Log.e(TAG, "Error parsing places JSON", e);
+                        Log.e(TAG, "Error parsing themes JSON", e);
                     }
                 },
                 error -> {
@@ -108,6 +131,34 @@ public class ThemeListActivity extends AppCompatActivity implements ThemeAdapter
     @Override
     public void onThemeClick(Theme theme) {
         if(!theme.isObtained()){
+            if (theme.getPrice()<= points){
+                String buyThemes = ApiConstants.BASE_URL + ApiConstants.PURCHASE_THEMES + "?primaryId=" + userId;
+
+                JSONObject jsonObject = new JSONObject();
+                try {
+                    jsonObject.put("theme", theme.getName());
+                } catch (JSONException e) {
+                    throw new RuntimeException(e);
+                }
+
+                // Buys clicked item
+                JsonObjectRequest jsonObjReq = new JsonObjectRequest(
+                        Request.Method.PUT,
+                        buyThemes,
+                        jsonObject,
+                        response -> {
+                            Log.d(TAG, "Response: "+ response.toString());
+
+                        },
+                        volleyError -> {
+                            Log.e(TAG, "Error buying theme: " + theme.getName(), volleyError);
+                        }
+                );
+                VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(jsonObjReq);
+            }
+            else{
+                Toast.makeText(this, "Not enought Points for this theme.", Toast.LENGTH_SHORT).show();
+            }
 
         }
         changeTheme(theme.getName());

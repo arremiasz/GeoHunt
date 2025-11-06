@@ -6,6 +6,8 @@ package com.jubair5.geohunt.network;
 
 public final class ApiConstants {
 
+
+
     private ApiConstants() {}
 
     // Base URL for all API calls
@@ -37,6 +39,8 @@ public final class ApiConstants {
 
     // Themes
     public static final String GET_THEMES_ENDPOINT = "/themes";
+    public static final String RESET_THEMES = "/resetThemes";
+    public static final String PURCHASE_THEMES = "/purchaseThemes";
 
 
 }
