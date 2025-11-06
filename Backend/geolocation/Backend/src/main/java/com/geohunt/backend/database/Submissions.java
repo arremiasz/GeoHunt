@@ -35,6 +35,7 @@ public class Submissions {
     @JsonBackReference("account-submissions")
     private Account submitter;
 
+    @Column(columnDefinition = "mediumtext")
     private String photourl;
     private LocalDateTime submissionTime;
     private int reports;
