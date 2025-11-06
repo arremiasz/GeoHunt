@@ -24,7 +24,7 @@ public class Submissions {
 
     @ManyToOne
     @JoinColumn(name="challenges_id")
-    @JsonBackReference("challenge-submissions")
+    @JsonBackReference("challenges-submissions")
     private Challenges challenge;
 
     private double latitude;
@@ -35,6 +35,7 @@ public class Submissions {
     @JsonBackReference("account-submissions")
     private Account submitter;
 
+    @Column(columnDefinition = "mediumtext")
     private String photourl;
     private LocalDateTime submissionTime;
     private int reports;

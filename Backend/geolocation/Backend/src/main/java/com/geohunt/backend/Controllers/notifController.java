@@ -26,14 +26,14 @@ public class notifController {
         return ResponseEntity.ok(notifs);
     }
 
-    // Delete a notification by ID
+
     @DeleteMapping("/{notifId}")
     public ResponseEntity<Void> deleteNotif(@PathVariable Long notifId) {
         notificationsService.deleteNotification(notifId);
         return ResponseEntity.ok().build();
     }
 
-    // (Optional) Mark as read
+
     @PutMapping("/{notifId}/read")
     public ResponseEntity<Void> markAsRead(@PathVariable Long notifId) {
         notificationsService.markAsRead(notifId);

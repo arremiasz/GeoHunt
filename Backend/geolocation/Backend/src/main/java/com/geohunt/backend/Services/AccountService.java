@@ -1,12 +1,12 @@
 package com.geohunt.backend.Services;
 
-import com.geohunt.backend.database.Account;
-import com.geohunt.backend.database.AccountRepository;
+import com.geohunt.backend.database.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Optional;
 
 @Service
@@ -14,6 +14,17 @@ public class AccountService {
     @Autowired
     private AccountRepository accountRepository;
 
+    @Autowired
+    private FriendsService friendsService;
+
+    @Autowired
+    private ChallengesRepository challengeService;
+
+    @Autowired
+    private NotificationsRepository notificationsService;
+
+    @Autowired
+    private SubmissionsRepository submissionsRepository;
 
     public long getIdByUsername(String username) {
         Account a = getAccountByUsername(username);
@@ -44,8 +55,28 @@ public class AccountService {
         throw new IllegalArgumentException("Account does not exist.");
     }
 
+    public boolean deleteFriends(long id) {
+        return friendsService.deleteFriends(id);
+    }
+
+    public void deleteChallenges(long id) {
+        challengeService.deleteByCreator_Id(id);
+    }
+
+    public void deleteNotifications(long id) {
+        notificationsService.deleteAllByTargetId(id);
+    }
+
+    public void deleteSubmissions(long id) {
+        submissionsRepository.deleteById(id);
+    }
+
     public boolean deleteAccountByID(Long id) {
         if(accountRepository.findById(id).isPresent()) {
+            deleteFriends(id);
+            deleteSubmissions(id);
+            deleteChallenges(id);
+            deleteNotifications(id);
             accountRepository.deleteById(id);
             return true;
         } else {

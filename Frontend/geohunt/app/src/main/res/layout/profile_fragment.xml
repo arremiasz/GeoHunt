@@ -45,20 +45,23 @@
                 android:backgroundTint="#AFAFAF"
                 android:layout_marginTop="30dp"/>
 
-            <Button
-                android:id="@+id/logout_button"
+            <TextView
+                android:id="@+id/places_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Logout"
-                android:layout_marginTop="16dp"/>
+                android:layout_gravity="start"
+                android:layout_marginTop="30dp"
+                android:text="@string/my_places"
+                android:textSize="20sp"
+                android:textStyle="bold"/>
 
-            <Button
-                android:id="@+id/delete_account_button"
-                android:layout_width="wrap_content"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/places_recycler_view"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/delete_account"
-                android:backgroundTint="#FF0000"
-                android:layout_marginTop="16dp" />
+                app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                app:spanCount="3"
+                android:layout_marginTop="16dp"/>
 
         </LinearLayout>
 
@@ -151,6 +154,24 @@
                     android:layout_marginStart="16dp"
                     android:text="Save Changes"/>
             </LinearLayout>
+
+            <Button
+                android:id="@+id/logout_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Logout"
+                android:layout_marginTop="16dp"/>
+
+            <Button
+                android:id="@+id/delete_account_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/delete_account"
+                android:backgroundTint="#FF0000"
+                android:layout_marginTop="16dp" />
+
         </LinearLayout>
     </LinearLayout>
 </ScrollView>

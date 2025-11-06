@@ -1,10 +1,13 @@
 package com.geohunt.backend.Services;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.geohunt.backend.database.Challenges;
-import com.geohunt.backend.database.ChallengesRepository;
+import com.geohunt.backend.database.*;
 
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,6 +19,7 @@ import java.net.http.HttpResponse;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 @Service
@@ -23,6 +27,12 @@ public class GeohuntService {
 
     @Autowired
     private ChallengesRepository challengesRepository;
+
+    @Autowired
+    private AccountService accountService;
+
+    @Autowired
+    private SubmissionsRepository submissionsRepository;
 
     private double haversine(double lat1, double lon1, double lat2, double lon2) {
         double R = 3959; // miles
@@ -57,33 +67,6 @@ public class GeohuntService {
 
     }
 
-    public boolean doChallengesExist(double lat, double lon) {
-        String key = "AIzaSyA4cGMdtzfM4Ub-1agmFLqKP5WLWLLwLLg";
-        String placesUrl = String.format(
-                "https://maps.googleapis.com/maps/api/streetview/metadata?location=LAT=%f,LNG=%f&key=%s",
-                lat, lon, key
-        );
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(placesUrl))
-                .GET()
-                .build();
-        try{
-            HttpClient client = HttpClient.newHttpClient();
-            ObjectMapper mapper = new ObjectMapper();
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            JsonNode root = mapper.readTree(response.body());
-            JsonNode results = root.get("status");
-            if(results.equals("OK")){
-                return true;
-            } else {
-                return false;
-            }
-        } catch(Exception e){
-            e.printStackTrace();
-        }
-
-        return true;
-    }
 
     public List<Challenges> generateChallenges(double lat, double lon, double rad, int count) {
         List<Challenges> generated = new ArrayList<>();
@@ -91,7 +74,9 @@ public class GeohuntService {
         ObjectMapper mapper = new ObjectMapper();
         HttpClient client = HttpClient.newHttpClient();
 
+
         try {
+
             // Convert miles to meters for Places API
             int radiusMeters = (int) (rad * 1609.34);
 
@@ -128,6 +113,10 @@ public class GeohuntService {
                         "https://maps.googleapis.com/maps/api/streetview?size=600x400&location=%f,%f&key=%s",
                         newLat, newLon, apiKey
                 );
+
+                if (challengesRepository.findByStreetviewurl(streetviewUrl).isPresent()) {
+
+                }
 
                 Challenges challenge = new Challenges();
                 challenge.setLatitude(newLat);
@@ -170,9 +159,6 @@ public class GeohuntService {
         return new double[]{Math.toDegrees(newLat), Math.toDegrees(newLon)};
     }
 
-    public void deleteChallengeByID(long id) {
-        challengesRepository.deleteById(id);
-    }
 
     public List<Challenges> fallbackGenerate(double lat, double lon, double rad, int count) {
         List<Challenges> generated = new ArrayList<>();
@@ -187,14 +173,85 @@ public class GeohuntService {
                     newLat, newLon, apiKey
             );
 
-            Challenges challenge = new Challenges();
-            challenge.setLatitude(newLat);
-            challenge.setLongitude(newLon);
-            challenge.setStreetviewurl(streetviewUrl);
-            challenge.setCreationdate(LocalDate.now());
-            challengesRepository.save(challenge);
-            generated.add(challenge);
+                Challenges challenge = new Challenges();
+                challenge.setLatitude(newLat);
+                challenge.setLongitude(newLon);
+                challenge.setStreetviewurl(streetviewUrl);
+                challenge.setCreationdate(LocalDate.now());
+                challengesRepository.save(challenge);
+                generated.add(challenge);
+
         }
         return generated;
+    }
+
+    public ResponseEntity customChallenge(double lat, double lng, long uid, String url){
+        try{
+            Challenges challenge = new Challenges();
+            Account a = accountService.getAccountById(uid);
+            challenge.setLatitude(lat);
+            challenge.setLongitude(lng);
+            challenge.setStreetviewurl(url);
+            challenge.setCreationdate(LocalDate.now());
+            challenge.setCreator(a);
+            challengesRepository.save(challenge);
+            return ResponseEntity.ok(challenge);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("User not found.");
+        }
+
+    }
+
+    public ResponseEntity getUsersChallenges(long id) {
+        try{
+            List<Challenges> returnable = challengesRepository.getChallengesByCreator(accountService.getAccountById(id));
+            return ResponseEntity.status(HttpStatus.OK).body(returnable);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
+    public ResponseEntity deleteUsersChallenges(long uid, long cid){
+        Account user;
+        try{
+            user = accountService.getAccountById(uid);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
+        }
+        List<Challenges> returnable = challengesRepository.getChallengesByCreator(user);
+        submissionsRepository.deleteByChallenge_Id(cid);
+        for(Challenges challenge : returnable){
+            if(challenge.getId() == cid){
+                challengesRepository.deleteById(challenge.getId());
+                return ResponseEntity.status(HttpStatus.OK).build();
+            }
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Challenge not found.");
+    }
+
+
+    public ResponseEntity updateChallenge(long userId, long chalId, String image, double lng, double lat) {
+        Account user;
+        try{
+            user = accountService.getAccountById(userId);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
+        }
+        Optional<Challenges> challenge = challengesRepository.findById(chalId);
+        if(!challenge.isPresent()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Challenge not found.");
+        }
+        if(userId != challenge.get().getCreator().getId()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User does not own challenge.");
+        }
+        challenge.get().setStreetviewurl(image);
+        if(lat != -200){
+            challenge.get().setLatitude(lat);
+        }
+        if(lng != -200){
+            challenge.get().setLongitude(lng);
+        }
+        challengesRepository.save(challenge.get());
+        return ResponseEntity.ok().build();
     }
 }

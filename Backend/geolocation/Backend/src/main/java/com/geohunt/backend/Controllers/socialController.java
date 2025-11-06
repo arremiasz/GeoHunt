@@ -3,11 +3,13 @@ package com.geohunt.backend.Controllers;
 import com.geohunt.backend.database.Account;
 import com.geohunt.backend.Services.AccountService;
 import com.geohunt.backend.database.FriendsService;
+import com.geohunt.backend.util.FriendDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 public class socialController {
@@ -18,8 +20,18 @@ public class socialController {
     private FriendsService friendsService;
 
     @GetMapping("/friends")
-    public ResponseEntity<ArrayList<Account>> getFriends(@RequestParam(required = true) long id){
+    public ResponseEntity<List<Account>> getFriends(@RequestParam(required = true) long id){
         return friendsService.getFriends(id);
+    }
+
+    @GetMapping("/friendRequestsRecieved")
+    public ResponseEntity<List<Account>> getFriendRequestsRecieved(@RequestParam(required = true) long id){
+        return friendsService.getFriendRequestsRecieved(id);
+    }
+
+    @GetMapping("/friendRequestsSent")
+    public ResponseEntity<List<Account>> getFriendRequestsSent(@RequestParam(required = true) long id){
+        return friendsService.getFriendRequestsSent(id);
     }
 
     @PostMapping("/friends/add")
