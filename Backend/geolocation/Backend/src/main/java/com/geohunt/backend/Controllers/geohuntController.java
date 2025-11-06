@@ -70,4 +70,9 @@ public class geohuntController {
     public ResponseEntity customChallenge(@RequestParam double lat, @RequestParam double lng, @RequestParam long uid, @RequestBody String url){
         return geohuntService.customChallenge(lat, lng, uid, url);
     }
+
+    @GetMapping("/geohunt")
+    public ResponseEntity getMyChallenges(@RequestParam long id) {
+        return geohuntService.getUsersChallenges(id);
+    }
 }

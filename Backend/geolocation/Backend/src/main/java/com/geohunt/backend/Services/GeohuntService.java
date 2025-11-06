@@ -222,4 +222,14 @@ public class GeohuntService {
         }
 
     }
+
+    public ResponseEntity getUsersChallenges(long id) {
+        try{
+            List<Challenges> returnable = challengesRepository.getChallengesByCreator(accountService.getAccountById(id));
+            return ResponseEntity.status(HttpStatus.OK).body(returnable);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+
+    }
 }
