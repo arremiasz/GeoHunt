@@ -57,7 +57,7 @@ public class signupController {
     }
 
     @DeleteMapping("/account/byId")
-    public ResponseEntity<String> deleteAccount(@RequestParam Long id) {
+    public ResponseEntity<String> deleteAccount(@RequestParam long id) {
         boolean resp = accountService.deleteAccountByID(id);
         if(resp){
             return ResponseEntity.ok("Account deleted successfully");

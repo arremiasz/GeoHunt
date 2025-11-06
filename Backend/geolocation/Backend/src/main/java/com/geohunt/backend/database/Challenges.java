@@ -20,7 +20,8 @@ public class Challenges {
     private @Id long id;
     double latitude;
     double longitude;
-    String streetviewurl;
+    @Column(unique = true)
+    private String streetviewurl;
     @ManyToOne
     @JoinColumn(name="account_id")
     @JsonIgnore
