@@ -8,4 +8,5 @@ import java.util.List;
 @Repository
 public interface ChallengesRepository extends JpaRepository<Challenges, Long> {
     List<Challenges> findByCreator_Id(Long accountId);
+    Challenges findById(long id);
 }

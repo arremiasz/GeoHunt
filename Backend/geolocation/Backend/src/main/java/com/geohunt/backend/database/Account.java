@@ -23,23 +23,26 @@ public class Account {
     public String email;
 
     @OneToMany(mappedBy = "creator")
-    @JsonManagedReference("account-challenges")
+    @JsonManagedReference
     private List<Challenges> challenges;
 
     @OneToMany(mappedBy="submitter")
-    @JsonManagedReference("account-submissions")
+    @JsonManagedReference
     private List<Submissions> submissions;
 
-    @OneToMany(mappedBy="target")
-    @JsonManagedReference("account-notifications")
-    private List<Notifications> notifications;
 
     @OneToMany(mappedBy = "primary")
+    @JsonManagedReference("primary-friends")
     private Set<Friends> sentFriendRequests;
 
 
     @OneToMany(mappedBy = "target")
+    @JsonManagedReference("target-friends")
     private Set<Friends> receivedFriendRequests;
 
+    public Account(String username, String password){
+        this.username = username;
+        this.password = password;
+    }
 
 }

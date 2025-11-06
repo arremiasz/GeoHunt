@@ -8,20 +8,17 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class signupController {
-
     @Autowired
     private AccountService accountService;
 
-    @PostMapping(value = "/signup", consumes = "application/json")
+    @PostMapping(value = "/signup")
     public ResponseEntity<String> signup(@RequestBody Account account) {
-        long id = accountService.createAccount(account);
-        if(id == -1){
-            return ResponseEntity.badRequest().body("username exists");
-        } else if(id == -2){
-            return ResponseEntity.badRequest().body("email exists");
+        try {
+            accountService.createAccount(account);
+            return ResponseEntity.ok("Account created");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Username Already Exists");
         }
-
-        return ResponseEntity.ok(String.format("{\"id\":%d}", id));
     }
 
     @GetMapping("/account/byName")
@@ -67,7 +64,12 @@ public class signupController {
     @PutMapping("/account/update")
     public ResponseEntity<String> updateName(@RequestParam Long id, @RequestBody Account account) {
         try{
-            return accountService.updatedAccount(id, account);
+            if(accountService.updatedAccount(id, account)){
+                return ResponseEntity.ok("Account updated successfully");
+            } else {
+                return ResponseEntity.status(404).build();
+            }
+
         } catch(IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }
