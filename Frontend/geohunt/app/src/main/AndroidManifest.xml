@@ -61,6 +61,13 @@
         <activity
             android:name=".places.AddPlaceActivity"
             android:exported="false" />
+        <activity
+            android:name=".game.GameActivity"
+            android:exported="false"
+            android:theme="@style/Theme.GeoHunt.NoActionBar" />
+        <activity
+            android:name=".game.ResultsActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
