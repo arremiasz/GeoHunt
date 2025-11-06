@@ -43,7 +43,7 @@ public class ThemeAdapter extends RecyclerView.Adapter<ThemeAdapter.ViewHolder> 
     @NonNull
     @Override
     public ThemeAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.item_friend, parent, false);
+        View view = LayoutInflater.from(context).inflate(R.layout.item_theme, parent, false);
         return new ViewHolder(view);
     }
 
