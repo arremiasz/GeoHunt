@@ -70,6 +70,8 @@ public class SingleFriendActivity extends AppCompatActivity {
                 null,
                 response -> {
                     Log.d(TAG, "Response: "+ response.toString());
+                    
+                    if(reponse.)
 
 
 
