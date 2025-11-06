@@ -160,8 +160,6 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
 
         if (MOCK_MODE) {
             setupMockMode();
-        } else {
-            createWebSocketClient();
         }
     }
 
@@ -385,6 +383,8 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
     }
 
     private void createWebSocketClient() {
+        if (webSocketClient != null && !webSocketClient.isClosed()) return;
+
         URI uri;
         try {
             String url = ApiConstants.WEBSOCKET_URL + "/multiplayer/" + username;
@@ -412,7 +412,7 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
             public void onClose(int code, String reason, boolean remote) {
                 Log.i(TAG, "WebSocket connection closed: " + reason);
                 runOnUiThread(() -> Toast.makeText(LobbyActivity.this, "Disconnected: " + reason, Toast.LENGTH_SHORT).show());
-                finish();
+//                finish();
             }
 
             @Override
@@ -568,6 +568,7 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
     @Override
     protected void onResume() {
         super.onResume();
+        createWebSocketClient();
         mapView.onResume();
     }
 
@@ -587,6 +588,14 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
     protected void onPause() {
         super.onPause();
         mapView.onPause();
+        if (isFinishing()) {
+            Log.d(TAG, "Activity is finishing, sending 'leave' message and closing WebSocket.");
+            sendLobbyMessage("leave");
+            if (webSocketClient != null) {
+                webSocketClient.close();
+            }
+        }
+
         if (fusedLocationClient != null && locationCallback != null) {
             fusedLocationClient.removeLocationUpdates(locationCallback);
         }
@@ -595,7 +604,7 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (webSocketClient != null) {
+        if (webSocketClient != null && !webSocketClient.isClosed()) {
             webSocketClient.close();
         }
         mapView.onDestroy();

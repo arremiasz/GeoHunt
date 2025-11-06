@@ -71,7 +71,8 @@
             android:theme="@style/Theme.GeoHunt.NoActionBar" />
         <activity
             android:name=".game.LobbyActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:configChanges="orientation|screenSize" />
         <activity
             android:name=".game.ResultsActivity"
             android:exported="false" />
