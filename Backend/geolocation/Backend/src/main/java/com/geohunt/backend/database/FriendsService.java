@@ -124,9 +124,13 @@ public class FriendsService {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ArrayList<>());
         }
         List<Friends> friends = friendsRepository.findByPrimaryAndIsAcceptedTrue(account.get());
+        List<Friends> incomingFriends = friendsRepository.findByTargetAndIsAcceptedTrue(account.get());
         ArrayList<Account> accounts = new ArrayList<>();
         for(Friends friend : friends) {
             accounts.add(friend.getTarget());
+        }
+        for(Friends f : incomingFriends){
+            accounts.add(f.getPrimary());
         }
         return ResponseEntity.status(HttpStatus.OK).body(accounts);
     }
