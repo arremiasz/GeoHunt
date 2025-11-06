@@ -26,6 +26,6 @@ public class Challenges {
     private Account creator;
     LocalDate creationdate;
     @OneToMany(mappedBy="challenge")
-    @JsonManagedReference("challenge-submissions")
+    @JsonManagedReference("challenges-submissions")
     private List<Submissions> submissions;
 }
