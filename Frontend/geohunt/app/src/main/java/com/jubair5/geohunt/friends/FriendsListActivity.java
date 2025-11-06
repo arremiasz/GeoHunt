@@ -1,5 +1,5 @@
 /**
- * Activity for displaying details of a place.
+ * Activity for displaying a list of friends.
  * @author Nathan Imig
  */
 package com.jubair5.geohunt.friends;

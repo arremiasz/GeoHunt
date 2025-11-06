@@ -5,6 +5,7 @@
 package com.jubair5.geohunt.network;
 
 public final class ApiConstants {
+
     private ApiConstants() {}
 
     // Base URL for all API calls
@@ -30,12 +31,12 @@ public final class ApiConstants {
     // Friends Endpoints
     public static final String GET_FRIENDS_ENDPOINT= "/friends";
     public static final String Send_Friend_Request_ENDPOINT= "/friends/add";
-
     public static final String Accept_Friend_Request_ENDPOINT= "/friends/accept";
-
     public static final String Reject_Friend_Request_ENDPOINT= "/friends/reject";
-
     public static final String Remove_FRIEND = "/friends/remove";
+
+    // Themes
+    public static final String GET_THEMES_ENDPOINT = "/themes";
 
 
 }

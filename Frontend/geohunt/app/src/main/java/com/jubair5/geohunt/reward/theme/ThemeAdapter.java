@@ -2,14 +2,13 @@
  * Adapter class that handles the list of accounts searched.
  * @author Nathan Imig
  */
-package com.jubair5.geohunt.friends;
+package com.jubair5.geohunt.reward.theme;
 
 
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -17,24 +16,25 @@ import androidx.recyclerview.widget.RecyclerView;
 
 
 import com.jubair5.geohunt.R;
+import com.jubair5.geohunt.friends.Friend;
 
 import java.util.List;
 
-public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder> {
+public class ThemeAdapter extends RecyclerView.Adapter<ThemeAdapter.ViewHolder> {
 
     private final Context context;
-    private final List<Friend> friends;
+    private final List<Theme> themes;
 
-    private final OnFriendClickListener listener;
+    private final OnThemeClickListener listener;
 
 
-    public interface OnFriendClickListener {
-        void onFriendClick(Friend friend);
+    public interface OnThemeClickListener {
+        void onThemeClick(Theme theme);
     }
 
-    public FriendAdapter(Context context, List<Friend> friends, OnFriendClickListener listener){
+    public ThemeAdapter(Context context, List<Theme> themes, OnThemeClickListener listener){
         this.context = context;
-        this.friends = friends;
+        this.themes = themes;
         this.listener = listener;
     }
 
@@ -42,28 +42,29 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
 
     @NonNull
     @Override
-    public FriendAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public ThemeAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(context).inflate(R.layout.item_friend, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull FriendAdapter.ViewHolder holder, int position) {
-        Friend friend = friends.get(position );
+    public void onBindViewHolder(@NonNull ThemeAdapter.ViewHolder holder, int position) {
+        Theme theme = themes.get(position);
 
         // Name and state
-        holder.friendNameTextView.setText(friend.getUsername());
-        holder.itemView.setOnClickListener(v -> listener.onFriendClick(friend));
+        holder.friendNameTextView.setText(theme.getName());
+        holder.itemView.setOnClickListener(v -> listener.onThemeClick(theme));
 
     }
 
     @Override
     public int getItemCount() {
-        return this.friends.size();
+        return this.themes.size();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView friendNameTextView;
+        TextView friendState;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
