@@ -35,6 +35,10 @@ public class Account {
     @JsonManagedReference("primary-friends")
     private Set<Friends> sentFriendRequests;
 
+    @OneToMany(mappedBy="target")
+    @JsonManagedReference("account-notifications")
+    private List<Notifications> notifications;
+
 
     @OneToMany(mappedBy = "target")
     @JsonManagedReference("target-friends")
