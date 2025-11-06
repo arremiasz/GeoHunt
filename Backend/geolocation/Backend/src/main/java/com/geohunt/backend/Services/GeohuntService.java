@@ -232,5 +232,20 @@ public class GeohuntService {
         }
     }
 
-    public ResponseEntity
+    public ResponseEntity deleteUsersChallenges(long uid, long cid){
+        Account user;
+        try{
+            user = accountService.getAccountById(uid);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
+        }
+        List<Challenges> returnable = challengesRepository.getChallengesByCreator(user);
+        for(Challenges challenge : returnable){
+            if(challenge.getId() == cid){
+                challengesRepository.deleteById(challenge.getId());
+                return ResponseEntity.status(HttpStatus.OK).build();
+            }
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Challenge not found.");
+    }
 }
