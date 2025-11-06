@@ -29,7 +29,7 @@ public class SubmissionController {
      */
 
     // Post Submission
-    @PostMapping("/geohunt/submission")
+    @PostMapping(value = "/geohunt/submission", consumes = "application/json")
     public ResponseEntity<Double> saveSubmission(@RequestBody Submissions submission, @RequestParam long uid, @RequestParam long cid){
         Submissions savedSubmission;
         double distance;

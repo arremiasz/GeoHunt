@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import jakarta.transaction.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -129,6 +130,19 @@ public class FriendsService {
         }
         return ResponseEntity.status(HttpStatus.OK).body(accounts);
     }
+
+    @Transactional
+    public boolean deleteFriends(long id) {
+        Optional<Account> accountOpt = accountRepository.findById(id);
+        if (accountOpt.isEmpty()) return false;
+
+        Account account = accountOpt.get();
+
+        friendsRepository.deleteByPrimaryOrTarget(account, account);
+
+        return true;
+    }
+
 
     public ResponseEntity<String> rejectFriend(Long primaryId, Long targetId) {
         ArrayList<Optional<Account>> Accounts = doesAccountsExist(primaryId, targetId);

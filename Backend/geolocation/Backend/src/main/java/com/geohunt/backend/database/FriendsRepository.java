@@ -1,5 +1,6 @@
 package com.geohunt.backend.database;
 
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -15,6 +16,9 @@ public interface FriendsRepository extends JpaRepository<Friends, FriendKey> {
     boolean existsByPrimaryAndTarget(Account primary, Account target);
 
     Optional<Friends> findByPrimaryAndTarget(Account primary, Account target);
+
+    @Transactional
+    void deleteByPrimaryOrTarget(Account primary, Account target);
 
 }
 

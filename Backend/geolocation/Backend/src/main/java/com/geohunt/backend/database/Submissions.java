@@ -24,7 +24,7 @@ public class Submissions {
 
     @ManyToOne
     @JoinColumn(name="challenges_id")
-    @JsonBackReference("challenge-submissions")
+    @JsonBackReference("challenges-submissions")
     private Challenges challenge;
 
     private double latitude;
