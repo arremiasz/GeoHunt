@@ -337,18 +337,14 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         JSONObject requestBody = new JSONObject();
         try {
-            requestBody.put("uid", userId);
-            requestBody.put("cid", challengeId);
             requestBody.put("latitude", currentLat);
             requestBody.put("longitude", currentLng);
             requestBody.put("photourl", imageString);
-            requestBody.put("time", stopStopwatch());
-
         } catch (JSONException e) {
             Log.e(TAG, "Failed to create JSON object for submission.", e);
         }
 
-        String url = ApiConstants.BASE_URL + ApiConstants.POST_SUBMISSION_ENDPOINT;
+        String url = ApiConstants.BASE_URL + ApiConstants.POST_SUBMISSION_ENDPOINT + "?uid=" + userId + "&cid=" + challengeId;
 
         JsonObjectRequest submissionRequest = new JsonObjectRequest(Request.Method.POST, url, requestBody,
                 response -> {
@@ -361,16 +357,16 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                 error -> {
                     Log.e(TAG, "Submission failed.", error);
                     Toast.makeText(this, "Error submitting guess. Please try again.", Toast.LENGTH_LONG).show();
-                }
-        ) {
+                })
+        {
             @Override
             public byte[] getBody() {
-            return requestBody.toString().getBytes(StandardCharsets.UTF_8);
+                return requestBody.toString().getBytes(StandardCharsets.UTF_8);
             }
 
             @Override
             public String getBodyContentType() {
-            return "application/json; charset=utf-8";
+                return "application/json; charset=utf-8";
             }
         };
 

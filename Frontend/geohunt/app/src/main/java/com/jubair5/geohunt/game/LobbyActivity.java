@@ -550,6 +550,7 @@ public class LobbyActivity extends AppCompatActivity implements OnMapReadyCallba
             webSocketClient.send(message);
         } else {
             Toast.makeText(this, "Not connected to the server.", Toast.LENGTH_SHORT).show();
+            finish();
         }
     }
 

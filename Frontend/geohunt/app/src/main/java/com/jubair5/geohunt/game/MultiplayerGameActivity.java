@@ -23,6 +23,7 @@ public class MultiplayerGameActivity extends GameActivity {
     private static final String TAG = "MultiplayerGameActivity";
     private int multiplayerChallengeId;
     private String streetViewUrl;
+    private boolean isMultiplayerReady = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,31 +43,51 @@ public class MultiplayerGameActivity extends GameActivity {
             return;
         }
 
-        // This will call our overridden readyUp() method to start the game flow.
-        readyUp();
+        // Set a flag that we are ready to start. The game will be started from our
+        // overridden enableMyLocation() method, which is called by the parent's onMapReady().
+        isMultiplayerReady = true;
     }
 
     /**
-     * Overrides the default ready-up behavior for multiplayer.
-     * Instead of fetching a new location from the server, it immediately starts the game
-     * using the challenge details passed from the lobby.
+     * Intercepts the parent's setup flow. This method is called by onMapReady() in the parent class.
+     * Instead of the default behavior, we use the challenge data we received from the intent
+     * to start the game immediately after centering the camera on the user.
      */
     @Override
-    protected void readyUp() {
-        Log.d(TAG, "Bypassing single-player ready-up. Starting game with provided challenge.");
-        // We already have the challenge details, so we can skip the server request
-        // and go straight to the startGame method.
+    protected void enableMyLocation() {
+        if (isMultiplayerReady) {
+            Log.d(TAG, "Map is ready, starting multiplayer game setup.");
 
-        // Get the most current location
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(this, "Location permission is required to start the game.", Toast.LENGTH_SHORT).show();
-            return;
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // If permission is not granted, we launch the permission request. The parent activity's
+                // launcher will handle the result and call this method again.
+                requestLocationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
+                return;
+            }
+
+            // Set the blue dot on the map
+            googleMap.setMyLocationEnabled(true);
+
+            fusedLocationProviderClient.getLastLocation().addOnSuccessListener(this, location -> {
+                if (location != null) {
+                    currentLat = location.getLatitude();
+                    currentLng = location.getLongitude();
+                    Log.d(TAG, "Initial location for multiplayer game: Lat: " + currentLat + ", Lng: " + currentLng);
+
+                    // Animate camera to the user's location, now that the map is guaranteed to be ready.
+                    googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLat, currentLng), 18f));
+
+                    // Immediately start the game
+                    startGame(multiplayerChallengeId, streetViewUrl);
+                } else {
+                    Log.e(TAG, "Could not get current location to start game.");
+                    Toast.makeText(this, "Could not get current location. Please try again.", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+            });
+        } else {
+            // This case should not be hit in the multiplayer flow, but as a fallback, we call the parent.
+            super.enableMyLocation();
         }
-
-        if (googleMap != null) {
-            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLat, currentLng), 18f));
-        }
-
-        startGame(multiplayerChallengeId, streetViewUrl);
     }
 }
