@@ -53,7 +53,8 @@ public class PlacesAdapter extends RecyclerView.Adapter<PlacesAdapter.ViewHolder
             holder.addIcon.setVisibility(View.GONE);
             holder.placeImage.setVisibility(View.VISIBLE);
             Place place = places.get(position - 1);
-            Glide.with(context).load(place.getImageUrl()).into(holder.placeImage);
+            // Load the image from the decoded byte array
+            Glide.with(context).load(place.getPhotoData()).into(holder.placeImage);
             holder.itemView.setOnClickListener(v -> listener.onPlaceClick(place));
         }
     }

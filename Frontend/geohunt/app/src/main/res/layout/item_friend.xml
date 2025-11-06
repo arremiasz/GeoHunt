@@ -7,17 +7,17 @@
     app:cardElevation="4dp"
     android:layout_margin="4dp">
 
-        <ImageView
-            android:id="@+id/profile_icon"
+        <TextView
+            android:id="@+id/friendState"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="centerCrop" />
 
         <TextView
             android:id="@+id/username_label"
-            android:layout_width="48dp"
+            android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:layout_gravity="center" />
+            android:textSize="45sp"/>
 
 
 </androidx.cardview.widget.CardView>

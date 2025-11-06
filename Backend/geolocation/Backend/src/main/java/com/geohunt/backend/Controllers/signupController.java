@@ -1,27 +1,29 @@
 package com.geohunt.backend.Controllers;
 
 import com.geohunt.backend.database.Account;
-import com.geohunt.backend.database.AccountService;
+import com.geohunt.backend.Services.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class signupController {
-
     @Autowired
     private AccountService accountService;
 
-    @PostMapping(value = "/signup", consumes = "application/json")
+    @PostMapping(value = "/signup")
     public ResponseEntity<String> signup(@RequestBody Account account) {
-        long id = accountService.createAccount(account);
-        if(id == -1){
+        try {
+            long id = accountService.createAccount(account);
+            if(id == -1){
+                return ResponseEntity.badRequest().body("username exists");
+            } else if (id == -2){
+                return ResponseEntity.badRequest().body("email exists");
+            }
+            return ResponseEntity.ok(String.format("{\"id\":%d}", id));
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("username exists");
-        } else if(id == -2){
-            return ResponseEntity.badRequest().body("email exists");
         }
-
-        return ResponseEntity.ok(String.format("{\"id\":%d}", id));
     }
 
     @GetMapping("/account/byName")
@@ -55,7 +57,7 @@ public class signupController {
     }
 
     @DeleteMapping("/account/byId")
-    public ResponseEntity<String> deleteAccount(@RequestParam Long id) {
+    public ResponseEntity<String> deleteAccount(@RequestParam long id) {
         boolean resp = accountService.deleteAccountByID(id);
         if(resp){
             return ResponseEntity.ok("Account deleted successfully");
@@ -68,6 +70,7 @@ public class signupController {
     public ResponseEntity<String> updateName(@RequestParam Long id, @RequestBody Account account) {
         try{
             return accountService.updatedAccount(id, account);
+
         } catch(IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }
