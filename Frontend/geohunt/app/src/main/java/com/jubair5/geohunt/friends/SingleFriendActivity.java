@@ -82,7 +82,7 @@ public class SingleFriendActivity extends AppCompatActivity {
 
 
     private void sendFriendRequest() {
-        String friendsURL = ApiConstants.BASE_URL + ApiConstants.Send_Friend_Request_ENDPOINT + "?primaryId=" + userId + "&targetId=" + friendID ;
+        String friendsURL = ApiConstants.BASE_URL + ApiConstants.Send_Friend_Request_ENDPOINT + "?primaryId=" + userId + "&targetId=" + friendID;
 
         // Getting state
         JsonObjectRequest jsonObjReq = new JsonObjectRequest(
@@ -91,6 +91,7 @@ public class SingleFriendActivity extends AppCompatActivity {
                 null,
                 response -> {
                     Log.d(TAG, "Response: "+ response.toString());
+
                     state = SENT_REQUEST_STATE;
 
                 },
