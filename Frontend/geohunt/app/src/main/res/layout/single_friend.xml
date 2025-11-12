@@ -21,10 +21,17 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.218" />
+            app:layout_constraintVertical_bias="0.28" />
 
         <TextView
             android:id="@+id/friendName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            android:layout_marginTop="10dp"/>
+
+        <TextView
+            android:id="@+id/friendStatus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="20sp"

@@ -29,12 +29,11 @@ public final class ApiConstants {
 
     // Friends Endpoints
     public static final String GET_FRIENDS_ENDPOINT= "/friends";
+    public static final String GET_SENT_FRIENDS_ENDPOINT= "/friendRequestsSent";
+    public static final String GET_Received_FRIENDS_ENDPOINT= "/friendRequestsRecieved";
     public static final String Send_Friend_Request_ENDPOINT= "/friends/add";
-
     public static final String Accept_Friend_Request_ENDPOINT= "/friends/accept";
-
     public static final String Reject_Friend_Request_ENDPOINT= "/friends/reject";
-
     public static final String Remove_FRIEND = "/friends/remove";
 
 

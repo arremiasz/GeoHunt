@@ -18,16 +18,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.jubair5.geohunt.R;
 import com.jubair5.geohunt.network.ApiConstants;
 import com.jubair5.geohunt.network.VolleySingleton;
-import com.jubair5.geohunt.places.Place;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,7 +48,7 @@ public class FriendsListActivity extends AppCompatActivity implements FriendAdap
     @Override
     protected void onCreate(Bundle savedInstancesState){
         super.onCreate(savedInstancesState);
-        setContentView(R.layout.friends_list_activity);
+        setContentView(R.layout.friends_fragment);
         prefs = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
 
         if (getSupportActionBar() != null) {
@@ -63,7 +57,7 @@ public class FriendsListActivity extends AppCompatActivity implements FriendAdap
 
         // Set up Ui elements
         searchBar = findViewById(R.id.search_bar);
-        searchButton = findViewById(R.id.search_button);
+        //searchButton = findViewById(R.id.search_button);
         friendsRecycleViewer = findViewById(R.id.friends_recycler_view);
 
         friendsRecycleViewer.setLayoutManager(new LinearLayoutManager(this));
