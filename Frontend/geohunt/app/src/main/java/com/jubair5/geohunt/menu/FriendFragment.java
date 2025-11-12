@@ -9,7 +9,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.SearchView;
 import android.widget.Toast;
 
@@ -78,13 +77,14 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
         searchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextChange(String newText) {
-                searchForFriends(newText);
+                getStartingFriends();
                 return true;
             }
 
             @Override
             public boolean onQueryTextSubmit(String query) {
-                return false;
+                searchForAccount(query);
+                return true;
             }
         }
         );
@@ -93,7 +93,7 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
         return root;
     }
 
-    private void searchForFriends(String name){
+    private void searchForAccount(String name){
         String searchURL = ApiConstants.BASE_URL + ApiConstants.GET_ACCOUNT_BY_USERNAME_ENDPOINT + "?name=" + name;
 
         JsonObjectRequest jsonObjReq = new JsonObjectRequest(
@@ -156,6 +156,7 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
                         friendList.clear();
                         for (int i = 0; i < response.length(); i++) {
                             JSONObject friendJson = response.getJSONObject(i);
+                            friendJson.put("state", 4);
                             friendList.add(new Friend(friendJson));
                         }
                     } catch (JSONException e) {
@@ -169,32 +170,7 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
         );
         VolleySingleton.getInstance(getContext()).addToRequestQueue(jsonArrayRequest);
 
-
-        friendsURL = ApiConstants.BASE_URL + ApiConstants.GET_SENT_FRIENDS_ENDPOINT + "?id=" + userId;
-        jsonArrayRequest = new JsonArrayRequest(
-                Request.Method.GET,
-                friendsURL,
-                null,
-                response -> {
-                    try{
-                        Log.d(TAG, "People who sent Response: "+ response.toString());
-
-                        for (int i = 0; i < response.length(); i++) {
-                            JSONObject friendJson = response.getJSONObject(i);
-                            friendList.add(new Friend(friendJson));
-                        }
-                    } catch (JSONException e) {
-                        Log.e(TAG, "Error parsing Friends Json", e);
-                    }
-
-                },
-                VolleyError -> {
-                    Log.e(TAG, "Error getting Friends", VolleyError);
-                }
-        );
-        VolleySingleton.getInstance(getContext()).addToRequestQueue(jsonArrayRequest);
-
-
+        // People who sent you a request
         friendsURL = ApiConstants.BASE_URL + ApiConstants.GET_Received_FRIENDS_ENDPOINT + "?id=" + userId;
         jsonArrayRequest = new JsonArrayRequest(
                 Request.Method.GET,
@@ -202,9 +178,36 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
                 null,
                 response -> {
                     try{
-                        Log.d(TAG, "People you sent Response: "+ response.toString());
+                        Log.d(TAG, "People who sent you Response: "+ response.toString());
                         for (int i = 0; i < response.length(); i++) {
                             JSONObject friendJson = response.getJSONObject(i);
+                            friendJson.put("state", 1);
+                            friendList.add(new Friend(friendJson));
+                        }
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Error parsing Friends Json", e);
+                    }
+
+                },
+                VolleyError -> {
+                    Log.e(TAG, "Error getting Friends", VolleyError);
+                }
+        );
+        VolleySingleton.getInstance(getContext()).addToRequestQueue(jsonArrayRequest);
+
+        // People you sent a friend request to
+        friendsURL = ApiConstants.BASE_URL + ApiConstants.GET_SENT_FRIENDS_ENDPOINT + "?id=" + userId;
+        jsonArrayRequest = new JsonArrayRequest(
+                Request.Method.GET,
+                friendsURL,
+                null,
+                response -> {
+                    try{
+                        Log.d(TAG, "People you sent Response: "+ response.toString());
+
+                        for (int i = 0; i < response.length(); i++) {
+                            JSONObject friendJson = response.getJSONObject(i);
+                            friendJson.put("state", 2);
                             friendList.add(new Friend(friendJson));
                         }
                     } catch (JSONException e) {

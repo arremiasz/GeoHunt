@@ -9,7 +9,7 @@ import org.json.JSONObject;
 public class Friend {
     private int id;
     private String username;
-    private String state;
+    private int state;
 
     // Future Use
     private String photoUrl;
@@ -19,21 +19,17 @@ public class Friend {
         id = json.optInt("id");
         username = json.optString("username");
         photoUrl = json.optString("pfp");
-
-        // Future Use
-        //photoUrl = json.optString("photourl");
+        state = json.optInt("state");
     }
 
-    //Future Use
     private String getPhotoUrl(){return photoUrl;}
-
     public int getId() {
         return id;
     }
     public String getUsername() {
         return username;
     }
-    public String getState() {
+    public int getState() {
         return state;
     }
 }

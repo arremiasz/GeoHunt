@@ -9,6 +9,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -51,13 +52,28 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull FriendAdapter.ViewHolder holder, int position) {
-        Friend friend = friends.get(position );
+        Friend friend = friends.get(position);
 
         // Name and state
         holder.friendNameTextView.setText(friend.getUsername());
+        setActionButton(holder, friend);
         holder.itemView.setOnClickListener(v -> listener.onFriendClick(friend));
 
     }
+
+    private void setActionButton(ViewHolder holder, Friend friend) {
+        if(friend.getState() == 0){
+            holder.actionButton.setText("Friend");
+        } else if (friend.getState() == 1) {
+            holder.actionButton.setText("Accept");
+        }
+        else if(friend.getState() == 2){
+            holder.actionButton.setText("Pending");
+        }else{
+            holder.actionButton.setText("Challenge");
+        }
+    }
+
 
     @Override
     public int getItemCount() {
@@ -67,11 +83,12 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView pfp;
         TextView friendNameTextView;
-        TextView friendState;
+        Button actionButton;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             friendNameTextView = itemView.findViewById(R.id.username_label);
+            actionButton = itemView.findViewById(R.id.action_button);
         }
     }
 }
