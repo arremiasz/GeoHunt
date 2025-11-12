@@ -54,6 +54,7 @@ class Lobby {
         setLobbyLeader(lobbyLeader);
         canJoin = true;
         open = true;
+        radiusCenter = new Location(0,0);
     }
 
     boolean addPlayer(Account account){

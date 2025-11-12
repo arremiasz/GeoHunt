@@ -1,9 +1,7 @@
 package com.geohunt.backend.multiplayer;
 
 
-import com.geohunt.backend.database.Account;
 import com.geohunt.backend.Services.AccountService;
-import jakarta.persistence.Lob;
 import jakarta.websocket.*;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
@@ -15,7 +13,6 @@ import org.springframework.stereotype.Controller;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -54,7 +51,7 @@ public class MultiplayerSocket {
         usernameSessionMap.put(username, session);
 
         // Send confirmation message
-        sendStringToSingleUser(username, "Connection Success");
+        sendStringToUser(username, "Connection Success");
         logger.info("OnOpen : User " + username + " connected");
     }
 
@@ -65,7 +62,7 @@ public class MultiplayerSocket {
         logger.info("OnMessage : Got Message: " + message);
         String username = sessionUsernameMap.get(session);
 
-        sendStringToSingleUser(username, "Received: " + message);
+        sendStringToUser(username, "Received: " + message);
 
         String[] splitMsg = message.split("\\s+");
 
@@ -92,13 +89,7 @@ public class MultiplayerSocket {
 
     // Sending Messages
 
-    public void sendStringToUserList(List<String> usernames, String message){
-        for(String username : usernames) {
-            sendStringToSingleUser(username, message);
-        }
-    }
-
-    public void sendStringToSingleUser(String username, String message){
+    public void sendStringToUser(String username, String message){
         Session session = usernameSessionMap.get(username);
         sendStringToSession(session, message);
     }

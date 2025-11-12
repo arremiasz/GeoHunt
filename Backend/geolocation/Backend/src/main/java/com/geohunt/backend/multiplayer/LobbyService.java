@@ -1,7 +1,9 @@
 package com.geohunt.backend.multiplayer;
 
 import com.geohunt.backend.Services.AccountService;
+import com.geohunt.backend.Services.GeohuntService;
 import com.geohunt.backend.database.Account;
+import com.geohunt.backend.database.Challenges;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -12,8 +14,9 @@ import java.util.Map;
 @Service
 public class LobbyService {
 
-    @Autowired
-    AccountService accountService;
+    @Autowired AccountService accountService;
+    @Autowired GeohuntService geohuntService;
+    @Autowired MultiplayerSocket multiplayerSocket;
 
     Map<String, Lobby> userLobbyMap = new HashMap<>();
     Map<Long, Lobby> idLobbyMap = new HashMap<>();
@@ -31,7 +34,7 @@ public class LobbyService {
     public Lobby joinLobby(Account user, Long lobbyId){
         Lobby lobby = idLobbyMap.get(lobbyId);
         if(lobby == null){
-            sendWSMessage(user, "lobby_find_fail");
+            sendWSMessage(user, "lobby_not_found");
             return null; // Cannot find lobby
         }
 
@@ -52,6 +55,7 @@ public class LobbyService {
     public void leaveLobby(Account user){
         Lobby lobby = userLobbyMap.get(user.getUsername());
         if(lobby == null){
+            sendWSMessage(user, "lobby_not_found");
             return; // Cannot find lobby to leave
         }
 
@@ -71,9 +75,11 @@ public class LobbyService {
     public void changeSetting(Account user, String setting, String args){
         Lobby lobby = userLobbyMap.get(user.getUsername());
         if(lobby == null){
+            sendWSMessage(user, "lobby_not_found");
             return;
         }
         if(!lobby.isLobbyLeader(user)){
+            sendWSMessage(user, "not_lobby_leader");
             return;
         }
 
@@ -86,19 +92,43 @@ public class LobbyService {
         }
     }
 
-    public void startGame(){
-        // Generate & Save Challenge
+    public void startGame(Account user){
+        // Check user
+        Lobby lobby = userLobbyMap.get(user.getUsername());
+        if(lobby == null){
+            sendWSMessage(user, "lobby_not_found");
+            return;
+        }
+        if(!lobby.isLobbyLeader(user)){
+            sendWSMessage(user, "not_lobby_leader");
+            return;
+        }
+
+        // Check for valid generation settings
+        if(lobby.getRadius() == 0 || lobby.getRadiusCenter().isAtZero()){
+            sendWSMessage(user, "invalid_generation_settings");
+        }
+
+        // Generate Challenge
+        Challenges challenges = geohuntService.getChallenge(lobby.getRadiusCenter().getLatitude(), lobby.getRadiusCenter().getLongitude(), lobby.getRadius());
+        lobby.currentChallenge = challenges; // TODO: Handle possible errors here?
 
         // Inform users
+        StringBuilder message = new StringBuilder();
+        message.append("game_start \n");
+        message.append("challenge: " + challenges.getId()); // TODO: Not sure if this should just be the id or an entire JSON object
+        sendWSMessage(lobby.getConnectedPlayers(), message.toString());
     }
 
     // send WS Messages
     public void sendWSMessage(Account user, String message){
-
+        multiplayerSocket.sendStringToUser(user.getUsername(), message);
     }
 
     public void sendWSMessage(List<Account> users, String message){
-
+        for(Account user : users){
+            multiplayerSocket.sendStringToUser(user.getUsername(), message);
+        }
     }
 
 }

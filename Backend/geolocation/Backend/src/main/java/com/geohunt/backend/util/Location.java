@@ -53,8 +53,14 @@ public class Location {
         return KM_TO_MILES * distanceKM(other);
     }
 
+    public boolean isAtZero(){
+        return longitude == 0 && latitude == 0;
+    }
+
     private double degreesToRadians(double angleDegrees){
         return angleDegrees * (Math.PI/180);
     }
+
+
 
 }
