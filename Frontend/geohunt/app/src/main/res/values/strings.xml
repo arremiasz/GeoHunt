@@ -20,4 +20,5 @@
     <string name="search_for_friends">Search For Friends</string>
     <string name="send_friend_request">Send Friend Request</string>
     <string name="enter">Enter</string>
+    <string name="stats">Stats</string>
 </resources>

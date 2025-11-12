@@ -1,5 +1,7 @@
 package com.jubair5.geohunt.friends;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.SparseIntArray;
@@ -22,27 +24,40 @@ public class SingleFriendActivity extends AppCompatActivity {
     private static final int SENT_REQUEST_STATE = 1;
     private static final int RECEIVED_REQUEST_STATE = 2;
     private static final int ARE_FRIENDS_STATE = 3;
+    private static final String SHARED_PREFS_NAME = "GeoHuntPrefs";
+    private static final String KEY_USER_NAME = "userName";
+    private static final String KEY_USER_ID = "userId";
+
+
+    private int userId;
+    private int friendID;
+    private SharedPreferences prefs;
     private TextView nameText;
     private ImageView profilePic;
     private Button friendRequestButton;
     private int state;
 
-    private int friendID;
-
-    private int userId;
-
     public void onCreate(Bundle savedInstancesState){
         super.onCreate(savedInstancesState);
         setContentView(R.layout.single_friend);
+        prefs = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle(getIntent().getStringExtra("USERNAME"));
         }
 
+
         nameText = findViewById(R.id.friendName);
         profilePic = findViewById(R.id.friendProfileImage);
         friendRequestButton = findViewById(R.id.friendRequestButton);
 
+        userId = prefs.getInt(KEY_USER_ID, -1);
+        if (userId == -1) {
+            Log.e(TAG, "User ID not found in shared preferences.");
+            return;
+        }
+
+        friendID = getIntent().getIntExtra("FID", 0);
         getFriendProfile();
 
         friendRequestButton.setOnClickListener(V->buttonClicked());
@@ -143,15 +158,6 @@ public class SingleFriendActivity extends AppCompatActivity {
     }
 
     private void getFriendProfile() {
-        //Testing
-        //int userId = prefs.getInt(KEY_USER_ID, -1);
-        userId = 24680;
-        if (userId == -1) {
-            Log.e(TAG, "User ID not found in shared preferences.");
-            return;
-        }
-
-        friendID = getIntent().getIntExtra("FID", 0);
         String name = getIntent().getStringExtra("USERNAME");
 
         nameText.setText(name);

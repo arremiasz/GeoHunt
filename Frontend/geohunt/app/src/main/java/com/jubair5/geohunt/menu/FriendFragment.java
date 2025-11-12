@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.SearchView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -19,7 +20,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.Request;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.jubair5.geohunt.R;
@@ -44,7 +44,7 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
     private static final String KEY_USER_NAME = "userName";
     private static final String KEY_USER_ID = "userId";
 
-    private EditText searchBar;
+    private SearchView searchBar;
     private Button searchButton;
 
 
@@ -63,8 +63,7 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
 
 
         // Set up Ui elements
-        searchBar = root.findViewById(R.id.search_bar);
-        searchButton = root.findViewById(R.id.search_button);
+        searchBar = root.findViewById(R.id.friend_search_bar);
         friendsRecycleViewer = root.findViewById(R.id.friends_recycler_view);
 
         friendList = new ArrayList<>();
@@ -75,10 +74,20 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
         friendsRecycleViewer.setAdapter(friendAdapter);
         friendsRecycleViewer.setLayoutManager(new LinearLayoutManager((getContext())));
         getStartingFriends();
-        
 
+        searchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                searchForFriends(newText);
+                return true;
+            }
 
-        searchButton.setOnClickListener(v->searchForFriends(searchBar.getText().toString().trim()));
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+        }
+        );
 
 
         return root;
@@ -102,20 +111,21 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
                 volleyError -> {
                     Log.e(TAG, "Error getting friends", volleyError);
                     if (volleyError.networkResponse != null) {
-                        Log.e(TAG, "Login error status code: " + volleyError.networkResponse.statusCode);
+                        Log.e(TAG, "Friends error status code: " + volleyError.networkResponse.statusCode);
                         String responseBody = "";
                         if(volleyError.networkResponse.data != null) {
                             responseBody = new String(volleyError.networkResponse.data, StandardCharsets.UTF_8);
                         }
-                        Log.e(TAG, "Login error response body: " + responseBody);
+                        Log.e(TAG, "Friends error response body: " + responseBody);
 
                         if (volleyError.networkResponse.statusCode == 404) {
-                            Toast.makeText(getContext(), "No account found", Toast.LENGTH_LONG).show();
+                            friendList.clear();;
+                            friendAdapter.notifyDataSetChanged();
                         } else {
                             Toast.makeText(getContext(), "Finding Account failed. Server error: " + volleyError.networkResponse.statusCode, Toast.LENGTH_LONG).show();
                         }
                     } else {
-                        Toast.makeText(getContext(), "Login failed. Check network connection.", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getContext(), "Getting account failed. Check network connection.", Toast.LENGTH_LONG).show();
                     }
                 }
         );

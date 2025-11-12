@@ -56,8 +56,6 @@ public class FriendsListActivity extends AppCompatActivity implements FriendAdap
         }
 
         // Set up Ui elements
-        searchBar = findViewById(R.id.search_bar);
-        //searchButton = findViewById(R.id.search_button);
         friendsRecycleViewer = findViewById(R.id.friends_recycler_view);
 
         friendsRecycleViewer.setLayoutManager(new LinearLayoutManager(this));

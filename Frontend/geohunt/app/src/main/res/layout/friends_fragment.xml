@@ -12,29 +12,26 @@
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
         android:orientation="vertical"
-        android:visibility="visible"
-        tools:ignore="MissingConstraints">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
 
-        <EditText
-            android:id="@+id/search_bar"
+        <SearchView
+            android:id="@+id/friend_search_bar"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginTop="100dp"
-            android:hint="@string/search_for_friends" />
+            android:queryHint="@string/search_for_friends"
+            android:iconifiedByDefault="false"/>
 
-        <Button
-            android:id="@+id/search_button"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:text="@string/enter"/>
 
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/friends_recycler_view"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

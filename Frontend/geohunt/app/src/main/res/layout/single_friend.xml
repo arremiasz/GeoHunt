@@ -8,46 +8,51 @@
     <ImageView
         android:id="@+id/friendProfileImage"
         android:layout_width="100dp"
-
         android:layout_height="100dp"
+
+
+        android:src="@android:drawable/ic_menu_gallery"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.106"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.117"
-        tools:srcCompat="@tools:sample/avatars"/>
+        app:layout_constraintVertical_bias="0.117" />
 
     <TextView
         android:id="@+id/friendName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/button_log_in"
+        android:text="@string/hint_username"
+        android:layout_marginStart="15dp"
         android:textSize="20sp"
-        app:layout_constraintBottom_toBottomOf="parent"
+
+        app:layout_constraintBottom_toBottomOf="@+id/friendProfileImage"
         app:layout_constraintStart_toEndOf="@+id/friendProfileImage"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="@+id/friendProfileImage" />
 
     <TextView
         android:id="@+id/friendStatus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/hint_username"
+        android:text="@string/stats"
         android:textSize="20sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/friendName"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.235" />
+        android:layout_marginTop="50dp"
+
+        android:layout_marginStart="20dp"
+
+        app:layout_constraintStart_toStartOf="@+id/friendProfileImage"
+        app:layout_constraintTop_toBottomOf="@+id/friendProfileImage" />
 
     <Button
         android:id="@+id/friendRequestButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/send_friend_request"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:text="@string/friends"
+        app:layout_constraintBottom_toBottomOf="@+id/friendProfileImage"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/friendName"
+        app:layout_constraintTop_toTopOf="@+id/friendProfileImage"
         app:layout_constraintVertical_bias="0.625" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
