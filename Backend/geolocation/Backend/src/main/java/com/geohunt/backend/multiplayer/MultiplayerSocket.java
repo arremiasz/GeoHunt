@@ -69,30 +69,6 @@ public class MultiplayerSocket {
 
         String[] splitMsg = message.split("\\s+");
 
-        if(splitMsg.length == 0){
-            // message is empty, do nothing
-            return;
-        }
-        else if (splitMsg[0].equals("create")) {
-            // message starts with "create" - create lobby
-            createLobby(username);
-        }
-        else if (splitMsg[0].equals("join")){
-            long lobbyId = Long.parseLong(splitMsg[1]);
-            if(idLobbyMap.get((Long)lobbyId) == null){
-                sendStringToSingleUser(username,"cannot join lobby");
-                return;
-            }
-            joinLobby(username,lobbyId);
-        }
-        else if (splitMsg[0].equals("leave")){
-            leaveLobby(username);
-            sendStringToSingleUser(username, "Left lobby");
-        }
-        else if (splitMsg[0].equals("lobby")){
-            Lobby lobby = usernameLobbyMap.get(username);
-            lobby.processMessage(username,splitMsg);
-        }
     }
 
     @OnClose
@@ -100,7 +76,6 @@ public class MultiplayerSocket {
         // Remove player from lobby.
         String username = sessionUsernameMap.get(session);
         logger.info("OnClose : User " + username + " disconnected");
-        leaveLobby(username);
 
         sessionUsernameMap.remove(session);
         usernameSessionMap.remove(username);
@@ -114,40 +89,6 @@ public class MultiplayerSocket {
         throwable.printStackTrace();
     }
 
-    // Lobby Management
-
-    public void createLobby(String username){
-        if(usernameLobbyMap.get(username) != null){
-            return;
-        }
-        Lobby lobby = new Lobby(accountService.getAccountByUsername(username), this, accountService);
-        usernameLobbyMap.put(username, lobby);
-        idLobbyMap.put((Long)lobby.getId(), lobby);
-        sendStringToSingleUser(username, "Successfully created lobby " + lobby.getId());
-        logger.info("Created Lobby: " + lobby.getId() + " Leader: " + username);
-    }
-
-    public void joinLobby(String username, long id){
-        Lobby lobby = idLobbyMap.get((Long)id);
-        lobby.joinLobby(accountService.getAccountByUsername(username));
-    }
-
-    public void leaveLobby(String username){
-        Lobby lobby = usernameLobbyMap.get(username);
-        if(lobby != null){
-            lobby.disconnectUser(username);
-            usernameLobbyMap.remove(username);
-            logger.info("User " + username + " left lobby");
-        }
-    }
-
-    public void closeLobby(Lobby lobby){
-        List<Account> lobbyPlayerList = lobby.getConnectedPlayers();
-        for(Account player : lobbyPlayerList){
-            lobby.disconnectUser(player.getUsername());
-            usernameLobbyMap.put(player.getUsername(), null);
-        }
-    }
 
     // Sending Messages
 

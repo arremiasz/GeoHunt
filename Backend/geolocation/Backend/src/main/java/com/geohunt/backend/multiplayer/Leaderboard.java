@@ -19,9 +19,11 @@ class Leaderboard {
         }
     }
 
-
-
     public Leaderboard(int size){
         entries = new LeaderboardEntry[size];
+    }
+
+    private void sort(){
+
     }
 }
