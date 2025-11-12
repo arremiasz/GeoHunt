@@ -21,7 +21,7 @@ public class LobbyService {
 
     @Autowired AccountService accountService;
     @Autowired GeohuntService geohuntService;
-    @Autowired MultiplayerSocket multiplayerSocket;
+    @Autowired MultiplayerSocket multiplayerSocket; // TODO: Fix dependency circle preventing startup
 
     Map<String, Lobby> userLobbyMap = new HashMap<>();
     Map<Long, Lobby> idLobbyMap = new HashMap<>();
@@ -72,7 +72,7 @@ public class LobbyService {
     }
 
     // Invite users
-    public void inviteUser(Account userToInvite){
+    public void inviteUser(Account userInviting, Account userToInvite){
         // TODO: Ask about how notifications will be used to invite users.
         // Will try to send a notification to another user with the lobby code, which the frontend will recieve and use to join the lobby.
     }
@@ -144,6 +144,14 @@ public class LobbyService {
         message.append("game_start \n");
         message.append("challenge: " + challenges.getId()); // TODO: Not sure if this should just be the id or an entire JSON object
         sendWSMessage(lobby.getConnectedPlayers(), message.toString());
+    }
+
+    public void submit(Account user){
+
+    }
+
+    public void closeLobby(Lobby lobby){
+
     }
 
     // send WS Messages

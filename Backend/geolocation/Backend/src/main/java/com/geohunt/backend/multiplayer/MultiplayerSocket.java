@@ -2,6 +2,8 @@ package com.geohunt.backend.multiplayer;
 
 
 import com.geohunt.backend.Services.AccountService;
+import com.geohunt.backend.database.Account;
+import jakarta.persistence.Lob;
 import jakarta.websocket.*;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
@@ -20,15 +22,15 @@ import java.util.Map;
 public class MultiplayerSocket {
 
     public static AccountService accountService;
+    public static LobbyService lobbyService;
 
     @Autowired
     public void setAccountService(AccountService service){ accountService = service; }
+    @Autowired
+    public void setLobbyService(LobbyService service){lobbyService = service;}
 
     private static Map<Session, String> sessionUsernameMap = new Hashtable<>();
     private static Map<String, Session> usernameSessionMap = new Hashtable<>();
-
-    private static Map<String, Lobby> usernameLobbyMap = new HashMap<>();
-    private static Map<Long, Lobby> idLobbyMap = new HashMap<>();
 
     private final Logger logger = LoggerFactory.getLogger(MultiplayerSocket.class);
 
@@ -61,10 +63,35 @@ public class MultiplayerSocket {
         // If a user is in a lobby, the request is handled by the lobby.
         logger.info("OnMessage : Got Message: " + message);
         String username = sessionUsernameMap.get(session);
+        Account user = accountService.getAccountByUsername(username);
+        String[] splitMsg = message.split("[,:]"); // splits incoming messages by : or ,
 
-        sendStringToUser(username, "Received: " + message);
-
-        String[] splitMsg = message.split("\\s+");
+        // Handle messages
+        if(splitMsg[0].equals("create lobby")) {
+            lobbyService.createLobby(user);
+        }
+        else if (splitMsg[0].equals("join lobby")){
+            String args = splitMsg[1];
+            //lobbyService.joinLobby(user, args); // TODO: Parse args as long
+        }
+        else if (splitMsg[0].equals("leave lobby")){
+            lobbyService.leaveLobby(user);
+        }
+        else if (splitMsg[0].equals("invite user")){
+            String args = splitMsg[1];
+            Account userToInvite = accountService.getAccountByUsername(args);
+            lobbyService.inviteUser(user, userToInvite);
+        }
+        else if (splitMsg[0].equals("change setting")){
+            String setting = splitMsg[1];
+            // TODO: Create args list
+        }
+        else if (splitMsg[0].equals("start game")){
+            lobbyService.startGame(user);
+        }
+        else if (splitMsg[0].equals("submit")){
+            // TODO: Handle Submission JSON object
+        }
 
     }
 
@@ -72,11 +99,13 @@ public class MultiplayerSocket {
     public void onClose(Session session){
         // Remove player from lobby.
         String username = sessionUsernameMap.get(session);
+        Account user = accountService.getAccountByUsername(username);
         logger.info("OnClose : User " + username + " disconnected");
 
         sessionUsernameMap.remove(session);
         usernameSessionMap.remove(username);
-        usernameLobbyMap.remove(username);
+
+        lobbyService.leaveLobby(user);
     }
 
     @OnError
