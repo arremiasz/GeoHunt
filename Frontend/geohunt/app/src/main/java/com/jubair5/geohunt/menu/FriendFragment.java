@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -31,6 +32,7 @@ import com.jubair5.geohunt.network.VolleySingleton;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,15 +64,19 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
 
         // Set up Ui elements
         searchBar = root.findViewById(R.id.search_bar);
-        //searchButton = root.findViewById(R.id.search_button);
+        searchButton = root.findViewById(R.id.search_button);
         friendsRecycleViewer = root.findViewById(R.id.friends_recycler_view);
 
-
         friendList = new ArrayList<>();
+
+
+
         friendAdapter = new FriendAdapter(getContext(), friendList, this);
         friendsRecycleViewer.setAdapter(friendAdapter);
-        
+        friendsRecycleViewer.setLayoutManager(new LinearLayoutManager((getContext())));
         getStartingFriends();
+        
+
 
         searchButton.setOnClickListener(v->searchForFriends(searchBar.getText().toString().trim()));
 
@@ -79,8 +85,6 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
     }
 
     private void searchForFriends(String name){
-
-
         String searchURL = ApiConstants.BASE_URL + ApiConstants.GET_ACCOUNT_BY_USERNAME_ENDPOINT + "?name=" + name;
 
         JsonObjectRequest jsonObjReq = new JsonObjectRequest(
@@ -88,7 +92,7 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
                 searchURL,
                 null,
                 response -> {
-                    Log.d(TAG, "Response: "+ response.toString());
+                    Log.d(TAG, "Account Search Response: "+ response.toString());
 
                     // Display Friends
                     friendList.clear();
@@ -97,6 +101,22 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
                 },
                 volleyError -> {
                     Log.e(TAG, "Error getting friends", volleyError);
+                    if (volleyError.networkResponse != null) {
+                        Log.e(TAG, "Login error status code: " + volleyError.networkResponse.statusCode);
+                        String responseBody = "";
+                        if(volleyError.networkResponse.data != null) {
+                            responseBody = new String(volleyError.networkResponse.data, StandardCharsets.UTF_8);
+                        }
+                        Log.e(TAG, "Login error response body: " + responseBody);
+
+                        if (volleyError.networkResponse.statusCode == 404) {
+                            Toast.makeText(getContext(), "No account found", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getContext(), "Finding Account failed. Server error: " + volleyError.networkResponse.statusCode, Toast.LENGTH_LONG).show();
+                        }
+                    } else {
+                        Toast.makeText(getContext(), "Login failed. Check network connection.", Toast.LENGTH_LONG).show();
+                    }
                 }
         );
         VolleySingleton.getInstance(getContext()).addToRequestQueue(jsonObjReq);
@@ -104,6 +124,7 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
 
 
     private void getStartingFriends(){
+        Log.e(TAG, "Made it into the function");
         int userId = prefs.getInt(KEY_USER_ID, -1);
         if (userId == -1) {
             Log.e(TAG, "User ID not found in shared preferences.");
@@ -120,6 +141,7 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
                 null,
                 response -> {
                     try{
+                        Log.d(TAG, "Friends Response: "+ response.toString());
 
                         friendList.clear();
                         for (int i = 0; i < response.length(); i++) {
@@ -145,6 +167,7 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
                 null,
                 response -> {
                     try{
+                        Log.d(TAG, "People who sent Response: "+ response.toString());
 
                         for (int i = 0; i < response.length(); i++) {
                             JSONObject friendJson = response.getJSONObject(i);
@@ -169,7 +192,7 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
                 null,
                 response -> {
                     try{
-
+                        Log.d(TAG, "People you sent Response: "+ response.toString());
                         for (int i = 0; i < response.length(); i++) {
                             JSONObject friendJson = response.getJSONObject(i);
                             friendList.add(new Friend(friendJson));

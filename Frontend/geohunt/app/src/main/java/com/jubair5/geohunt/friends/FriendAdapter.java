@@ -65,6 +65,7 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
+        ImageView pfp;
         TextView friendNameTextView;
         TextView friendState;
 
