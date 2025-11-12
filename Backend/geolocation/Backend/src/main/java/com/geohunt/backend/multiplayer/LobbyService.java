@@ -14,6 +14,11 @@ import java.util.Map;
 @Service
 public class LobbyService {
 
+    static final String ERROR_LOBBY_NOT_FOUND = "error: lobby not found";
+    static final String ERROR_NOT_LOBBY_LEADER = "error: not lobby leader";
+    static final String ERROR_CANNOT_JOIN = "error: cannot join lobby";
+    static final String ERROR_INCORRECT_ARGUMENT = "error: incorrect argument";
+
     @Autowired AccountService accountService;
     @Autowired GeohuntService geohuntService;
     @Autowired MultiplayerSocket multiplayerSocket;
@@ -34,7 +39,7 @@ public class LobbyService {
     public Lobby joinLobby(Account user, Long lobbyId){
         Lobby lobby = idLobbyMap.get(lobbyId);
         if(lobby == null){
-            sendWSMessage(user, "lobby_not_found");
+            sendWSMessage(user, ERROR_LOBBY_NOT_FOUND);
             return null; // Cannot find lobby
         }
 
@@ -46,7 +51,7 @@ public class LobbyService {
             return lobby;
         }
         else {
-            sendWSMessage(user, "lobby_join_fail");
+            sendWSMessage(user, ERROR_CANNOT_JOIN);
             return null;
         }
     }
@@ -55,7 +60,7 @@ public class LobbyService {
     public void leaveLobby(Account user){
         Lobby lobby = userLobbyMap.get(user.getUsername());
         if(lobby == null){
-            sendWSMessage(user, "lobby_not_found");
+            sendWSMessage(user, ERROR_LOBBY_NOT_FOUND);
             return; // Cannot find lobby to leave
         }
 
@@ -68,27 +73,48 @@ public class LobbyService {
 
     // Invite users
     public void inviteUser(Account userToInvite){
-
+        // TODO: Ask about how notifications will be used to invite users.
+        // Will try to send a notification to another user with the lobby code, which the frontend will recieve and use to join the lobby.
     }
 
     // Change Lobby Settings
     public void changeSetting(Account user, String setting, String args){
         Lobby lobby = userLobbyMap.get(user.getUsername());
         if(lobby == null){
-            sendWSMessage(user, "lobby_not_found");
+            sendWSMessage(user, ERROR_LOBBY_NOT_FOUND);
             return;
         }
         if(!lobby.isLobbyLeader(user)){
-            sendWSMessage(user, "not_lobby_leader");
+            sendWSMessage(user, ERROR_NOT_LOBBY_LEADER);
             return;
         }
 
         if(setting.equals("radius")){
-            // set radius
+
+            double radius;
+            try{
+                radius = Double.parseDouble(args);
+            }
+            catch(NullPointerException e){
+                sendWSMessage(user, ERROR_INCORRECT_ARGUMENT);
+                return;
+                // Args is null
+            }
+            catch (NumberFormatException e){
+                sendWSMessage(user, ERROR_INCORRECT_ARGUMENT);
+                return;
+                // Args is not a number
+            }
+            lobby.setRadius(radius);
+
         } else if (setting.equals("center")) {
+
             // set center
+
         } else if (setting.equals("powerups")) {
+
             // set powerups
+
         }
     }
 
@@ -96,17 +122,17 @@ public class LobbyService {
         // Check user
         Lobby lobby = userLobbyMap.get(user.getUsername());
         if(lobby == null){
-            sendWSMessage(user, "lobby_not_found");
+            sendWSMessage(user, ERROR_LOBBY_NOT_FOUND);
             return;
         }
         if(!lobby.isLobbyLeader(user)){
-            sendWSMessage(user, "not_lobby_leader");
+            sendWSMessage(user, ERROR_NOT_LOBBY_LEADER);
             return;
         }
 
         // Check for valid generation settings
         if(lobby.getRadius() == 0 || lobby.getRadiusCenter().isAtZero()){
-            sendWSMessage(user, "invalid_generation_settings");
+            sendWSMessage(user, "error: invalid_generation_settings");
         }
 
         // Generate Challenge
