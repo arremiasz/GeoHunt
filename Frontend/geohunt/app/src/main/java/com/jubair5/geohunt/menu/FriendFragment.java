@@ -48,6 +48,9 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
 
 
     // Set up for the actual list
+    private List<Integer> friendsId;
+    private List<Integer> friendsReceivedId;
+    private List<Integer> friendsSentId;
     private RecyclerView friendsRecycleViewer;
     private FriendAdapter friendAdapter;
     private List<Friend> friendList;
@@ -66,6 +69,9 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
         friendsRecycleViewer = root.findViewById(R.id.friends_recycler_view);
 
         friendList = new ArrayList<>();
+        friendsId = new ArrayList<Integer>();
+        friendsReceivedId = new ArrayList<Integer>();
+        friendsSentId = new ArrayList<Integer>();
 
 
 
@@ -77,8 +83,7 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
         searchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextChange(String newText) {
-                getStartingFriends();
-                return true;
+                return false;
             }
 
             @Override
@@ -105,7 +110,10 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
 
                     // Display Friends
                     friendList.clear();
-                    friendList.add(new Friend(response));
+                    Friend account =  new Friend(response);
+                    int accountId = account.getId();
+                    setAccountState(accountId, account);
+                    friendList.add(account);
                     friendAdapter.notifyDataSetChanged();
                 },
                 volleyError -> {
@@ -130,6 +138,22 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
                 }
         );
         VolleySingleton.getInstance(getContext()).addToRequestQueue(jsonObjReq);
+    }
+
+    private void setAccountState(int accountId, Friend account) {
+        if(friendsId.contains(accountId)){
+            account.setState(3);
+
+        } else if (friendsReceivedId.contains(accountId)) {
+            account.setState(1);
+
+        } else if (friendsSentId.contains(accountId)) {
+            account.setState(2);
+
+        } else {
+            account.setState(0);
+
+        }
     }
 
 
@@ -157,6 +181,7 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
                         for (int i = 0; i < response.length(); i++) {
                             JSONObject friendJson = response.getJSONObject(i);
                             friendJson.put("state", 4);
+                            friendsId.add(friendJson.getInt("id"));
                             friendList.add(new Friend(friendJson));
                         }
                     } catch (JSONException e) {
@@ -182,6 +207,7 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
                         for (int i = 0; i < response.length(); i++) {
                             JSONObject friendJson = response.getJSONObject(i);
                             friendJson.put("state", 1);
+                            friendsReceivedId.add(friendJson.getInt("id"));
                             friendList.add(new Friend(friendJson));
                         }
                     } catch (JSONException e) {
@@ -208,6 +234,8 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
                         for (int i = 0; i < response.length(); i++) {
                             JSONObject friendJson = response.getJSONObject(i);
                             friendJson.put("state", 2);
+                            friendsSentId.add(friendJson.getInt("id"));
+
                             friendList.add(new Friend(friendJson));
                         }
                     } catch (JSONException e) {
@@ -238,6 +266,7 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
         }
         intent.putExtra("FID", friend.getId());
         intent.putExtra("USERNAME", friend.getUsername());
+        intent.putExtra("STATE", friend.getState());
         startActivity(intent);
     }
 }
