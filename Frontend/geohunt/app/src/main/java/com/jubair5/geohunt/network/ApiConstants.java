@@ -5,6 +5,7 @@
 package com.jubair5.geohunt.network;
 
 public final class ApiConstants {
+
     private ApiConstants() {}
 
     // Base URL for all API calls
@@ -27,6 +28,10 @@ public final class ApiConstants {
     public static final String SUBMIT_PLACE_ENDPOINT = "/geohunt/customChallenge";
     public static final String GET_SUBMITTED_PLACES_ENDPOINT = "/geohunt";
     public static final String DEL_SUBMITTED_PLACE_ENDPOINT = "/geohunt/mySubmissions";
+
+    // Location Endpoints
+    public static final String GET_GENERATED_LOCATIONS_ENDPOINT = "/geohunt/getLocation";
+    public static final String POST_SUBMISSION_ENDPOINT = "/geohunt/submission";
 
     // Friends Endpoints
     public static final String GET_FRIENDS_ENDPOINT= "/friends";
