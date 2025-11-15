@@ -17,9 +17,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 
-import com.bumptech.glide.Glide;
 import com.jubair5.geohunt.R;
-import com.jubair5.geohunt.places.Place;
+import com.jubair5.geohunt.friends.SingleFriendActivity;
 
 import java.util.List;
 
@@ -64,6 +63,7 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
     private void setActionButton(ViewHolder holder, Friend friend) {
         if(friend.getState() == 0){
             holder.actionButton.setText("Friend");
+            //holder.actionButton.setOnClickListener(.);
         } else if (friend.getState() == 1) {
             holder.actionButton.setText("Accept");
         }

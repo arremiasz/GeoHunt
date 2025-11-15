@@ -22,10 +22,10 @@ import java.nio.charset.StandardCharsets;
 public class SingleFriendActivity extends AppCompatActivity {
 
     private static final String TAG = "SingleFriendActivity";
-    private static final int NOT_FRIENDS_STATE = 0;
-    private static final int RECEIVED_REQUEST_STATE = 1;
-    private static final int  SENT_REQUEST_STATE = 2;
-    private static final int ARE_FRIENDS_STATE = 3;
+    public static final int NOT_FRIENDS_STATE = 0;
+    public static final int RECEIVED_REQUEST_STATE = 1;
+    public static final int  SENT_REQUEST_STATE = 2;
+    public static final int ARE_FRIENDS_STATE = 3;
     private static final String SHARED_PREFS_NAME = "GeoHuntPrefs";
     private static final String KEY_USER_NAME = "userName";
     private static final String KEY_USER_ID = "userId";
@@ -157,13 +157,13 @@ public class SingleFriendActivity extends AppCompatActivity {
                 friendsURL,
                 null,
                 response -> {
-                    Log.d(TAG, "Response: "+ response.toString());
+                    Log.d(TAG, "Request Sent");
 
                     state = SENT_REQUEST_STATE;
 
                 },
                 volleyError -> {
-                    Log.e(TAG, "Error Sending Request", volleyError);
+                    Log.e(TAG, "Error Sending Request" + volleyError.toString(), volleyError);
                 }
         );
         VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(jsonObjReq);
@@ -183,7 +183,7 @@ public class SingleFriendActivity extends AppCompatActivity {
 
                 },
                 volleyError -> {
-                    Log.e(TAG, "Error accepting request", volleyError);
+                    Log.e(TAG, "Error accepting request" + volleyError.toString(), volleyError);
                 }
         );
         VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(jsonObjReq);

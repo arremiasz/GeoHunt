@@ -117,7 +117,7 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
                     friendAdapter.notifyDataSetChanged();
                 },
                 volleyError -> {
-                    Log.e(TAG, "Error getting friends", volleyError);
+                    Log.e(TAG, "Error getting friends" + volleyError.toString());
                     if (volleyError.networkResponse != null) {
                         Log.e(TAG, "Friends error status code: " + volleyError.networkResponse.statusCode);
                         String responseBody = "";
@@ -127,7 +127,7 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
                         Log.e(TAG, "Friends error response body: " + responseBody);
 
                         if (volleyError.networkResponse.statusCode == 404) {
-                            friendList.clear();;
+                            friendList.clear();
                             friendAdapter.notifyDataSetChanged();
                         } else {
                             Toast.makeText(getContext(), "Finding Account failed. Server error: " + volleyError.networkResponse.statusCode, Toast.LENGTH_LONG).show();
