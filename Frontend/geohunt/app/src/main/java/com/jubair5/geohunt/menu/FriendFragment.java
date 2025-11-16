@@ -38,7 +38,7 @@ import java.util.List;
 public class FriendFragment extends Fragment implements FriendAdapter.OnFriendClickListener {
 
 
-    private static final String TAG = "FriendsList";
+    private static final String TAG = "FriendsFragment";
     private static final String SHARED_PREFS_NAME = "GeoHuntPrefs";
     private static final String KEY_USER_NAME = "userName";
     private static final String KEY_USER_ID = "userId";
@@ -52,7 +52,8 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
     private List<Integer> friendsReceivedId;
     private List<Integer> friendsSentId;
     private RecyclerView friendsRecycleViewer;
-    private FriendAdapter friendAdapter;
+    private FriendAdapter startingFriendAdapter;
+    private FriendAdapter searchFriendAdapter;
     private List<Friend> friendList;
     private SharedPreferences prefs;
     private View root;
@@ -69,26 +70,31 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
         friendsRecycleViewer = root.findViewById(R.id.friends_recycler_view);
 
         friendList = new ArrayList<>();
+        searchList = new ArrayList<>();
         friendsId = new ArrayList<Integer>();
         friendsReceivedId = new ArrayList<Integer>();
         friendsSentId = new ArrayList<Integer>();
 
 
 
-        friendAdapter = new FriendAdapter(getContext(), friendList, this);
-        friendsRecycleViewer.setAdapter(friendAdapter);
+        searchFriendAdapter = new  FriendAdapter(getContext(), friendList, this);
+        startingFriendAdapter = new FriendAdapter(getContext(), friendList, this);
+        friendsRecycleViewer.setAdapter(startingFriendAdapter);
         friendsRecycleViewer.setLayoutManager(new LinearLayoutManager((getContext())));
         getStartingFriends();
 
         searchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextChange(String newText) {
+                getStartingFriends();
                 return false;
             }
 
             @Override
             public boolean onQueryTextSubmit(String query) {
-                searchForAccount(query);
+                if(!(query.equals(prefs.getString(KEY_USER_NAME, "")))){
+                    searchForAccount(query);
+                }
                 return true;
             }
         }
@@ -114,7 +120,7 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
                     int accountId = account.getId();
                     setAccountState(accountId, account);
                     friendList.add(account);
-                    friendAdapter.notifyDataSetChanged();
+                    startingFriendAdapter.notifyDataSetChanged();
                 },
                 volleyError -> {
                     Log.e(TAG, "Error getting friends" + volleyError.toString());
@@ -128,7 +134,7 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
 
                         if (volleyError.networkResponse.statusCode == 404) {
                             friendList.clear();
-                            friendAdapter.notifyDataSetChanged();
+                            startingFriendAdapter.notifyDataSetChanged();
                         } else {
                             Toast.makeText(getContext(), "Finding Account failed. Server error: " + volleyError.networkResponse.statusCode, Toast.LENGTH_LONG).show();
                         }
@@ -180,7 +186,7 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
                         friendList.clear();
                         for (int i = 0; i < response.length(); i++) {
                             JSONObject friendJson = response.getJSONObject(i);
-                            friendJson.put("state", 4);
+                            friendJson.put("state", SingleFriendActivity.ARE_FRIENDS_STATE);
                             friendsId.add(friendJson.getInt("id"));
                             friendList.add(new Friend(friendJson));
                         }
@@ -215,8 +221,13 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
                     }
 
                 },
-                VolleyError -> {
-                    Log.e(TAG, "Error getting Friends", VolleyError);
+                volleyError -> {
+                    Log.e(TAG, "Error getting Friends", volleyError);
+                    String responseBody = "";
+                    if(volleyError.networkResponse.data != null) {
+                        responseBody = new String(volleyError.networkResponse.data, StandardCharsets.UTF_8);
+                    }
+                    Log.e(TAG, "Accepting friends error response body: " + responseBody);
                 }
         );
         VolleySingleton.getInstance(getContext()).addToRequestQueue(jsonArrayRequest);
@@ -243,13 +254,19 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
                     }
 
                 },
-                VolleyError -> {
-                    Log.e(TAG, "Error getting Friends", VolleyError);
+                volleyError -> {
+                    Log.e(TAG, "Error getting Friends", volleyError);
+                    String responseBody = "";
+                    if(volleyError.networkResponse.data != null) {
+                        responseBody = new String(volleyError.networkResponse.data, StandardCharsets.UTF_8);
+                    }
+                    Log.e(TAG, "Accepting friends error response body: " + responseBody);
+
                 }
         );
         VolleySingleton.getInstance(getContext()).addToRequestQueue(jsonArrayRequest);
 
-        friendAdapter.notifyDataSetChanged();
+        startingFriendAdapter.notifyDataSetChanged();
 
 
 

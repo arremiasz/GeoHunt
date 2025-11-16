@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.jubair5.geohunt.R;
 import com.jubair5.geohunt.network.ApiConstants;
 import com.jubair5.geohunt.network.VolleySingleton;
@@ -76,37 +77,6 @@ public class SingleFriendActivity extends AppCompatActivity {
 
     }
 
-    private void secondaryButtonClicked() {
-        if (state == RECEIVED_REQUEST_STATE) {
-            rejectFriend();
-        }
-        else if (state == ARE_FRIENDS_STATE) {
-            removeFriend();;
-        }
-
-        setState();
-    }
-
-    private void rejectFriend() {
-
-        String friendsURL = ApiConstants.BASE_URL + ApiConstants.Reject_Friend_Request_ENDPOINT + "?primaryId=" + userId + "&targetId=" + friendID ;
-
-        // Getting state
-        JsonObjectRequest jsonObjReq = new JsonObjectRequest(
-                Request.Method.DELETE,
-                friendsURL,
-                null,
-                response -> {
-                    Log.d(TAG, "Response: " + response.toString());
-                    state = NOT_FRIENDS_STATE;
-
-                },
-                volleyError -> {
-                    Log.e(TAG, "Error removing friends", volleyError);
-                }
-        );
-        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(jsonObjReq);
-    }
 
     private void mainButtonClicked() {
         if(state == NOT_FRIENDS_STATE){
@@ -118,12 +88,116 @@ public class SingleFriendActivity extends AppCompatActivity {
         else if (state == ARE_FRIENDS_STATE) {
             challengeFriend();
         }
+        setState();
+    }
+
+    private void secondaryButtonClicked() {
+        if (state == RECEIVED_REQUEST_STATE) {
+            rejectFriend();
+        }
+        else if (state == ARE_FRIENDS_STATE) {
+            removeFriend();;
+        }
 
         setState();
+    }
 
+
+    private void sendFriendRequest() {
+        String friendsURL = ApiConstants.BASE_URL + ApiConstants.Send_Friend_Request_ENDPOINT + "?primaryId=" + userId + "&targetId=" + friendID;
+
+        StringRequest sendRequest = new StringRequest(
+                Request.Method.POST,
+                friendsURL,
+                response -> {
+                    Log.d(TAG, "Request Sent");
+
+                    state = SENT_REQUEST_STATE;
+
+                },
+                volleyError -> {
+                    Log.e(TAG, "Error Sending Request" + volleyError.toString());
+                    String responseBody = "";
+                    if(volleyError.networkResponse.data != null) {
+                        responseBody = new String(volleyError.networkResponse.data, StandardCharsets.UTF_8);
+                    }
+                    Log.e(TAG, "Accepting friends error response body: " + responseBody);
+                }
+        );
+        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(sendRequest);
+    }
+
+    private void accpetFriendRequest() {
+        String friendsURL = ApiConstants.BASE_URL + ApiConstants.Accept_Friend_Request_ENDPOINT + "?primaryId=" + userId + "&targetId=" + friendID ;
+
+        StringRequest acceptRequest = new StringRequest(
+                Request.Method.PUT,
+                friendsURL,
+                response -> {
+                    Log.d(TAG, "Response: "+ response.toString());
+                    state = ARE_FRIENDS_STATE;
+
+                },
+                volleyError -> {
+                    Log.e(TAG, "Error accepting request" + volleyError.toString());
+                    String responseBody = "";
+                    if(volleyError.networkResponse.data != null) {
+                        responseBody = new String(volleyError.networkResponse.data, StandardCharsets.UTF_8);
+                    }
+                    Log.e(TAG, "Accepting friends error response body: " + responseBody);
+                }
+        );
+        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(acceptRequest);
+    }
+
+    private void rejectFriend() {
+
+        String friendsURL = ApiConstants.BASE_URL + ApiConstants.Reject_Friend_Request_ENDPOINT + "?primaryId=" + userId + "&targetId=" + friendID ;
+
+        StringRequest rejectRequest = new StringRequest(
+                Request.Method.DELETE,
+                friendsURL,
+                response -> {
+                    Log.d(TAG, "Response: " + response.toString());
+                    state = NOT_FRIENDS_STATE;
+
+                },
+                volleyError -> {
+                    Log.e(TAG, "Error removing friends" + volleyError.toString());
+                    String responseBody = "";
+                    if(volleyError.networkResponse.data != null) {
+                        responseBody = new String(volleyError.networkResponse.data, StandardCharsets.UTF_8);
+                    }
+                    Log.e(TAG, "Accepting friends error response body: " + responseBody);
+                }
+        );
+        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(rejectRequest);
     }
 
     private void challengeFriend() {
+    }
+
+    private void removeFriend() {
+        String friendsURL = ApiConstants.BASE_URL + ApiConstants.Remove_FRIEND + "?primaryId=" + userId + "&targetId=" + friendID ;
+
+        StringRequest removeRequest = new StringRequest(
+                Request.Method.DELETE,
+                friendsURL,
+                response -> {
+                    Log.d(TAG, "Response: "+ response);
+                    state = NOT_FRIENDS_STATE;
+
+                },
+                volleyError -> {
+                    Log.e(TAG, "Error removing friends " + volleyError.toString());
+                    String responseBody = "";
+                    if(volleyError.networkResponse.data != null) {
+                        responseBody = new String(volleyError.networkResponse.data, StandardCharsets.UTF_8);
+                    }
+                    Log.e(TAG, "Accepting friends error response body: " + responseBody);
+                }
+        );
+        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(removeRequest);
     }
 
     private void setState() {
@@ -147,68 +221,6 @@ public class SingleFriendActivity extends AppCompatActivity {
         }
     }
 
-
-    private void sendFriendRequest() {
-        String friendsURL = ApiConstants.BASE_URL + ApiConstants.Send_Friend_Request_ENDPOINT + "?primaryId=" + userId + "&targetId=" + friendID;
-
-        // Getting state
-        JsonObjectRequest jsonObjReq = new JsonObjectRequest(
-                Request.Method.POST,
-                friendsURL,
-                null,
-                response -> {
-                    Log.d(TAG, "Request Sent");
-
-                    state = SENT_REQUEST_STATE;
-
-                },
-                volleyError -> {
-                    Log.e(TAG, "Error Sending Request" + volleyError.toString(), volleyError);
-                }
-        );
-        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(jsonObjReq);
-    }
-
-    private void accpetFriendRequest() {
-        String friendsURL = ApiConstants.BASE_URL + ApiConstants.Accept_Friend_Request_ENDPOINT + "?primaryId=" + userId + "&targetId=" + friendID ;
-
-        // Getting state
-        JsonObjectRequest jsonObjReq = new JsonObjectRequest(
-                Request.Method.PUT,
-                friendsURL,
-                null,
-                response -> {
-                    Log.d(TAG, "Response: "+ response.toString());
-                    state = ARE_FRIENDS_STATE;
-
-                },
-                volleyError -> {
-                    Log.e(TAG, "Error accepting request" + volleyError.toString(), volleyError);
-                }
-        );
-        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(jsonObjReq);
-    }
-
-    private void removeFriend() {
-        String friendsURL = ApiConstants.BASE_URL + ApiConstants.Remove_FRIEND + "?primaryId=" + userId + "&targetId=" + friendID ;
-
-        // Getting state
-        JsonObjectRequest jsonObjReq = new JsonObjectRequest(
-                Request.Method.DELETE,
-                friendsURL,
-                null,
-                response -> {
-                    Log.d(TAG, "Response: "+ response.toString());
-                    state = NOT_FRIENDS_STATE;
-
-                },
-                volleyError -> {
-                    Log.e(TAG, "Error removing friends", volleyError);
-                }
-        );
-        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(jsonObjReq);
-    }
-
     private void getFriendProfile() {
         nameText.setText(friendUsername);
 
@@ -225,7 +237,12 @@ public class SingleFriendActivity extends AppCompatActivity {
                     // Stats later on
                 },
                 volleyError -> {
-                    Log.e(TAG, "Error getting friends", volleyError);
+                    Log.e(TAG, "Error getting friends" + volleyError.toString());
+                    String responseBody = "";
+                    if(volleyError.networkResponse.data != null) {
+                        responseBody = new String(volleyError.networkResponse.data, StandardCharsets.UTF_8);
+                    }
+                    Log.e(TAG, "Accepting friends error response body: " + responseBody);
                 }
         );
         VolleySingleton.getInstance(this).addToRequestQueue(jsonObjReq);
