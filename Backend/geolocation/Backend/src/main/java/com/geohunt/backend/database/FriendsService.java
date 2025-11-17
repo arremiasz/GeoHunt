@@ -123,7 +123,12 @@ public class FriendsService {
 
 
         Optional<Friends> friendship = friendsRepository.findByPrimaryAndTarget(acc, target);
-        if(friendship.isEmpty()) {return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Friend Request not sent.");}
+        if(friendship.isEmpty()) {
+            friendship = friendsRepository.findByPrimaryAndTarget(target, acc);
+            if(friendship.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Friend Request not sent.");
+            }
+        }
         if(friendship.get().isAccepted()) {return ResponseEntity.status(HttpStatus.CONFLICT).body("Friend already accepted.");}
         friendship.get().setAccepted(true);
         friendsRepository.save(friendship.get());
@@ -210,7 +215,12 @@ public class FriendsService {
         Account target = Accounts.get(1).get();
 
         Optional<Friends> friendship = friendsRepository.findByPrimaryAndTarget(acc, target);
-        if(friendship.isEmpty()) {return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Friend Request does not exist.");}
+        if(friendship.isEmpty()) {
+            friendship = friendsRepository.findByPrimaryAndTarget(target, acc);
+            if(friendship.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Friend Request does not exist.");
+            }
+        }
         friendsRepository.delete(friendship.get());
         return ResponseEntity.status(HttpStatus.OK).body("Friend removed.");
     }
