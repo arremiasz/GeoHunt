@@ -20,8 +20,18 @@ public class socialController {
     private FriendsService friendsService;
 
     @GetMapping("/friends")
-    public ResponseEntity<List<FriendDTO>> getFriends(@RequestParam(required = true) long id){
+    public ResponseEntity<List<Account>> getFriends(@RequestParam(required = true) long id){
         return friendsService.getFriends(id);
+    }
+
+    @GetMapping("/friendRequestsRecieved")
+    public ResponseEntity<List<Account>> getFriendRequestsRecieved(@RequestParam(required = true) long id){
+        return friendsService.getFriendRequestsRecieved(id);
+    }
+
+    @GetMapping("/friendRequestsSent")
+    public ResponseEntity<List<Account>> getFriendRequestsSent(@RequestParam(required = true) long id){
+        return friendsService.getFriendRequestsSent(id);
     }
 
     @PostMapping("/friends/add")

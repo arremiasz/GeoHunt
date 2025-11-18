@@ -7,10 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class FriendsService {
@@ -48,8 +45,14 @@ public class FriendsService {
         key.setPrimaryId(senderId);
         key.setTargetId(targetId);
 
-        if (friendsRepository.existsById(key)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Friend already exists.");
+// Reverse key
+        FriendKey reverseKey = new FriendKey();
+        reverseKey.setPrimaryId(targetId);
+        reverseKey.setTargetId(senderId);
+
+// Check both directions
+        if (friendsRepository.existsById(key) || friendsRepository.existsById(reverseKey)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Friendship already exists.");
         }
         Optional<Account> acc = accountRepository.findById(senderId);
         Optional<Account> target = accountRepository.findById(targetId);
@@ -84,7 +87,14 @@ public class FriendsService {
         Account acc = Accounts.get(0).get();
         Account target = Accounts.get(1).get();
 
-        Optional<Friends> friendship = friendsRepository.findByPrimaryAndTarget(acc, target);
+        Optional<Friends> friendship;
+        if(friendsRepository.findByPrimaryAndTarget(acc, target).isEmpty()) {
+            friendship = friendsRepository.findByPrimaryAndTarget(target, acc);
+        } else {
+            friendship = friendsRepository.findByPrimaryAndTarget(acc, target);
+        }
+
+
         if(friendship.isEmpty()) {return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Both accounts are not friends.");}
 
 
@@ -113,33 +123,69 @@ public class FriendsService {
 
 
         Optional<Friends> friendship = friendsRepository.findByPrimaryAndTarget(acc, target);
-        if(friendship.isEmpty()) {return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Friend Request not sent.");}
+        if(friendship.isEmpty()) {
+            friendship = friendsRepository.findByPrimaryAndTarget(target, acc);
+            if(friendship.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Friend Request not sent.");
+            }
+        }
         if(friendship.get().isAccepted()) {return ResponseEntity.status(HttpStatus.CONFLICT).body("Friend already accepted.");}
         friendship.get().setAccepted(true);
         friendsRepository.save(friendship.get());
         return ResponseEntity.status(HttpStatus.OK).body("Friend accepted.");
     }
 
-    public ResponseEntity<List<FriendDTO>> getFriends(long id) {
+    public ResponseEntity<List<Account>> getFriends(long id) {
         Optional<Account> account = accountRepository.findById(id);
         if (account.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyList());
         }
 
-        List<Friends> sentFriends = friendsRepository.findByPrimary(account.get());
-        List<Friends> receivedFriends = friendsRepository.findByTarget(account.get());
+        List<Account> friends = new ArrayList<>();
 
-        List<FriendDTO> friendList = new ArrayList<>();
+        List<Friends> sentFriends = friendsRepository.findByPrimaryAndIsAcceptedTrue(account.get());
+        List<Friends> receivedFriends = friendsRepository.findByTargetAndIsAcceptedTrue(account.get());
+
 
         for (Friends f : sentFriends) {
-            friendList.add(new FriendDTO(f.getTarget(), f.isAccepted()));
+            friends.add(f.getTarget());
         }
 
         for (Friends f : receivedFriends) {
-            friendList.add(new FriendDTO(f.getPrimary(), f.isAccepted()));
+            friends.add(f.getPrimary());
         }
 
-        return ResponseEntity.ok(friendList);
+        return ResponseEntity.ok(friends);
+    }
+
+    public ResponseEntity<List<Account>> getFriendRequestsSent(long id) {
+        Optional<Account> account = accountRepository.findById(id);
+        if (account.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyList());
+        }
+
+        List<Account> friends = new ArrayList<>();
+        List<Friends> f = friendsRepository.findByPrimaryAndIsAcceptedFalse(account.get());
+
+        for (Friends f1 : f) {
+            friends.add(f1.getTarget());
+        }
+        return ResponseEntity.ok(friends);
+    }
+
+    public ResponseEntity<List<Account>> getFriendRequestsRecieved(long id) {
+        Optional<Account> account = accountRepository.findById(id);
+        if (account.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyList());
+        }
+
+        List<Account> friends = new ArrayList<>();
+        List<Friends> f = friendsRepository.findByTargetAndIsAcceptedFalse(account.get());
+
+        for (Friends f1 : f) {
+            friends.add(f1.getPrimary());
+        }
+        return ResponseEntity.ok(friends);
     }
 
     @Transactional
@@ -169,8 +215,15 @@ public class FriendsService {
         Account target = Accounts.get(1).get();
 
         Optional<Friends> friendship = friendsRepository.findByPrimaryAndTarget(acc, target);
-        if(friendship.isEmpty()) {return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Friend Request does not exist.");}
+        if(friendship.isEmpty()) {
+            friendship = friendsRepository.findByPrimaryAndTarget(target, acc);
+            if(friendship.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Friend Request does not exist.");
+            }
+        }
         friendsRepository.delete(friendship.get());
         return ResponseEntity.status(HttpStatus.OK).body("Friend removed.");
     }
+
+
 }

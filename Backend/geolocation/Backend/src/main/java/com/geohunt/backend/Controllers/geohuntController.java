@@ -81,4 +81,8 @@ public class geohuntController {
     @DeleteMapping("/geohunt/mySubmissions")
     public ResponseEntity<String> deleteMySubmissions(@RequestParam long userId, @RequestParam long chalId){return geohuntService.deleteUsersChallenges(userId, chalId);}
 
+    @PutMapping("/geohunt/mySubmission/updateChallenge")
+    public ResponseEntity updateMyChallenge(@RequestParam long userId, @RequestParam long chalId, @RequestParam double lat, @RequestParam double lng, @RequestBody String image){
+        return geohuntService.updateChallenge(userId, chalId, image, lng, lat);
+    }
 }
