@@ -104,7 +104,8 @@
         android:layout_margin="16dp"
         android:visibility="gone"
         app:cardCornerRadius="8dp"
-        app:cardElevation="8dp">
+        app:cardElevation="8dp"
+        tools:ignore="MissingConstraints">
         <ImageView
             android:id="@+id/hint_image"
             android:layout_width="match_parent"
