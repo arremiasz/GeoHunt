@@ -1,38 +1,37 @@
-stages:             # these stages (jobs) forms the CICD pipeline
-  - androidbuild    # this is a JOB to build your Android application
-  - androidtest     # this is a JOB to run tests in your Android application (it's okay you don't have any test for now)
-
+stages:
+  - androidbuild
+  - androidtest 
+  
 android-build:
-  image: afirefly/android-ci:java23 # Docker image that has Android environments installed     gjandres/android-ci:latest
-  stage: androidbuild               # one of the stages listed above
+  image: afirefly/android-ci:java23
+  stage: androidbuild
   tags:
-   - aremiasz_android_tag                  # change to your runner's tag
-  before_script:                    # enable gradlew, change 'Frontend' to where you have 'gradlew'
+   - aremiasz_android_tag                   # <-- change to your runner's tag
+  before_script:                    # change 'Frontend' to where you have 'gradlew'
+    - export GRADLE_USER_HOME=`pwd`/.gradle
+    - chmod +x ./Frontend/geohunt/gradlew
+  script:
+    - cd Frontend/geohunt                   # change 'Frontend' to where you have 'gradlew' (do not add / in the beginning)
+    - ./gradlew build
+  only:
+    refs:
+      - aremiasz_CICD
+    changes:
+      - Frontend/**/*
+
+android-test:
+  image: afirefly/android-ci:java23
+  stage: androidtest
+  tags:
+    - yourname_tag                  # <-- change to your runner's tag
+  before_script:                   # change 'Frontend' to where you have 'gradlew'
     - export GRADLE_USER_HOME=`pwd`/.gradle
     - chmod +x ./Frontend/geohunt/gradlew
   script:
     - cd Frontend/geohunt                  # change 'Frontend' to where you have 'gradlew' (do not add / in the beginning)
-    - ./gradlew build               # gradle build
+    - ./gradlew test
   only:
     refs:
-      - aremiasz_CICD                        # only to trigger the pipeline when changes are pushed to 'main'
+      - aremiasz_CICD
     changes:
-      - Frontend/**/*               # more specifically - only when changes are made inside the 'Frontend' folder
-
-android-test:
-  image: afirefly/android-ci:java23
-  stage: androidtest               # one of the stages listed above
-  tags:
-    - aremiasz_android_tag                   # change to your runner's tag
-  before_script:                   # enable gradlew, change 'Frontend' to where you have 'gradlew'
-     - export GRADLE_USER_HOME=`pwd`/.gradle
-     - chmod +x ./Frontend/geohunt/gradlew
-  script:
-     - cd Frontend/geohunt                  # change 'Frontend' to where you have 'gradlew' (do not add / in the beginning)
-     - ./gradlew test               # gradle test
-  only:
-    refs:
-      - aremiasz_CICD          # only to trigger the pipeline when changes are pushed to 'main'
-    changes:
-      - Frontend/**/*               # more specifically - only when changes are made inside the 'Frontend' folder
-
+      - Frontend/**/*
