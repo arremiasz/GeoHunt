@@ -16,8 +16,8 @@ android-build:
   only:
     refs:
       - aremiasz_CICD
-    changes:
-      - Frontend/**/*
+    #changes:
+    #  - Frontend/**/*
 
 android-test:
   image: afirefly/android-ci:java17
@@ -33,5 +33,5 @@ android-test:
   only:
     refs:
       - aremiasz_CICD
-    changes:
-      - Frontend/**/*
+    #changes:
+    #  - Frontend/**/*
