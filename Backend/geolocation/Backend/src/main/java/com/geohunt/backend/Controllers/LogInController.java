@@ -32,6 +32,7 @@ public class LogInController {
                 return ResponseEntity.badRequest().body(null);
             }
         }
+
         catch (IllegalArgumentException e){
             return ResponseEntity.badRequest().body(null);
         }
