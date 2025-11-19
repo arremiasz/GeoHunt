@@ -55,6 +55,7 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
     private FriendAdapter startingFriendAdapter;
     private FriendAdapter searchFriendAdapter;
     private List<Friend> friendList;
+    private List<Friend> searchList;
     private SharedPreferences prefs;
     private View root;
 
@@ -77,7 +78,7 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
 
 
 
-        searchFriendAdapter = new  FriendAdapter(getContext(), friendList, this);
+        searchFriendAdapter = new  FriendAdapter(getContext(), searchList, this);
         startingFriendAdapter = new FriendAdapter(getContext(), friendList, this);
         friendsRecycleViewer.setAdapter(startingFriendAdapter);
         friendsRecycleViewer.setLayoutManager(new LinearLayoutManager((getContext())));
@@ -86,13 +87,16 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
         searchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextChange(String newText) {
-                getStartingFriends();
+                if(!(friendsRecycleViewer.getAdapter().equals(startingFriendAdapter))){
+                    friendsRecycleViewer.setAdapter(startingFriendAdapter);
+                }
                 return false;
             }
 
             @Override
             public boolean onQueryTextSubmit(String query) {
                 if(!(query.equals(prefs.getString(KEY_USER_NAME, "")))){
+                    friendsRecycleViewer.setAdapter(searchFriendAdapter);
                     searchForAccount(query);
                 }
                 return true;
@@ -115,12 +119,12 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
                     Log.d(TAG, "Account Search Response: "+ response.toString());
 
                     // Display Friends
-                    friendList.clear();
+                    searchList.clear();
                     Friend account =  new Friend(response);
                     int accountId = account.getId();
                     setAccountState(accountId, account);
-                    friendList.add(account);
-                    startingFriendAdapter.notifyDataSetChanged();
+                    searchList.add(account);
+                    searchFriendAdapter.notifyDataSetChanged();
                 },
                 volleyError -> {
                     Log.e(TAG, "Error getting friends" + volleyError.toString());
