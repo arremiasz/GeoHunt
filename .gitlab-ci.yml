@@ -3,7 +3,7 @@ stages:             # these stages (jobs) forms the CICD pipeline
   - androidtest     # this is a JOB to run tests in your Android application (it's okay you don't have any test for now)
 
 android-build:
-  image: afirefly/android-ci:java17 # Docker image that has Android environments installed     gjandres/android-ci:latest
+  image: afirefly/android-ci:java23 # Docker image that has Android environments installed     gjandres/android-ci:latest
   stage: androidbuild               # one of the stages listed above
   tags:
    - aremiasz_android_tag                  # change to your runner's tag
@@ -20,7 +20,7 @@ android-build:
       - Frontend/**/*               # more specifically - only when changes are made inside the 'Frontend' folder
 
 android-test:
-  image: afirefly/android-ci:java17
+  image: afirefly/android-ci:java23
   stage: androidtest               # one of the stages listed above
   tags:
     - aremiasz_android_tag                   # change to your runner's tag
