@@ -50,7 +50,6 @@ public class LoginFragment extends Fragment {
     private static final String KEY_USER_EMAIL = "userEmail";
     private static final String KEY_USER_PFP = "userPfp";
 
-
     private TextInputLayout usernameLoginLayout, passwordLoginLayout;
     private EditText usernameEditText, passwordEditText;
     private Button loginButton;
@@ -58,7 +57,8 @@ public class LoginFragment extends Fragment {
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+            @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.login_fragment, container, false);
     }
 
@@ -116,8 +116,10 @@ public class LoginFragment extends Fragment {
     }
 
     /**
-     * Validates the login form inputs and initiates the login network request if all inputs are valid.
-     * Handles UI updates for errors and successful login, including saving session data.
+     * Validates the login form inputs and initiates the login network request if
+     * all inputs are valid.
+     * Handles UI updates for errors and successful login, including saving session
+     * data.
      */
     private void performLogin() {
         usernameLoginLayout.setError(null);
@@ -149,7 +151,8 @@ public class LoginFragment extends Fragment {
                     Log.d(TAG, "Login successful: " + response);
                     int userId = Integer.parseInt(response);
 
-                    String userDetailsUrl = ApiConstants.BASE_URL + ApiConstants.GET_ACCOUNT_BY_ID_ENDPOINT + "?id=" + userId;
+                    String userDetailsUrl = ApiConstants.BASE_URL + ApiConstants.GET_ACCOUNT_BY_ID_ENDPOINT + "?id="
+                            + userId;
                     StringRequest userDetailsRequest = new StringRequest(Request.Method.GET, userDetailsUrl,
                             userDetailsResponse -> {
                                 try {
@@ -158,7 +161,8 @@ public class LoginFragment extends Fragment {
                                     String pfp = userJson.getString("pfp");
 
                                     if (getContext() != null) {
-                                        SharedPreferences sharedPreferences = getContext().getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
+                                        SharedPreferences sharedPreferences = getContext()
+                                                .getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
                                         SharedPreferences.Editor editor = sharedPreferences.edit();
                                         editor.putBoolean(KEY_USER_LOGGED_IN, true);
                                         editor.putLong(KEY_LOGIN_TIMESTAMP, System.currentTimeMillis());
@@ -177,12 +181,14 @@ public class LoginFragment extends Fragment {
                                     }
                                 } catch (JSONException e) {
                                     Log.e(TAG, "Error parsing user details from GET request", e);
-                                    Toast.makeText(getContext(), "Login successful, but failed to parse user details.", Toast.LENGTH_LONG).show();
+                                    Toast.makeText(getContext(), "Login successful, but failed to parse user details.",
+                                            Toast.LENGTH_LONG).show();
                                 }
                             },
                             error -> {
                                 Log.e(TAG, "Error fetching user details", error);
-                                Toast.makeText(getContext(), "Login successful, but failed to fetch user details.", Toast.LENGTH_LONG).show();
+                                Toast.makeText(getContext(), "Login successful, but failed to fetch user details.",
+                                        Toast.LENGTH_LONG).show();
                             });
 
                     if (getContext() != null) {
@@ -194,25 +200,28 @@ public class LoginFragment extends Fragment {
                     if (error.networkResponse != null) {
                         Log.e(TAG, "Login error status code: " + error.networkResponse.statusCode);
                         String responseBody = "";
-                        if(error.networkResponse.data != null) {
+                        if (error.networkResponse.data != null) {
                             responseBody = new String(error.networkResponse.data, StandardCharsets.UTF_8);
                         }
                         Log.e(TAG, "Login error response body: " + responseBody);
 
                         if (error.networkResponse.statusCode == 400) {
-                            Toast.makeText(getContext(), "Username and password doesn't match", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getContext(), "Username and password doesn't match", Toast.LENGTH_LONG)
+                                    .show();
                             usernameLoginLayout.setError("The username or password is incorrect");
                             passwordLoginLayout.setError("The username or password is incorrect");
-//                            usernameEditText.requestFocus();
-//                            passwordEditText.requestFocus();
+                            // usernameEditText.requestFocus();
+                            // passwordEditText.requestFocus();
                         } else {
-                            Toast.makeText(getContext(), "Login failed. Server error: " + error.networkResponse.statusCode, Toast.LENGTH_LONG).show();
+                            Toast.makeText(getContext(),
+                                    "Login failed. Server error: " + error.networkResponse.statusCode,
+                                    Toast.LENGTH_LONG).show();
                         }
                     } else {
-                        Toast.makeText(getContext(), "Login failed. Check network connection.", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getContext(), "Login failed. Check network connection.", Toast.LENGTH_LONG)
+                                .show();
                     }
-                }
-        ) {
+                }) {
             @Override
             public byte[] getBody() {
                 return requestBody.toString().getBytes(StandardCharsets.UTF_8);
@@ -233,7 +242,6 @@ public class LoginFragment extends Fragment {
             VolleySingleton.getInstance(getContext()).addToRequestQueue(stringRequest);
         }
     }
-
 
     /**
      * Validates the provided username.
@@ -256,7 +264,8 @@ public class LoginFragment extends Fragment {
      * Validates that the password is not empty
      *
      * @param password The password string to validate.
-     * @return {@code true} if the password meets all criteria, {@code false} otherwise.
+     * @return {@code true} if the password meets all criteria, {@code false}
+     *         otherwise.
      */
     private boolean validatePassword(String password) {
         if (TextUtils.isEmpty(password)) {
