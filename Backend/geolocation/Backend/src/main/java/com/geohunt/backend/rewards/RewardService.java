@@ -37,14 +37,16 @@ public class RewardService {
     // Update
 
     public Reward updateReward(Long id, Reward rewardNew){
-        Reward rewardOld = getRewardById(id);
-        if(rewardOld == null){
+        Reward reward = getRewardById(id);
+        if(reward == null){
             return null;
         }
 
-        // TODO: Update function
+        reward.update(rewardNew);
 
-        return null;
+        rewardRepository.save(reward);
+
+        return reward;
 
     }
 

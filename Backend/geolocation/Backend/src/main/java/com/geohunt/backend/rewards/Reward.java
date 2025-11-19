@@ -13,7 +13,12 @@ import lombok.Setter;
 public class Reward {
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private @Id long id;
-    String name;
-    String rewardType;
+    private String name;
+    private String rewardType;
 
+
+    public void update(Reward other){
+        this.name = other.getName();
+        this.rewardType = other.getRewardType();
+    }
 }
