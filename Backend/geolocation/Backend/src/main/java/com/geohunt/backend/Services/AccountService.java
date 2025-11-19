@@ -13,7 +13,6 @@ import java.util.Optional;
 public class AccountService {
     @Autowired
     private AccountRepository accountRepository;
-
     @Autowired
     private FriendsService friendsService;
 
