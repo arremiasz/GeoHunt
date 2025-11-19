@@ -4,9 +4,11 @@ import com.geohunt.backend.Services.AccountService;
 import com.geohunt.backend.Services.GeohuntService;
 import com.geohunt.backend.database.Account;
 import com.geohunt.backend.database.Challenges;
+import com.geohunt.backend.multiplayer.exceptions.LobbyNotFoundException;
+import com.geohunt.backend.multiplayer.exceptions.LobbyNotJoinableException;
+import com.geohunt.backend.multiplayer.exceptions.NotLobbyLeaderException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import java.util.List;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,79 +16,79 @@ import java.util.Map;
 @Service
 public class LobbyService {
 
-    static final String ERROR_LOBBY_NOT_FOUND = "error: lobby not found";
-    static final String ERROR_NOT_LOBBY_LEADER = "error: not lobby leader";
-    static final String ERROR_CANNOT_JOIN = "error: cannot join lobby";
-    static final String ERROR_INCORRECT_ARGUMENT = "error: incorrect argument";
-
     @Autowired AccountService accountService;
     @Autowired GeohuntService geohuntService;
-    @Autowired MultiplayerSocket multiplayerSocket; // TODO: Fix dependency circle preventing startup
 
     Map<String, Lobby> userLobbyMap = new HashMap<>();
     Map<Long, Lobby> idLobbyMap = new HashMap<>();
 
     // Create Lobby
-    public Lobby createLobby(Account user){
-        Lobby lobby = new Lobby(user);
+    public Lobby createLobby(Account user) throws IllegalStateException{
+        Lobby lobby = userLobbyMap.get(user);
+        if(lobby != null){
+            throw new IllegalStateException("user already in lobby");
+        }
+
+        lobby = new Lobby(user);
         userLobbyMap.put(user.getUsername(), lobby);
         idLobbyMap.put(lobby.getId(), lobby);
-        sendWSMessage(user, "created_lobby: " + lobby.getId());
         return lobby;
+        // TODO: Move WS Message to Socket
+        // Exceptions: IllegalState (User already in lobby)
     }
 
     // Join Lobby by Id
-    public Lobby joinLobby(Account user, Long lobbyId){
+    public Lobby joinLobby(Account user, Long lobbyId) throws LobbyNotFoundException, LobbyNotJoinableException {
         Lobby lobby = idLobbyMap.get(lobbyId);
         if(lobby == null){
-            sendWSMessage(user, ERROR_LOBBY_NOT_FOUND);
-            return null; // Cannot find lobby
+            throw new LobbyNotFoundException();
         }
 
         boolean joined = lobby.addPlayer(user);
-        if(joined){
-            sendWSMessage(user, lobby.getJoinWSMessage());
-            sendWSMessage(lobby.getConnectedPlayers(), "user_joined: " + user.getUsername());
-            userLobbyMap.put(user.getUsername(), lobby);
-            return lobby;
+        if(!joined){
+            throw new LobbyNotJoinableException();
         }
-        else {
-            sendWSMessage(user, ERROR_CANNOT_JOIN);
-            return null;
-        }
+
+        //sendWSMessage(user, lobby.getJoinWSMessage());
+        //sendWSMessage(lobby.getConnectedPlayers(), "user_joined: " + user.getUsername());
+        userLobbyMap.put(user.getUsername(), lobby);
+        return lobby;
+        // TODO: Move WS Message to Socket using Exceptions
     }
 
     // Leave Lobby
-    public void leaveLobby(Account user){
+    public Lobby leaveLobby(Account user) throws IllegalStateException{
         Lobby lobby = userLobbyMap.get(user.getUsername());
         if(lobby == null){
-            sendWSMessage(user, ERROR_LOBBY_NOT_FOUND);
-            return; // Cannot find lobby to leave
+            throw new IllegalStateException("User not in lobby");
         }
 
         userLobbyMap.remove(user.getUsername());
         lobby.removePlayer(user);
 
-        sendWSMessage(user, "left_lobby");
-        sendWSMessage(lobby.getConnectedPlayers(), "user_left: " + user.getUsername());
+        //sendWSMessage(user, "left_lobby");
+        //sendWSMessage(lobby.getConnectedPlayers(), "user_left: " + user.getUsername());
+        return lobby;
+        // TODO: Move WS Message to Socket using Exceptions
+
     }
 
     // Invite users
     public void inviteUser(Account userInviting, Account userToInvite){
         // TODO: Ask about how notifications will be used to invite users.
         // Will try to send a notification to another user with the lobby code, which the frontend will recieve and use to join the lobby.
+        // TODO: Move WS Message to Socket using Exceptions
+
     }
 
     // Change Lobby Settings
-    public void changeSetting(Account user, String setting, String args){
+    public void changeSetting(Account user, String setting, String args) throws IllegalStateException, NotLobbyLeaderException, IllegalArgumentException {
         Lobby lobby = userLobbyMap.get(user.getUsername());
         if(lobby == null){
-            sendWSMessage(user, ERROR_LOBBY_NOT_FOUND);
-            return;
+            throw new IllegalStateException("User not in lobby");
         }
         if(!lobby.isLobbyLeader(user)){
-            sendWSMessage(user, ERROR_NOT_LOBBY_LEADER);
-            return;
+            throw new NotLobbyLeaderException();
         }
 
         if(setting.equals("radius")){
@@ -96,13 +98,11 @@ public class LobbyService {
                 radius = Double.parseDouble(args);
             }
             catch(NullPointerException e){
-                sendWSMessage(user, ERROR_INCORRECT_ARGUMENT);
-                return;
+                throw new IllegalArgumentException();
                 // Args is null
             }
             catch (NumberFormatException e){
-                sendWSMessage(user, ERROR_INCORRECT_ARGUMENT);
-                return;
+                throw new IllegalArgumentException();
                 // Args is not a number
             }
             lobby.setRadius(radius);
@@ -116,23 +116,23 @@ public class LobbyService {
             // set powerups
 
         }
+        // TODO: Move WS Message to Socket using Exceptions
+
     }
 
-    public void startGame(Account user){
+    public void startGame(Account user) throws IllegalStateException, NotLobbyLeaderException, IllegalArgumentException{
         // Check user
         Lobby lobby = userLobbyMap.get(user.getUsername());
         if(lobby == null){
-            sendWSMessage(user, ERROR_LOBBY_NOT_FOUND);
-            return;
+            throw new IllegalStateException("User not in lobby");
         }
         if(!lobby.isLobbyLeader(user)){
-            sendWSMessage(user, ERROR_NOT_LOBBY_LEADER);
-            return;
+            throw new NotLobbyLeaderException();
         }
 
         // Check for valid generation settings
         if(lobby.getRadius() == 0 || lobby.getRadiusCenter().isAtZero()){
-            sendWSMessage(user, "error: invalid_generation_settings");
+            throw new IllegalStateException("Radius and center not set");
         }
 
         // Generate Challenge
@@ -143,26 +143,17 @@ public class LobbyService {
         StringBuilder message = new StringBuilder();
         message.append("game_start \n");
         message.append("challenge: " + challenges.getId()); // TODO: Not sure if this should just be the id or an entire JSON object
-        sendWSMessage(lobby.getConnectedPlayers(), message.toString());
-    }
-
-    public void submit(Account user){
+        //sendWSMessage(lobby.getConnectedPlayers(), message.toString());
+        // TODO: Move WS Message to Socket using Exceptions
 
     }
 
-    public void closeLobby(Lobby lobby){
+    public void submit(Account user) throws IllegalStateException{
 
     }
 
-    // send WS Messages
-    public void sendWSMessage(Account user, String message){
-        multiplayerSocket.sendStringToUser(user.getUsername(), message);
-    }
+    public void closeLobby(Lobby lobby) throws IllegalStateException{
 
-    public void sendWSMessage(List<Account> users, String message){
-        for(Account user : users){
-            multiplayerSocket.sendStringToUser(user.getUsername(), message);
-        }
     }
 
 }

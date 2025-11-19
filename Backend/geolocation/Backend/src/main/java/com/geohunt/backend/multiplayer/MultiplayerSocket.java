@@ -3,7 +3,8 @@ package com.geohunt.backend.multiplayer;
 
 import com.geohunt.backend.Services.AccountService;
 import com.geohunt.backend.database.Account;
-import jakarta.persistence.Lob;
+import com.geohunt.backend.multiplayer.exceptions.LobbyNotFoundException;
+import com.geohunt.backend.multiplayer.exceptions.LobbyNotJoinableException;
 import jakarta.websocket.*;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
@@ -13,8 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -53,7 +54,7 @@ public class MultiplayerSocket {
         usernameSessionMap.put(username, session);
 
         // Send confirmation message
-        sendStringToUser(username, "Connection Success");
+        sendWSMessage(username, "Connection Success");
         logger.info("OnOpen : User " + username + " connected");
     }
 
@@ -68,29 +69,66 @@ public class MultiplayerSocket {
 
         // Handle messages
         if(splitMsg[0].equals("create lobby")) {
-            lobbyService.createLobby(user);
+            Lobby lobby;
+            try{
+                lobby = lobbyService.createLobby(user);
+            }
+            catch (IllegalStateException e){
+                sendWSMessage(username, "CANNOT_CREATE");
+                return;
+            }
+            sendWSMessage(username, "LOBBY_CREATED: " + lobby.getId());
+            logger.info("LOBBY_CREATED: " + lobby.getId() + " BY " + username);
+            return;
+
         }
         else if (splitMsg[0].equals("join lobby")){
-            String args = splitMsg[1];
-            //lobbyService.joinLobby(user, args); // TODO: Parse args as long
+            // join lobby: lobbyId
+
+            String lobbyCode = splitMsg[1];
+            Long lobbyId = Long.parseLong(lobbyCode);
+
+            Lobby lobby;
+            try{
+                lobby = lobbyService.joinLobby(user, lobbyId);
+            }
+            catch (LobbyNotFoundException e){
+                // Lobby could not be found
+                sendWSMessage(username, "LOBBY_NOT_FOUND");
+                return;
+            }
+            catch (LobbyNotJoinableException e) {
+                // Lobby is not joinable
+                sendWSMessage(username, "LOBBY_NOT_JOINABLE");
+                return;
+            }
+            sendWSMessage(lobby.getConnectedPlayers(), "USER_JOINED: " + username);
+            sendWSMessage(user, lobby.getJoinWSMessage());
+            //TODO: Send WS Message to group and individual
         }
         else if (splitMsg[0].equals("leave lobby")){
-            lobbyService.leaveLobby(user);
+            Lobby lobby;
+            try{
+                lobby = lobbyService.leaveLobby(user);
+            } catch (IllegalStateException e) {
+                sendWSMessage(username, "NOT_IN_LOBBY");
+                return;
+            }
+            sendWSMessage(lobby.getConnectedPlayers(), "USER_LEFT: " + username);
+            sendWSMessage(user, "LEFT_LOBBY");
+            //TODO: Send WS Message to group and individual
         }
         else if (splitMsg[0].equals("invite user")){
-            String args = splitMsg[1];
-            Account userToInvite = accountService.getAccountByUsername(args);
-            lobbyService.inviteUser(user, userToInvite);
+            //TODO
         }
         else if (splitMsg[0].equals("change setting")){
-            String setting = splitMsg[1];
-            // TODO: Create args list
+            // TODO
         }
         else if (splitMsg[0].equals("start game")){
-            lobbyService.startGame(user);
+            //TODO
         }
         else if (splitMsg[0].equals("submit")){
-            // TODO: Handle Submission JSON object
+            // TODO
         }
 
     }
@@ -118,12 +156,23 @@ public class MultiplayerSocket {
 
     // Sending Messages
 
-    public void sendStringToUser(String username, String message){
+    private void sendWSMessage(List<Account> recipients, String message){
+        for(Account user : recipients){
+            sendWSMessage(user, message);
+        }
+    }
+
+    private void sendWSMessage(Account recipient, String message){
+        String username = recipient.getUsername();
+        sendWSMessage(username, message);
+    }
+
+    private void sendWSMessage(String username, String message){
         Session session = usernameSessionMap.get(username);
         sendStringToSession(session, message);
     }
 
-    public void sendStringToSession(Session session, String message){
+    private void sendStringToSession(Session session, String message){
         try {
             session.getBasicRemote().sendText(message);
         }
