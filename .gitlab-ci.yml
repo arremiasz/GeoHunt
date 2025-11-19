@@ -3,15 +3,15 @@ stages:
   - androidtest 
   
 android-build:
-  image: afirefly/android-ci:java23
+  image: afirefly/android-ci:java17
   stage: androidbuild
   tags:
-   - aremiasz_android_tag                   # <-- change to your runner's tag
+   - aremiasz_android_tag                      
   before_script:                    # change 'Frontend' to where you have 'gradlew'
     - export GRADLE_USER_HOME=`pwd`/.gradle
     - chmod +x ./Frontend/geohunt/gradlew
   script:
-    - cd Frontend/geohunt                   # change 'Frontend' to where you have 'gradlew' (do not add / in the beginning)
+    - cd Frontend/geohunt          # change 'Frontend' to where you have 'gradlew' (do not add / in the beginning)
     - ./gradlew build
   only:
     refs:
@@ -20,15 +20,15 @@ android-build:
       - Frontend/**/*
 
 android-test:
-  image: afirefly/android-ci:java23
+  image: afirefly/android-ci:java17
   stage: androidtest
   tags:
-    - yourname_tag                  # <-- change to your runner's tag
+    - aremiasz_android_tag                 
   before_script:                   # change 'Frontend' to where you have 'gradlew'
     - export GRADLE_USER_HOME=`pwd`/.gradle
     - chmod +x ./Frontend/geohunt/gradlew
   script:
-    - cd Frontend/geohunt                  # change 'Frontend' to where you have 'gradlew' (do not add / in the beginning)
+    - cd Frontend/geohunt          # change 'Frontend' to where you have 'gradlew' (do not add / in the beginning)
     - ./gradlew test
   only:
     refs:
