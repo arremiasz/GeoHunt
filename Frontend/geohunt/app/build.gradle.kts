@@ -1,3 +1,6 @@
+import org.gradle.external.javadoc.StandardJavadocDocletOptions
+import org.gradle.external.javadoc.JavadocMemberLevel
+
 plugins {
     alias(libs.plugins.android.application)
 }
@@ -46,4 +49,39 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+}
+
+android.applicationVariants.all {
+    if (this.name == "debug") {
+        val variant = this
+
+        tasks.register<Javadoc>("generateAndroidJavadoc") {
+            description = "Generates Javadoc for the main source code"
+            group = "documentation"
+
+            // 1. CRITICAL FIX: Wait for compilation so R.java exists
+            dependsOn(variant.javaCompileProvider)
+
+            // 2. Don't stop on errors (Javadoc is very sensitive)
+            isFailOnError = false
+
+            // 3. Use the compile task's source (Your code + R.java + BuildConfig.java)
+            source(variant.javaCompileProvider.get().source)
+
+            doFirst {
+                classpath = files(
+                    android.bootClasspath,
+                    variant.javaCompileProvider.get().classpath
+                )
+            }
+
+            val options = options as StandardJavadocDocletOptions
+            options.memberLevel = JavadocMemberLevel.PRIVATE
+            options.links("https://docs.oracle.com/javase/8/docs/api/")
+            options.links("https://developer.android.com/reference/")
+            // 4. Ensure special characters don't break the build
+            options.encoding = "UTF-8"
+            options.charSet = "UTF-8"
+        }
+    }
 }

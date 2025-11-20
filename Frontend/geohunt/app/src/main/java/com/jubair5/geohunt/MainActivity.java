@@ -14,6 +14,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.jubair5.geohunt.menu.HomeFragment;
 import com.jubair5.geohunt.menu.MapFragment;
 import com.jubair5.geohunt.menu.ProfileFragment;
+import com.jubair5.geohunt.menu.ShopFragment;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -22,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
     private final Fragment homeFragment = new HomeFragment();
     private final Fragment mapFragment = new MapFragment();
     private final Fragment profileFragment = new ProfileFragment();
+    private final Fragment shopFragment = new ShopFragment();
     private Fragment active;
 
     @Override
@@ -33,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
         botNav = findViewById(R.id.bottom_navigation);
 
         if (savedInstanceState == null) {
+            fm.beginTransaction().add(R.id.fragment_container, shopFragment, "4").hide(shopFragment).commit();
             fm.beginTransaction().add(R.id.fragment_container, profileFragment, "3").hide(profileFragment).commit();
             fm.beginTransaction().add(R.id.fragment_container, mapFragment, "2").hide(mapFragment).commit();
             fm.beginTransaction().add(R.id.fragment_container, homeFragment, "1").commit();
@@ -63,6 +66,9 @@ public class MainActivity extends AppCompatActivity {
             } else if (itemId == R.id.nav_profile) {
                 selectedFragment = profileFragment;
                 title = "Profile";
+            } else if (itemId == R.id.nav_shop) {
+                selectedFragment = shopFragment;
+                title = "Shop";
             }
 
             if (selectedFragment != null) {
