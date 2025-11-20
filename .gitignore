@@ -203,3 +203,4 @@ fabric.properties
 
 !/gradle/wrapper/gradle-wrapper.jar
 .DS_Store
+/Experiments/aremiasz/postwoman/client/node_modules/
