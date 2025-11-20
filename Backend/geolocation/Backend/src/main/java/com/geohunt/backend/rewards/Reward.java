@@ -12,13 +12,16 @@ import lombok.Setter;
 @Setter
 public class Reward {
     @GeneratedValue(strategy= GenerationType.IDENTITY)
-    private @Id long id;
-    private String name;
-    private String rewardType;
-
+    public @Id long id;
+    public String name;
+    public String rewardType;
+    public String imagePath;
+    public double valueInPoints;
 
     public void update(Reward other){
         this.name = other.getName();
         this.rewardType = other.getRewardType();
+        this.imagePath = other.imagePath;
+        this.valueInPoints = other.valueInPoints;
     }
 }
