@@ -106,7 +106,7 @@ public class geohuntController {
             @ApiResponse(responseCode = "200", description = "Content Uploaded",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = Challenges.class))),
-            @ApiResponse(responseCode = "500", description = "User not found", content = @Content)})
+            @ApiResponse(responseCode = "500", description = "User not found.", content = @Content)})
     @PostMapping("/geohunt/customChallenge")
     public ResponseEntity customChallenge(@RequestParam double lat, @RequestParam double lng, @RequestParam long uid, @RequestBody String url){
         return geohuntService.customChallenge(lat, lng, uid, url);
