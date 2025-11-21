@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "Notifications Controller", description = "Operations relating to notifications")
+@Tag(name = "Notifications Controller", description = "Operations relating to notifications. Creating is managed through the websocket feature, where any notification sent gets added to the database.")
 @RestController
 @RequestMapping("/notifications")
 public class notifController {
