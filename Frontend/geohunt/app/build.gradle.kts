@@ -45,6 +45,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-maps:18.2.0")
     implementation(libs.play.services.location)
     implementation("nl.dionsegijn:konfetti:1.3.2")
+    implementation(files("/Users/aremiasz/Library/Android/sdk/platforms/android-36/android.jar"))
     annotationProcessor("com.github.bumptech.glide:compiler:4.12.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
@@ -56,22 +57,23 @@ android.applicationVariants.all {
         val variant = this
 
         tasks.register<Javadoc>("generateAndroidJavadoc") {
-            description = "Generates Javadoc for the main source code"
+            description = "Generates clean Javadoc for the main source code"
             group = "documentation"
 
-            // 1. CRITICAL FIX: Wait for compilation so R.java exists
             dependsOn(variant.javaCompileProvider)
-
-            // 2. Don't stop on errors (Javadoc is very sensitive)
             isFailOnError = false
 
-            // 3. Use the compile task's source (Your code + R.java + BuildConfig.java)
-            source(variant.javaCompileProvider.get().source)
+            // 1. CLEAN SOURCE: Only read files from src/main/java
+            // This automatically excludes R.java, BuildConfig, and Dagger files
+            source(android.sourceSets.getByName("main").java.srcDirs)
 
             doFirst {
                 classpath = files(
                     android.bootClasspath,
-                    variant.javaCompileProvider.get().classpath
+                    variant.javaCompileProvider.get().classpath,
+                    // 2. RESOLVE REFS: Add compiled classes to classpath
+                    // This lets Javadoc 'know' what R.id.xyz is, without creating a page for R
+                    variant.javaCompileProvider.get().destinationDirectory
                 )
             }
 
@@ -79,9 +81,12 @@ android.applicationVariants.all {
             options.memberLevel = JavadocMemberLevel.PRIVATE
             options.links("https://docs.oracle.com/javase/8/docs/api/")
             options.links("https://developer.android.com/reference/")
-            // 4. Ensure special characters don't break the build
             options.encoding = "UTF-8"
-            options.charSet = "UTF-8"
+
+            // FIX: Assign a List, don't pass arguments
+            options.noQualifier(listOf(
+                "all"
+            ))
         }
     }
 }
