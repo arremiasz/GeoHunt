@@ -1,7 +1,3 @@
-/**
- * Fragment containing the home screen, with single and multiplayer options
- * @author Alex Remiasz
- */
 package com.jubair5.geohunt.menu;
 
 import android.Manifest;
@@ -39,6 +35,10 @@ import com.google.android.gms.maps.model.MapStyleOptions;
 import com.jubair5.geohunt.R;
 import com.jubair5.geohunt.game.GameActivity;
 
+/**
+ * Fragment containing the home screen, with single and multiplayer options
+ * @author Alex Remiasz
+ */
 public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
     private static final String TAG = "HomeFragment";

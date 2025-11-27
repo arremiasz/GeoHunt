@@ -1,7 +1,3 @@
-/**
- * Activity for handling login/signup fragments
- * @author Alex Remiasz
- */
 package com.jubair5.geohunt.auth;
 
 import android.os.Bundle;
@@ -10,6 +6,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.jubair5.geohunt.R;
 
+/**
+ * Activity for handling login/signup fragments
+ * @author Alex Remiasz
+ */
 public class AuthenticationActivity extends AppCompatActivity {
 
     @Override
