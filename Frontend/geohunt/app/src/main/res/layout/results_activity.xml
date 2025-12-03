@@ -90,6 +90,25 @@
 
             </androidx.cardview.widget.CardView>
 
+            <!-- Rating Section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Rate this Challenge"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <RatingBar
+                android:id="@+id/rating_bar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:numStars="5"
+                android:stepSize="1.0"
+                android:isIndicator="false"
+                android:layout_gravity="center_horizontal" />
+
             <!-- Gallery Section -->
             <TextView
                 android:layout_width="wrap_content"

@@ -3,12 +3,15 @@ package com.jubair5.geohunt.game;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Base64;
 import android.util.Log;
 import android.widget.Button;
-import android.widget.ImageView;
+import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -17,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -61,6 +65,7 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
     protected KonfettiView konfettiView;
     protected MapView mapView;
     protected GoogleMap googleMap;
+    protected RatingBar ratingBar;
     protected RecyclerView galleryRecyclerView;
     protected PhotoAdapter photoAdapter;
     protected List<Photo> photosList;
@@ -70,6 +75,7 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
     protected double targetLat;
     protected double targetLng;
     protected boolean targetLocationLoaded = false;
+    protected boolean userHasRated = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,12 +103,20 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
         goHomeButton = findViewById(R.id.go_home_button);
         konfettiView = findViewById(R.id.konfetti_view);
         mapView = findViewById(R.id.results_map_view);
+        ratingBar = findViewById(R.id.rating_bar);
         galleryRecyclerView = findViewById(R.id.gallery_recycler_view);
 
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
 
-        // Setup RecyclerView for gallery
+        ratingBar.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
+            if (fromUser) {
+                userHasRated = true;
+                ratingBar.setProgressTintList(ColorStateList.valueOf(Color.parseColor("#FFD700"))); // Gold
+                submitRating(rating);
+            }
+        });
+
         photosList = new ArrayList<>();
         photoAdapter = new PhotoAdapter(this, photosList);
         galleryRecyclerView.setAdapter(photoAdapter);
@@ -128,7 +142,6 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
             distanceText.setText("?");
             distanceUnitLabel.setText("Error");
         }
-
 
         challengeId = getIntent().getIntExtra("challengeId", -1);
         guessLat = getIntent().getDoubleExtra("guessLat", 0.0);
@@ -278,6 +291,12 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
                         targetLocationLoaded = true;
                         updateMap();
 
+                        if (!userHasRated) {
+                            double rating = response.optDouble("rating", 0.0);
+                            ratingBar.setRating((float) rating);
+                            ratingBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
+                        }
+
                         JSONArray submissions = response.getJSONArray("submissions");
                         photosList.clear();
                         for (int i = 0; i < submissions.length(); i++) {
@@ -301,6 +320,32 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
                 });
 
         VolleySingleton.getInstance(this).addToRequestQueue(jsonObjectRequest);
+    }
+
+    /**
+     * Submits the user's rating for the challenge.
+     * 
+     * @param rating The rating value (1-5).
+     */
+    protected void submitRating(float rating) {
+        if (challengeId == -1)
+            return;
+
+        String url = ApiConstants.BASE_URL + ApiConstants.RATE_CHALLENGE_ENDPOINT + "?cid=" + challengeId + "&rating="
+                + (int) rating;
+        Log.d(TAG, "Submitting rating: " + url);
+
+        StringRequest ratingRequest = new StringRequest(Request.Method.POST, url,
+                response -> {
+                    Log.d(TAG, "Rating submitted successfully: " + response);
+                    Toast.makeText(this, "Rating submitted!", Toast.LENGTH_SHORT).show();
+                },
+                error -> {
+                    Log.e(TAG, "Error submitting rating", error);
+                    Toast.makeText(this, "Failed to submit rating", Toast.LENGTH_SHORT).show();
+                });
+
+        VolleySingleton.getInstance(this).addToRequestQueue(ratingRequest);
     }
 
     /**
