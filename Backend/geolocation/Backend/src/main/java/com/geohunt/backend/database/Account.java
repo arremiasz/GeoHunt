@@ -20,6 +20,7 @@ public class Account {
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private @Id long id;
     private String username;
+    @Column(columnDefinition = "mediumtext")
     private String pfp;
     private String password;
     private String email;
