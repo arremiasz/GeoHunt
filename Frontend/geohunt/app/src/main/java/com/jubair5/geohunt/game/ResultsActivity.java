@@ -10,12 +10,14 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Base64;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.Request;
@@ -67,8 +69,13 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
     protected GoogleMap googleMap;
     protected RatingBar ratingBar;
     protected RecyclerView galleryRecyclerView;
+    protected Button loadMorePhotosButton;
     protected PhotoAdapter photoAdapter;
-    protected List<Photo> photosList;
+    protected List<Photo> allPhotosList;
+    protected List<Photo> displayedPhotosList;
+    protected RecyclerView commentsRecyclerView;
+    protected CommentAdapter commentAdapter;
+    protected List<Comment> commentsList;
     protected int challengeId;
     protected double guessLat;
     protected double guessLng;
@@ -105,6 +112,8 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
         mapView = findViewById(R.id.results_map_view);
         ratingBar = findViewById(R.id.rating_bar);
         galleryRecyclerView = findViewById(R.id.gallery_recycler_view);
+        loadMorePhotosButton = findViewById(R.id.load_more_photos_button);
+        commentsRecyclerView = findViewById(R.id.comments_recycler_view);
 
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
@@ -117,9 +126,18 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
             }
         });
 
-        photosList = new ArrayList<>();
-        photoAdapter = new PhotoAdapter(this, photosList);
+        allPhotosList = new ArrayList<>();
+        displayedPhotosList = new ArrayList<>();
+        photoAdapter = new PhotoAdapter(this, displayedPhotosList);
+        galleryRecyclerView.setLayoutManager(new androidx.recyclerview.widget.GridLayoutManager(this, 2));
         galleryRecyclerView.setAdapter(photoAdapter);
+
+        loadMorePhotosButton.setOnClickListener(v -> loadMorePhotos());
+
+        commentsList = new ArrayList<>();
+        commentAdapter = new CommentAdapter(this, commentsList);
+        commentsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        commentsRecyclerView.setAdapter(commentAdapter);
     }
 
     /**
@@ -296,19 +314,31 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
                             ratingBar.setRating((float) rating);
                             ratingBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
                         }
-
                         JSONArray submissions = response.getJSONArray("submissions");
-                        photosList.clear();
+                        allPhotosList.clear();
                         for (int i = 0; i < submissions.length(); i++) {
                             JSONObject submission = submissions.getJSONObject(i);
                             int submissionUserId = submission.optInt("uid", -1);
                             if (submissionUserId != userId) {
                                 Photo photo = new Photo(submission);
-                                photosList.add(photo);
+                                allPhotosList.add(photo);
                             }
                         }
-                        photoAdapter.notifyDataSetChanged();
-                        Log.d(TAG, "Loaded " + photosList.size() + " gallery photos");
+                        updateDisplayedPhotos();
+                        Log.d(TAG, "Loaded " + allPhotosList.size() + " gallery photos");
+
+                        JSONArray commentsArray = response.optJSONArray("comments");
+                        if (commentsArray != null) {
+                            commentsList.clear();
+                            for (int i = 0; i < commentsArray.length(); i++) {
+                                JSONObject commentObj = commentsArray.getJSONObject(i);
+                                Comment comment = new Comment(commentObj);
+                                commentsList.add(comment);
+                                fetchUserDetailsForComment(comment);
+                            }
+                            commentAdapter.notifyDataSetChanged();
+                        }
+
                     } catch (JSONException e) {
                         Log.e(TAG, "Error parsing challenge details JSON", e);
                         Toast.makeText(this, "Failed to load results details", Toast.LENGTH_SHORT).show();
@@ -346,6 +376,57 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
                 });
 
         VolleySingleton.getInstance(this).addToRequestQueue(ratingRequest);
+    }
+
+    /**
+     * Updates the displayed photos list based on the limit (initial 6).
+     */
+    private void updateDisplayedPhotos() {
+        displayedPhotosList.clear();
+        int limit = 6;
+        if (allPhotosList.size() > limit) {
+            for (int i = 0; i < limit; i++) {
+                displayedPhotosList.add(allPhotosList.get(i));
+            }
+            loadMorePhotosButton.setVisibility(View.VISIBLE);
+        } else {
+            displayedPhotosList.addAll(allPhotosList);
+            loadMorePhotosButton.setVisibility(View.GONE);
+        }
+        photoAdapter.notifyDataSetChanged();
+    }
+
+    /**
+     * Loads the rest of the photos into the displayed list.
+     */
+    private void loadMorePhotos() {
+        displayedPhotosList.clear();
+        displayedPhotosList.addAll(allPhotosList);
+        photoAdapter.notifyDataSetChanged();
+        loadMorePhotosButton.setVisibility(View.GONE);
+    }
+
+    /**
+     * Fetches user details (username, profile photo) for a comment.
+     */
+    private void fetchUserDetailsForComment(Comment comment) {
+        String url = ApiConstants.BASE_URL + ApiConstants.GET_ACCOUNT_BY_ID_ENDPOINT + "?id=" + comment.getUid();
+
+        JsonObjectRequest userRequest = new JsonObjectRequest(Request.Method.GET, url, null,
+                response -> {
+                    try {
+                        String username = response.getString("username");
+                        String profilePhoto = response.optString("pfp", "");
+                        comment.setUsername(username);
+                        comment.setProfilePhotoUrl(profilePhoto);
+                        commentAdapter.notifyDataSetChanged();
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Error parsing user details for comment", e);
+                    }
+                },
+                error -> Log.e(TAG, "Error fetching user details for comment", error));
+
+        VolleySingleton.getInstance(this).addToRequestQueue(userRequest);
     }
 
     /**
