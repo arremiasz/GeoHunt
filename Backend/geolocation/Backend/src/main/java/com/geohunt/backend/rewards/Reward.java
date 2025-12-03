@@ -1,11 +1,12 @@
 package com.geohunt.backend.rewards;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.geohunt.backend.images.Image;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.List;
 
 @Entity
 @Getter
@@ -15,13 +16,15 @@ public class Reward {
     public @Id long id;
     public String name;
     public String rewardType;
-    public String imagePath;
     public double valueInPoints;
+
+    @OneToOne
+    public Image rewardImage;
 
     public void update(Reward other){
         this.name = other.getName();
         this.rewardType = other.getRewardType();
-        this.imagePath = other.imagePath;
         this.valueInPoints = other.valueInPoints;
+        this.rewardImage = other.rewardImage;
     }
 }
