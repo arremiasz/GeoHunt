@@ -26,13 +26,14 @@
         android:id="@+id/distance_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="96sp"
+
+        android:textSize="80sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@+id/distance_unit_label"
+
+        android:layout_marginTop="25dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/results_title"
-        app:layout_constraintVertical_chainStyle="packed"
         tools:text="123" />
 
     <TextView
@@ -40,11 +41,46 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="24sp"
-        app:layout_constraintBottom_toTopOf="@+id/play_again_button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/distance_text"
         tools:text="miles" />
+
+    <TextView
+        android:id="@+id/time_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:textSize="80sp"
+
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/distance_unit_label"
+        tools:text="6:20" />
+
+    <TextView
+        android:id="@+id/time_unit_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="24sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/time_text"
+        tools:text="seconds" />
+
+    <TextView
+        android:id="@+id/currency_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:textSize="80sp"
+
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/time_unit_label"
+        tools:text="500" />
 
     <Button
         android:id="@+id/play_again_button"

@@ -24,6 +24,8 @@ public class ResultsActivity extends AppCompatActivity {
 
     protected TextView distanceText;
     protected TextView distanceUnitLabel;
+    protected TextView timeText;
+    protected TextView timeUnitLabel;
     protected Button playAgainButton;
     protected Button goHomeButton;
     protected KonfettiView konfettiView;
@@ -49,16 +51,24 @@ public class ResultsActivity extends AppCompatActivity {
     protected void setupViews() {
         distanceText = findViewById(R.id.distance_text);
         distanceUnitLabel = findViewById(R.id.distance_unit_label);
+
+        timeText = findViewById(R.id.time_text);
+        timeUnitLabel = findViewById(R.id.time_unit_label);
+
         playAgainButton = findViewById(R.id.play_again_button);
         goHomeButton = findViewById(R.id.go_home_button);
         konfettiView = findViewById(R.id.konfetti_view);
     }
+
 
     /**
      * Parses the results from the intent and updates the UI.
      */
     protected void displayResults() {
         double results = getIntent().getDoubleExtra("results", -1);
+        int time = getIntent().getIntExtra("time", -1);
+        int currency = getCurrency(results, time);
+
         if (results != -1) {
             if (results <= 0.1) {
                 double distanceInFeet = results * 5280;
@@ -74,6 +84,27 @@ public class ResultsActivity extends AppCompatActivity {
             distanceText.setText("?");
             distanceUnitLabel.setText("Error");
         }
+
+        if (time != -1) {
+            int minuets = time/60;
+            int seconds = time % 60;
+
+            timeText.setText(minuets + ":" + seconds);
+
+
+        } else {
+            timeText.setText("?");
+            timeUnitLabel.setText("Error");
+        }
+
+    }
+
+    private int getCurrency(double results, int time) {
+        return 0;
+    }
+
+    private void getRewards(){
+
     }
 
     /**

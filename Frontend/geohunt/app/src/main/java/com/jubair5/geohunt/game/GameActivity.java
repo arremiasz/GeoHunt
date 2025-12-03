@@ -350,8 +350,10 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         StringRequest submissionRequest = new StringRequest(Request.Method.POST, url,
                 response -> {
                     Log.d(TAG, "Submission successful: " + response);
+                    int time = stopStopwatch();
                     Intent intent = new Intent(GameActivity.this, ResultsActivity.class);
                     intent.putExtra("results", Double.parseDouble(response));
+                    intent.putExtra("time", time);
                     startActivity(intent);
                     finish();
                 },
