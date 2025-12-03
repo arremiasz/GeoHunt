@@ -78,14 +78,4 @@ public class ImageService {
         }
     }
 
-    // Update Image
-    public Image updateImage(MultipartFile newImageFile, String folder){
-
-    }
-
-    // Image Exists
-    public boolean imageExists(){
-
-    }
-
 }
