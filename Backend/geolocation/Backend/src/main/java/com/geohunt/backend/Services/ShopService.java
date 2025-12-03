@@ -33,7 +33,7 @@ public class ShopService {
     public boolean doesExist(String name) {
         Optional<Shop> item = shopRepository.findByName(name);
 
-        return item.map(shop -> true).orElse(false);
+        return item.isPresent();
     }
 
     public ResponseEntity<Shop> addItem(Shop shop) {
