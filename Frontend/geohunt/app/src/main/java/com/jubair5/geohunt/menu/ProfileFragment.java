@@ -141,6 +141,8 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         String username = prefs.getString(KEY_USER_NAME, "User");
         usernameLabel.setText("@" + username);
 
+        loadProfilePicture();
+
         setupRecyclerView();
         fetchSubmissions();
 
@@ -168,12 +170,26 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
     private void startImageCrop() {
         CropImageOptions options = new CropImageOptions();
         options.imageSourceIncludeGallery = true;
-        options.imageSourceIncludeCamera = false; // User requested camera roll, can enable camera if needed but
-                                                  // sticking to request
+        options.imageSourceIncludeCamera = false;
         options.aspectRatioX = 1;
         options.aspectRatioY = 1;
         options.fixAspectRatio = true;
         cropImage.launch(new CropImageContractOptions(null, options));
+    }
+
+    /**
+     * Loads the user's profile picture from SharedPreferences and displays it.
+     * Falls back to the placeholder icon if no profile picture is available.
+     */
+    private void loadProfilePicture() {
+        String pfp = prefs.getString(KEY_USER_PFP, "");
+        if (pfp != null && !pfp.isEmpty()) {
+            byte[] decodedImage = Base64.decode(pfp, Base64.DEFAULT);
+            Bitmap bitmap = BitmapFactory.decodeByteArray(decodedImage, 0, decodedImage.length);
+            profileIcon.setImageBitmap(bitmap);
+        } else {
+            profileIcon.setImageResource(android.R.drawable.ic_menu_gallery);
+        }
     }
 
     /**
@@ -234,7 +250,16 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         // Reset PFP state
         isPfpChanged = false;
         newPfpBitmap = null;
-        editProfileImage.setImageResource(android.R.drawable.ic_menu_gallery); // Or load current PFP if we had it
+
+        // Load current profile picture in edit view
+        String pfp = prefs.getString(KEY_USER_PFP, "");
+        if (pfp != null && !pfp.isEmpty()) {
+            byte[] decodedImage = Base64.decode(pfp, Base64.DEFAULT);
+            Bitmap bitmap = BitmapFactory.decodeByteArray(decodedImage, 0, decodedImage.length);
+            editProfileImage.setImageBitmap(bitmap);
+        } else {
+            editProfileImage.setImageResource(android.R.drawable.ic_menu_gallery);
+        }
     }
 
     /**
@@ -274,7 +299,6 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         if (isUserInfoChanged) {
             validatePasswordAndContinue(newUsername, newEmail, newPassword, currentPassword);
         } else if (isPfpChanged) {
-            // Only PFP changed, skip password validation
             performUpdate(newUsername, newEmail, newPassword);
         } else {
             Toast.makeText(getContext(), "No changes to save", Toast.LENGTH_SHORT).show();
@@ -402,7 +426,10 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
                     if (!newEmail.isBlank()) {
                         editor.putString(KEY_USER_EMAIL, newEmail);
                     }
-                    // Do NOT store pfp in shared prefs
+                    if (isPfpChanged && newPfpBitmap != null) {
+                        editor.putString(KEY_USER_PFP, bitmapToString(newPfpBitmap));
+                        profileIcon.setImageBitmap(newPfpBitmap);
+                    }
                     editor.apply();
 
                     showDisplayOptions();
