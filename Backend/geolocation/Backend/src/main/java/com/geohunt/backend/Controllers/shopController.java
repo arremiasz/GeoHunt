@@ -1,6 +1,5 @@
 package com.geohunt.backend.Controllers;
 
-import com.geohunt.backend.Services.GeohuntService;
 import com.geohunt.backend.Services.ShopService;
 import com.geohunt.backend.database.Shop;
 import org.springframework.beans.factory.annotation.Autowired;

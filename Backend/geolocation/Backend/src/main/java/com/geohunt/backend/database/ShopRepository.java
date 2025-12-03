@@ -9,7 +9,4 @@ import java.util.Optional;
 @Repository
 public interface ShopRepository extends JpaRepository<Shop, Long> {
     Optional<Shop> findByName(String name);
-
-    @Transactional
-    void deleteByShop(Shop shop);
 }

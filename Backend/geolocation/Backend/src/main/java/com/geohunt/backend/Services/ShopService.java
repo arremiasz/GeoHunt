@@ -26,9 +26,7 @@ public class ShopService {
 
     public ResponseEntity<Shop> getItem(String name){
         Optional<Shop> item = shopRepository.findByName(name);
-        if(item.isEmpty()){
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-        return ResponseEntity.status(HttpStatus.OK).body(item.get());
+
+        return item.isPresent() ? ResponseEntity.status(HttpStatus.OK).body(item.get()) : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 }
