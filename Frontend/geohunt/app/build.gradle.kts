@@ -1,3 +1,6 @@
+import org.gradle.external.javadoc.StandardJavadocDocletOptions
+import org.gradle.external.javadoc.JavadocMemberLevel
+
 plugins {
     alias(libs.plugins.android.application)
 }
@@ -46,4 +49,43 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+}
+
+android.applicationVariants.all {
+    if (this.name == "debug") {
+        val variant = this
+
+        tasks.register<Javadoc>("generateAndroidJavadoc") {
+            description = "Generates clean Javadoc for the main source code"
+            group = "documentation"
+
+            dependsOn(variant.javaCompileProvider)
+            isFailOnError = false
+
+            // 1. CLEAN SOURCE: Only read files from src/main/java
+            // This automatically excludes R.java, BuildConfig, and Dagger files
+            source(android.sourceSets.getByName("main").java.srcDirs)
+
+            doFirst {
+                classpath = files(
+                    android.bootClasspath,
+                    variant.javaCompileProvider.get().classpath,
+                    // 2. RESOLVE REFS: Add compiled classes to classpath
+                    // This lets Javadoc 'know' what R.id.xyz is, without creating a page for R
+                    variant.javaCompileProvider.get().destinationDirectory
+                )
+            }
+
+            val options = options as StandardJavadocDocletOptions
+            options.memberLevel = JavadocMemberLevel.PRIVATE
+            options.links("https://docs.oracle.com/javase/8/docs/api/")
+            options.links("https://developer.android.com/reference/")
+            options.encoding = "UTF-8"
+
+            // FIX: Assign a List, don't pass arguments
+            options.noQualifier(listOf(
+                "all"
+            ))
+        }
+    }
 }

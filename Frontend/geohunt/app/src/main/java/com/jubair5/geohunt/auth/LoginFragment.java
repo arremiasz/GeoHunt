@@ -1,7 +1,3 @@
-/**
- * Login page
- * @author Nathan Imig
- */
 package com.jubair5.geohunt.auth;
 
 import android.app.Activity;
@@ -39,6 +35,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Login page
+ * @author Nathan Imig
+ */
 public class LoginFragment extends Fragment {
 
     private static final String TAG = "LoginFragment";
