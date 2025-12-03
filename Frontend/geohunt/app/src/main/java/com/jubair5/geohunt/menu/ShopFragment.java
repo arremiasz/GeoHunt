@@ -23,6 +23,7 @@ import com.jubair5.geohunt.network.ApiConstants;
 import com.jubair5.geohunt.network.VolleySingleton;
 import com.jubair5.geohunt.shop.ShopAdapter;
 import com.jubair5.geohunt.shop.ShopItem;
+import com.android.volley.toolbox.JsonArrayRequest;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -34,6 +35,7 @@ import java.util.List;
 /**
  * Fragment for the shop view which allows users to purchase
  * items for future games or profile customizations
+ * 
  * @author Alex Remiasz
  */
 public class ShopFragment extends Fragment {
@@ -46,12 +48,13 @@ public class ShopFragment extends Fragment {
     private RecyclerView shopRecyclerView;
     private ShopAdapter shopAdapter;
     private List<ShopItem> shopItems;
-    private int currentPoints = 0;
+    private int currentPoints;
     private SharedPreferences prefs;
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+            @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_shop, container, false);
 
         prefs = requireActivity().getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
@@ -61,21 +64,47 @@ public class ShopFragment extends Fragment {
         shopRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
         setupShopItems();
+        fetchShopItems();
         fetchPoints();
 
         return root;
     }
 
     /**
-     * Sets up the shop items with their titles and costs.
+     * Sets up the shop items list and adapter.
      */
     private void setupShopItems() {
         shopItems = new ArrayList<>();
-        shopItems.add(new ShopItem("Heading Hint", 100));
-        shopItems.add(new ShopItem("Distance Hint", 100));
-
         shopAdapter = new ShopAdapter(shopItems, this::onPurchase);
         shopRecyclerView.setAdapter(shopAdapter);
+    }
+
+    /**
+     * Fetches shop items from the server.
+     */
+    private void fetchShopItems() {
+        String url = ApiConstants.BASE_URL + ApiConstants.GET_SHOP_ITEMS_ENDPOINT;
+
+        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
+                response -> {
+                    try {
+                        shopItems.clear();
+                        for (int i = 0; i < response.length(); i++) {
+                            JSONObject itemJson = response.getJSONObject(i);
+                            shopItems.add(new ShopItem(itemJson));
+                        }
+                        shopAdapter.notifyDataSetChanged();
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Error parsing shop items", e);
+                        Toast.makeText(getContext(), "Error loading shop items.", Toast.LENGTH_SHORT).show();
+                    }
+                },
+                error -> {
+                    Log.e(TAG, "Error fetching shop items", error);
+                    Toast.makeText(getContext(), "Failed to load shop. Please try again.", Toast.LENGTH_SHORT).show();
+                });
+
+        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);
     }
 
     /**
@@ -93,27 +122,12 @@ public class ShopFragment extends Fragment {
         StringRequest request = new StringRequest(Request.Method.GET, url,
                 response -> {
                     try {
-                        // Assuming response is a simple integer string or JSON with "points" field
-                        // If it's a raw integer string:
                         currentPoints = Integer.parseInt(response.trim());
-                        // If it's JSON:
-                        // JSONObject json = new JSONObject(response);
-                        // currentPoints = json.getInt("points");
-                        
-                        updatePointsDisplay();
                     } catch (NumberFormatException e) {
                         Log.e(TAG, "Error parsing points response", e);
-                        // Try parsing as JSON if simple int fails
-                        try {
-                             JSONObject json = new JSONObject(response);
-                             if (json.has("points")) {
-                                 currentPoints = json.getInt("points");
-                                 updatePointsDisplay();
-                             }
-                        } catch (JSONException jsonException) {
-                             Log.e(TAG, "Error parsing points JSON", jsonException);
-                        }
+                        currentPoints = 0;
                     }
+                    updatePointsDisplay();
                 },
                 error -> Log.e(TAG, "Error fetching points", error));
 
@@ -122,13 +136,13 @@ public class ShopFragment extends Fragment {
 
     private void updatePointsDisplay() {
         if (currentPointsView != null) {
-            fetchPoints();
             currentPointsView.setText("Current Points: " + currentPoints);
         }
     }
 
     /**
      * Handles the purchase of an item.
+     * 
      * @param item The item being purchased.
      */
     private void onPurchase(ShopItem item) {
@@ -151,14 +165,16 @@ public class ShopFragment extends Fragment {
 
     /**
      * Updates the user's points on the server.
+     * 
      * @param newPoints The new points balance.
-     * @param item The item purchased (for logging/toast).
+     * @param item      The item purchased (for logging/toast).
      */
     private void updatePointsOnServer(int newPoints, ShopItem item) {
         int userId = prefs.getInt(KEY_USER_ID, -1);
-        if (userId == -1) return;
+        if (userId == -1)
+            return;
 
-        String url = ApiConstants.BASE_URL + ApiConstants.PUT_POINTS_ENDPOINT + "?id=" + userId; // Assuming ID is query param or in body
+        String url = ApiConstants.BASE_URL + ApiConstants.PUT_POINTS_ENDPOINT + "?id=" + userId;
 
         JSONObject requestBody = new JSONObject();
         try {
@@ -171,7 +187,7 @@ public class ShopFragment extends Fragment {
         StringRequest request = new StringRequest(Request.Method.PUT, url,
                 response -> {
                     Log.d(TAG, "Points updated successfully");
-                    updatePointsDisplay();
+                    fetchPoints();
                     Toast.makeText(getContext(), "Purchased " + item.getTitle() + "!", Toast.LENGTH_SHORT).show();
                 },
                 error -> {
