@@ -99,8 +99,14 @@ public class ResultsActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Returns an amount of currency based off of results and time
+     * @param results
+     * @param time
+     * @return amount of currency
+     */
     private int getCurrency(double results, int time) {
-        return 0;
+        return 500 * ;
     }
 
     private void getRewards(){
