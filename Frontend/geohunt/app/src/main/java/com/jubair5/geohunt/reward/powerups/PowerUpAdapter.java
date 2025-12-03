@@ -32,7 +32,7 @@ public class PowerUpAdapter extends RecyclerView.Adapter<PowerUpAdapter.ViewHold
 
 
     public interface OnPowerUpClickListener {
-        void onFriendClick(PowerUp powerUp);
+        void onPowerUpClick(PowerUp powerUp);
     }
 
     public PowerUpAdapter(Context context, List<PowerUp> powerUps, OnPowerUpClickListener listener){

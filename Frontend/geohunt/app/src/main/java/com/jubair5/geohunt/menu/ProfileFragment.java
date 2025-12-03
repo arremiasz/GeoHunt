@@ -36,6 +36,8 @@ import com.jubair5.geohunt.places.PlaceDetailActivity;
 import com.jubair5.geohunt.places.PlacesAdapter;
 import com.jubair5.geohunt.network.ApiConstants;
 import com.jubair5.geohunt.network.VolleySingleton;
+import com.jubair5.geohunt.reward.powerups.PowerUp;
+import com.jubair5.geohunt.reward.powerups.PowerUpAdapter;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -49,7 +51,7 @@ import java.util.List;
  * Displays user information, places, statistics and account settings.
  * @author Alex Remiasz
  */
-public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceClickListener {
+public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceClickListener, PowerUpAdapter.OnPowerUpClickListener {
 
     private static final String TAG = "ProfileFragment";
     private static final String SHARED_PREFS_NAME = "GeoHuntPrefs";
@@ -66,6 +68,9 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
     private RecyclerView placesRecyclerView;
     private PlacesAdapter placesAdapter;
     private List<Place> placesList;
+    private RecyclerView powerUpsRecyclerView;
+    private PowerUpAdapter powerUpAdapter;
+    private List<PowerUp> powerUpList;
 
     private SharedPreferences prefs;
     private View root;
@@ -102,11 +107,13 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         cancelButton = root.findViewById(R.id.cancel_button);
         logoutButton = root.findViewById(R.id.logout_button);
         placesRecyclerView = root.findViewById(R.id.places_recycler_view);
+        powerUpsRecyclerView = root.findViewById(R.id.powerUp_recycler_view);
 
         String username = prefs.getString(KEY_USER_NAME, "User");
         usernameLabel.setText("@" + username);
 
-        setupRecyclerView();
+        setupPlaceRecyclerView();
+        setupPowerUpRecyclerView();
         fetchSubmissions();
 
         editButton.setOnClickListener(v -> showEditOptions());
@@ -126,10 +133,52 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
     /**
      * Sets up the RecyclerView for displaying places.
      */
-    private void setupRecyclerView() {
+    private void setupPlaceRecyclerView() {
         placesList = new ArrayList<>();
         placesAdapter = new PlacesAdapter(getContext(), placesList, this);
         placesRecyclerView.setAdapter(placesAdapter);
+    }
+
+    /**
+     * Sets up the RecyclerView for displaying power-ups.
+     */
+    private void setupPowerUpRecyclerView() {
+        powerUpList = new ArrayList<>();
+        powerUpAdapter = new PowerUpAdapter(getContext(), powerUpList, this);
+        powerUpsRecyclerView.setAdapter(powerUpAdapter);
+    }
+
+    /**
+     * Fetches the user's submissions from the server.
+     */
+    private void getSubmissions() {
+        int userId = prefs.getInt(KEY_USER_ID, -1);
+        if (userId == -1) {
+            Log.e(TAG, "User ID not found in shared preferences.");
+            return;
+        }
+
+        String url = ApiConstants.BASE_URL + ApiConstants.GET_POWERUPS_ENDPOINT + "?id=" + userId;
+
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null,
+                response -> {
+                    Log.d(TAG, "Custom Location Response: " + response.toString());
+                    try {
+                        placesList.clear();
+                        for (int i = response.length() - 1; i >= 0; i--) {
+                            JSONObject placeObject = response.getJSONObject(i);
+                            placesList.add(new Place(placeObject));
+                        }
+                        placesAdapter.notifyDataSetChanged();
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Error parsing places JSON", e);
+                    }
+                },
+                error -> {
+                    Log.e(TAG, "Error fetching places", error);
+                });
+
+        VolleySingleton.getInstance(requireContext()).addToRequestQueue(jsonArrayRequest);
     }
 
     /**
@@ -441,5 +490,10 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         intent.putExtra("LATITUDE", place.getLatitude());
         intent.putExtra("LONGITUDE", place.getLongitude());
         activityLauncher.launch(intent);
+    }
+
+    @Override
+    public void onPowerUpClick(PowerUp powerUp) {
+
     }
 }

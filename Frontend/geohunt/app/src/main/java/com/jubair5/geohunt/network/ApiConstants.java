@@ -6,6 +6,8 @@ package com.jubair5.geohunt.network;
  */
 public final class ApiConstants {
 
+
+
     private ApiConstants() {}
 
     // Base URL for all API calls
@@ -42,5 +44,7 @@ public final class ApiConstants {
     public static final String Reject_Friend_Request_ENDPOINT= "/friends/reject";
     public static final String Remove_FRIEND = "/friends/remove";
 
+    // PowerUp EndPoints
+    public static final String GET_POWERUPS_ENDPOINT = "";
 
 }
