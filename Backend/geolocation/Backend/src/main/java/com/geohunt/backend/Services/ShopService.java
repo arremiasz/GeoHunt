@@ -29,4 +29,18 @@ public class ShopService {
 
         return item.map(shop -> ResponseEntity.status(HttpStatus.OK).body(shop)).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
+
+    public boolean doesExist(String name) {
+        Optional<Shop> item = shopRepository.findByName(name);
+
+        return item.map(shop -> true).orElse(false);
+    }
+
+    public ResponseEntity<Shop> addItem(Shop shop) {
+        if (doesExist(shop.getName())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(shop);
+        }
+        shopRepository.save(shop);
+        return ResponseEntity.status(HttpStatus.CREATED).body(shop);
+    }
 }
