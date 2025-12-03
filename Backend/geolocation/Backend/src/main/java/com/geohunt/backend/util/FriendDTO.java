@@ -1,6 +1,6 @@
 package com.geohunt.backend.util;
 
-import com.geohunt.backend.account.Account;
+import com.geohunt.backend.database.Account;
 import lombok.Getter;
 import lombok.Setter;
 
