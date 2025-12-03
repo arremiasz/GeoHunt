@@ -2,15 +2,18 @@ package com.jubair5.geohunt.network;
 
 /**
  * A final class to hold all global API constants for the application.
+ * 
  * @author Alex Remiasz
  */
 public final class ApiConstants {
 
-    private ApiConstants() {}
+    private ApiConstants() {
+    }
 
     // Base URL for all API calls
-    public static final String BASE_URL = "http://coms-3090-030.class.las.iastate.edu:8080";
-//    public static final String BASE_URL = "https://6bfe1ae1-ae39-462f-910e-7d53b5da9867.mock.pstmn.io";
+    // public static final String BASE_URL =
+    // "http://coms-3090-030.class.las.iastate.edu:8080";
+    public static final String BASE_URL = "http://10.0.2.2:3000";
 
     // Account Endpoints
     public static final String SIGNUP_ENDPOINT = "/signup";
@@ -28,6 +31,6 @@ public final class ApiConstants {
     // Location Endpoints
     public static final String GET_GENERATED_LOCATIONS_ENDPOINT = "/geohunt/getLocation";
     public static final String POST_SUBMISSION_ENDPOINT = "/geohunt/submission";
-
+    public static final String GET_CHALLENGE_BY_ID_ENDPOINT = "/geohunt/getChallengeByID";
 
 }
