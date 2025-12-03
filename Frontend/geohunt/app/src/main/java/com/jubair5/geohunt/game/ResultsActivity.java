@@ -106,7 +106,7 @@ public class ResultsActivity extends AppCompatActivity {
      * @return amount of currency
      */
     private int getCurrency(double results, int time) {
-        return 500 * ;
+        return 500 * (1/((int) results * (time/60) ));
     }
 
     private void getRewards(){

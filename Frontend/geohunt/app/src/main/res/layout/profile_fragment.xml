@@ -45,6 +45,8 @@
                 android:backgroundTint="#AFAFAF"
                 android:layout_marginTop="30dp"/>
 
+
+            <!-- Places -->
             <TextView
                 android:id="@+id/places_label"
                 android:layout_width="wrap_content"
@@ -61,6 +63,25 @@
                 android:layout_height="wrap_content"
                 app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
                 app:spanCount="3"
+                android:layout_marginTop="16dp"/>
+
+            <!-- Power Ups -->
+            <TextView
+                android:id="@+id/powerUps_label"
+                android:layout_width="wrap_content"
+                android:layout_height="19dp"
+                android:layout_gravity="start"
+                android:layout_marginTop="30dp"
+                android:text="@string/my_places"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/powerup_recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                app:spanCount="5"
                 android:layout_marginTop="16dp"/>
 
         </LinearLayout>
