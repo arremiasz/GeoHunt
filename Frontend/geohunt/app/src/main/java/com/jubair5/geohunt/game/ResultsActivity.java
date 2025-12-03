@@ -1,7 +1,3 @@
-/**
- * Page for displaying the results from a game.
- * @author Alex Remiasz
- */
 package com.jubair5.geohunt.game;
 
 import android.content.Intent;
@@ -20,6 +16,10 @@ import nl.dionsegijn.konfetti.KonfettiView;
 import nl.dionsegijn.konfetti.models.Shape;
 import nl.dionsegijn.konfetti.models.Size;
 
+/**
+ * Page for displaying the results from a game.
+ * @author Alex Remiasz
+ */
 public class ResultsActivity extends AppCompatActivity {
 
     protected TextView distanceText;

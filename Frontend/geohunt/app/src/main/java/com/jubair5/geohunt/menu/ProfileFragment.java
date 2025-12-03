@@ -1,8 +1,3 @@
-/**
- * Profile Page Fragment
- * Displays user information, places, statistics and account settings.
- * @author Alex Remiasz
- */
 package com.jubair5.geohunt.menu;
 
 import android.app.Activity;
@@ -49,6 +44,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Profile Page Fragment
+ * Displays user information, places, statistics and account settings.
+ * @author Alex Remiasz
+ */
 public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceClickListener {
 
     private static final String TAG = "ProfileFragment";
