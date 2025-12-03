@@ -19,6 +19,7 @@ import java.net.http.HttpResponse;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 @Service
@@ -196,7 +197,7 @@ public class GeohuntService {
             challengesRepository.save(challenge);
             return ResponseEntity.ok(challenge);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getStackTrace());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("User not found.");
         }
 
     }
@@ -229,4 +230,28 @@ public class GeohuntService {
     }
 
 
+    public ResponseEntity updateChallenge(long userId, long chalId, String image, double lng, double lat) {
+        Account user;
+        try{
+            user = accountService.getAccountById(userId);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
+        }
+        Optional<Challenges> challenge = challengesRepository.findById(chalId);
+        if(!challenge.isPresent()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Challenge not found.");
+        }
+        if(userId != challenge.get().getCreator().getId()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User does not own challenge.");
+        }
+        challenge.get().setStreetviewurl(image);
+        if(lat != -200){
+            challenge.get().setLatitude(lat);
+        }
+        if(lng != -200){
+            challenge.get().setLongitude(lng);
+        }
+        challengesRepository.save(challenge.get());
+        return ResponseEntity.ok().build();
+    }
 }

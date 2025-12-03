@@ -41,7 +41,7 @@ public class PlaceDetailActivity extends AppCompatActivity implements OnMapReady
         setContentView(R.layout.place_detail_activity);
 
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle(getIntent().getStringExtra("NAME"));
+            getSupportActionBar().setTitle("My Place");
         }
 
         ImageView imageView = findViewById(R.id.place_image_detail);
