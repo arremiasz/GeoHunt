@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- Confetti overlay - stays on top, not affected by scrolling -->
+    <!-- Confetti overlay  -->
     <nl.dionsegijn.konfetti.KonfettiView
         android:id="@+id/konfetti_view"
         android:layout_width="match_parent"
@@ -97,7 +97,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
-                android:text="Other Attempts"
+                android:text="Community Photos"
                 android:textSize="20sp"
                 android:textStyle="bold" />
 

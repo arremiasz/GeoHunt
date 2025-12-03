@@ -208,7 +208,7 @@ public class ResultsActivity extends AppCompatActivity {
                 .setTimeToLive(3000L)
                 .addShapes(Shape.Square.INSTANCE, Shape.Circle.INSTANCE)
                 .addSizes(new Size(12, 5f))
-                .setPosition(getResources().getDisplayMetrics().widthPixels / 2f, 20)
+                .setPosition(getResources().getDisplayMetrics().widthPixels / 2f, -100)
                 .streamFor(150, 1600L);
     }
 }
