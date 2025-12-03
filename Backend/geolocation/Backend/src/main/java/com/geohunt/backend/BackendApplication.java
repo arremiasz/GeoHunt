@@ -1,6 +1,6 @@
 package com.geohunt.backend;
 
-import com.geohunt.backend.config.CustomSpringConfigurator;
+import com.geohunt.backend.WebSockets.CustomSpringConfigurator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
