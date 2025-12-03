@@ -105,7 +105,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     protected Handler stopwatchHandler = new Handler(Looper.getMainLooper());
     protected long startTime = 0L;
-    protected String submittedPhotoString;
 
     // For dragging the hint box
     protected float dX, dY;
@@ -352,8 +351,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             Log.e(TAG, "Failed to create JSON object for submission.", e);
         }
 
-        submittedPhotoString = imageString;
-
         String url = ApiConstants.BASE_URL + ApiConstants.POST_SUBMISSION_ENDPOINT + "?uid=" + userId + "&cid="
                 + challengeId;
 
@@ -363,7 +360,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                     Intent intent = new Intent(GameActivity.this, ResultsActivity.class);
                     intent.putExtra("results", Double.parseDouble(response));
                     intent.putExtra("challengeId", challengeId);
-                    intent.putExtra("userPhoto", submittedPhotoString);
+                    intent.putExtra("guessLat", currentLat);
+                    intent.putExtra("guessLng", currentLng);
                     startActivity(intent);
                     finish();
                 },

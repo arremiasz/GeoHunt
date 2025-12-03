@@ -18,6 +18,15 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.bumptech.glide.Glide;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.jubair5.geohunt.R;
 import com.jubair5.geohunt.network.ApiConstants;
 import com.jubair5.geohunt.network.VolleySingleton;
@@ -39,7 +48,7 @@ import nl.dionsegijn.konfetti.models.Size;
  * 
  * @author Alex Remiasz
  */
-public class ResultsActivity extends AppCompatActivity {
+public class ResultsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private static final String TAG = "ResultsActivity";
     private static final String SHARED_PREFS_NAME = "GeoHuntPrefs";
@@ -50,12 +59,17 @@ public class ResultsActivity extends AppCompatActivity {
     protected Button playAgainButton;
     protected Button goHomeButton;
     protected KonfettiView konfettiView;
-    protected ImageView userPhotoView;
+    protected MapView mapView;
+    protected GoogleMap googleMap;
     protected RecyclerView galleryRecyclerView;
     protected PhotoAdapter photoAdapter;
     protected List<Photo> photosList;
     protected int challengeId;
-    protected String userPhotoString;
+    protected double guessLat;
+    protected double guessLng;
+    protected double targetLat;
+    protected double targetLng;
+    protected boolean targetLocationLoaded = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,24 +80,27 @@ public class ResultsActivity extends AppCompatActivity {
             getSupportActionBar().setTitle("Results");
         }
 
-        setupViews();
+        setupViews(savedInstanceState);
         displayResults();
         setupButtons();
         startConfetti();
-        fetchGalleryPhotos();
+        fetchChallengeDetails();
     }
 
     /**
      * Initializes the views from the layout file.
      */
-    protected void setupViews() {
+    protected void setupViews(Bundle savedInstanceState) {
         distanceText = findViewById(R.id.distance_text);
         distanceUnitLabel = findViewById(R.id.distance_unit_label);
         playAgainButton = findViewById(R.id.play_again_button);
         goHomeButton = findViewById(R.id.go_home_button);
         konfettiView = findViewById(R.id.konfetti_view);
-        userPhotoView = findViewById(R.id.user_photo_view);
+        mapView = findViewById(R.id.results_map_view);
         galleryRecyclerView = findViewById(R.id.gallery_recycler_view);
+
+        mapView.onCreate(savedInstanceState);
+        mapView.getMapAsync(this);
 
         // Setup RecyclerView for gallery
         photosList = new ArrayList<>();
@@ -112,17 +129,10 @@ public class ResultsActivity extends AppCompatActivity {
             distanceUnitLabel.setText("Error");
         }
 
-        // Display user's photo
+
         challengeId = getIntent().getIntExtra("challengeId", -1);
-        userPhotoString = getIntent().getStringExtra("userPhoto");
-        if (userPhotoString != null && !userPhotoString.isEmpty()) {
-            try {
-                byte[] imageData = Base64.decode(userPhotoString, Base64.DEFAULT);
-                Glide.with(this).load(imageData).into(userPhotoView);
-            } catch (IllegalArgumentException e) {
-                Log.e(TAG, "Failed to decode user photo from Base64", e);
-            }
-        }
+        guessLat = getIntent().getDoubleExtra("guessLat", 0.0);
+        guessLng = getIntent().getDoubleExtra("guessLng", 0.0);
     }
 
     /**
@@ -149,10 +159,106 @@ public class ResultsActivity extends AppCompatActivity {
         finish();
     }
 
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        this.googleMap = googleMap;
+        updateMap();
+    }
+
     /**
-     * Fetches the gallery photos from the server for the current challenge.
+     * Updates the map with markers for the target and guess locations, and a line
+     * connecting them.
      */
-    protected void fetchGalleryPhotos() {
+    protected void updateMap() {
+        if (googleMap == null || !targetLocationLoaded) {
+            return;
+        }
+
+        LatLng targetLatLng = new LatLng(targetLat, targetLng);
+        LatLng guessLatLng = new LatLng(guessLat, guessLng);
+
+        googleMap.clear();
+
+        googleMap.addMarker(new MarkerOptions()
+                .position(targetLatLng)
+                .title("Target Location")
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
+
+        googleMap.addMarker(new MarkerOptions()
+                .position(guessLatLng)
+                .title("Your Guess")
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+
+        googleMap.addPolyline(new PolylineOptions()
+                .add(targetLatLng, guessLatLng)
+                .width(5)
+                .color(Color.RED));
+
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+        builder.include(targetLatLng);
+        builder.include(guessLatLng);
+        LatLngBounds bounds = builder.build();
+
+        try {
+            googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100));
+        } catch (Exception e) {
+            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(targetLatLng, 10f));
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mapView != null)
+            mapView.onResume();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (mapView != null)
+            mapView.onStart();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (mapView != null)
+            mapView.onStop();
+    }
+
+    @Override
+    protected void onPause() {
+        if (mapView != null)
+            mapView.onPause();
+        super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (mapView != null)
+            mapView.onDestroy();
+        super.onDestroy();
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        if (mapView != null)
+            mapView.onLowMemory();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (mapView != null)
+            mapView.onSaveInstanceState(outState);
+    }
+
+    /**
+     * Fetches the challenge details (target location) and gallery photos.
+     */
+    protected void fetchChallengeDetails() {
         if (challengeId == -1) {
             Log.e(TAG, "Challenge ID not found in intent.");
             return;
@@ -167,6 +273,11 @@ public class ResultsActivity extends AppCompatActivity {
                 response -> {
                     Log.d(TAG, "Response: " + response.toString());
                     try {
+                        targetLat = response.getDouble("latitude");
+                        targetLng = response.getDouble("longitude");
+                        targetLocationLoaded = true;
+                        updateMap();
+
                         JSONArray submissions = response.getJSONArray("submissions");
                         photosList.clear();
                         for (int i = 0; i < submissions.length(); i++) {
@@ -180,13 +291,13 @@ public class ResultsActivity extends AppCompatActivity {
                         photoAdapter.notifyDataSetChanged();
                         Log.d(TAG, "Loaded " + photosList.size() + " gallery photos");
                     } catch (JSONException e) {
-                        Log.e(TAG, "Error parsing gallery photos JSON", e);
-                        Toast.makeText(this, "Failed to load gallery photos", Toast.LENGTH_SHORT).show();
+                        Log.e(TAG, "Error parsing challenge details JSON", e);
+                        Toast.makeText(this, "Failed to load results details", Toast.LENGTH_SHORT).show();
                     }
                 },
                 error -> {
-                    Log.e(TAG, "Error fetching gallery photos", error);
-                    Toast.makeText(this, "Failed to load gallery photos", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Error fetching challenge details", error);
+                    Toast.makeText(this, "Failed to load results details", Toast.LENGTH_SHORT).show();
                 });
 
         VolleySingleton.getInstance(this).addToRequestQueue(jsonObjectRequest);
