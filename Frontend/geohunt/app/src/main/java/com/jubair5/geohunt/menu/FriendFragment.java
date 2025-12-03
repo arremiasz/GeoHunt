@@ -113,6 +113,7 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
     public void onResume(){
         super.onResume();
         getStartingFriends();
+        searchBar.setQuery("", false);
         searchBar.clearFocus();
 
     }
