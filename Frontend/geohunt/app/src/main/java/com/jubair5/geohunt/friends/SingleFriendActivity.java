@@ -1,3 +1,7 @@
+/**
+ * Activity used to display another account so that you can view stats or friend them
+ * @author Alex Remiasz
+ */
 package com.jubair5.geohunt.friends;
 
 import android.content.Context;

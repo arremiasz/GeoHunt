@@ -12,6 +12,7 @@ import android.widget.Button;
 import android.widget.SearchView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -106,6 +107,14 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
 
 
         return root;
+    }
+
+    @Override
+    public void onResume(){
+        super.onResume();
+        getStartingFriends();
+        searchBar.clearFocus();
+
     }
 
     private void searchForAccount(String name){
@@ -216,7 +225,7 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
                         Log.d(TAG, "People who sent you Response: "+ response.toString());
                         for (int i = 0; i < response.length(); i++) {
                             JSONObject friendJson = response.getJSONObject(i);
-                            friendJson.put("state", 1);
+                            friendJson.put("state", SingleFriendActivity.RECEIVED_REQUEST_STATE);
                             friendsReceivedId.add(friendJson.getInt("id"));
                             friendList.add(new Friend(friendJson));
                         }
@@ -248,7 +257,7 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
 
                         for (int i = 0; i < response.length(); i++) {
                             JSONObject friendJson = response.getJSONObject(i);
-                            friendJson.put("state", 2);
+                            friendJson.put("state", SingleFriendActivity.SENT_REQUEST_STATE);
                             friendsSentId.add(friendJson.getInt("id"));
 
                             friendList.add(new Friend(friendJson));

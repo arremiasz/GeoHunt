@@ -1,10 +1,11 @@
 /**
- * Adapter class that handles the list of accounts searched.
+ * Adapter class that handles the list of friends and accounts searched
  * @author Nathan Imig
  */
 package com.jubair5.geohunt.friends;
 
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -62,122 +63,23 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
 
         // Name and state
         holder.friendNameTextView.setText(friend.getUsername());
-        setActionButton(holder, friend);
+        setStateText(holder, friend);
         holder.itemView.setOnClickListener(v -> listener.onFriendClick(friend));
 
     }
 
-    private void setActionButton(ViewHolder holder, Friend friend) {
-        if(friend.getState() == SingleFriendActivity.NOT_FRIENDS_STATE){
-            holder.actionButton.setText("Friend");
-            //holder.actionButton.setOnClickListener();
-        } else if (friend.getState() == SingleFriendActivity.RECEIVED_REQUEST_STATE) {
-            holder.actionButton.setText("Accept");
+    @SuppressLint("SetTextI18n")
+    private void setStateText(ViewHolder holder, Friend friend) {
+        if (friend.getState() == SingleFriendActivity.RECEIVED_REQUEST_STATE) {
+            holder.friendState.setText("Recieved");
         }
         else if(friend.getState() == SingleFriendActivity.SENT_REQUEST_STATE){
-            holder.actionButton.setText("Pending");
+            holder.friendState.setText("Pending");
+        }else if(friend.getState() == SingleFriendActivity.ARE_FRIENDS_STATE){
+            holder.friendState.setText("Friends");
         }else{
-            holder.actionButton.setText("Challenge");
+            holder.friendState.setText("");
         }
-    }
-
-    private void sendFriendRequest(int userId, int friendID, int state) {
-        String friendsURL = ApiConstants.BASE_URL + ApiConstants.Send_Friend_Request_ENDPOINT + "?primaryId=" + userId + "&targetId=" + friendID;
-
-        StringRequest sendRequest = new StringRequest(
-                Request.Method.POST,
-                friendsURL,
-                response -> {
-                    Log.d(TAG, "Request Sent");
-                    //state = SingleFriendActivity.Send_Friend_Request;
-
-                },
-                volleyError -> {
-                    Log.e(TAG, "Error Sending Request" + volleyError.toString());
-                    String responseBody = "";
-                    if(volleyError.networkResponse.data != null) {
-                        responseBody = new String(volleyError.networkResponse.data, StandardCharsets.UTF_8);
-                    }
-                    Log.e(TAG, "Accepting friends error response body: " + responseBody);
-                }
-        );
-        VolleySingleton.getInstance(context.getApplicationContext()).addToRequestQueue(sendRequest);
-    }
-
-    private void accpetFriendRequest(int userId, int friendID, int state) {
-        String friendsURL = ApiConstants.BASE_URL + ApiConstants.Accept_Friend_Request_ENDPOINT + "?primaryId=" + userId + "&targetId=" + friendID ;
-
-        StringRequest acceptRequest = new StringRequest(
-                Request.Method.PUT,
-                friendsURL,
-                response -> {
-                    Log.d(TAG, "Response: "+ response.toString());
-                    //state = SingleFriendActivity.ARE_FRIENDS_STATE;
-
-                },
-                volleyError -> {
-                    Log.e(TAG, "Error accepting request" + volleyError.toString());
-                    String responseBody = "";
-                    if(volleyError.networkResponse.data != null) {
-                        responseBody = new String(volleyError.networkResponse.data, StandardCharsets.UTF_8);
-                    }
-                    Log.e(TAG, "Accepting friends error response body: " + responseBody);
-                }
-        );
-        VolleySingleton.getInstance(context.getApplicationContext()).addToRequestQueue(acceptRequest);
-    }
-
-    private void rejectFriend(int userId, int friendID, int state) {
-
-        String friendsURL = ApiConstants.BASE_URL + ApiConstants.Reject_Friend_Request_ENDPOINT + "?primaryId=" + userId + "&targetId=" + friendID ;
-
-        StringRequest rejectRequest = new StringRequest(
-                Request.Method.DELETE,
-                friendsURL,
-                response -> {
-                    Log.d(TAG, "Response: " + response.toString());
-                    //state = SingleFriendActivity.NOT_FRIENDS_STATE;
-
-                },
-                volleyError -> {
-                    Log.e(TAG, "Error removing friends" + volleyError.toString());
-                    String responseBody = "";
-                    if(volleyError.networkResponse.data != null) {
-                        responseBody = new String(volleyError.networkResponse.data, StandardCharsets.UTF_8);
-                    }
-                    Log.e(TAG, "Accepting friends error response body: " + responseBody);
-                }
-        );
-        VolleySingleton.getInstance(context.getApplicationContext()).addToRequestQueue(rejectRequest);
-    }
-
-    private void challengeFriend() {
-    }
-
-    private void removeFriend(int userId, int friendID, int state) {
-        String friendsURL = ApiConstants.BASE_URL + ApiConstants.Remove_FRIEND + "?primaryId=" + userId + "&targetId=" + friendID ;
-
-        StringRequest removeRequest = new StringRequest(
-                Request.Method.DELETE,
-                friendsURL,
-                response -> {
-                    Log.d(TAG, "Response: "+ response);
-                    //state = SingleFriendActivity.NOT_FRIENDS_STATE;
-
-                },
-                volleyError -> {
-                    Log.e(TAG, "Error removing friends " + volleyError.toString());
-                    String responseBody = "";
-                    if(volleyError.networkResponse.data != null) {
-                        responseBody = new String(volleyError.networkResponse.data, StandardCharsets.UTF_8);
-                    }
-                    Log.e(TAG, "Accepting friends error response body: " + responseBody);
-                }
-        );
-        VolleySingleton.getInstance(context.getApplicationContext()).addToRequestQueue(removeRequest);
-    }
-
-    private void setState() {
     }
 
 
@@ -189,12 +91,12 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView pfp;
         TextView friendNameTextView;
-        Button actionButton;
+        TextView friendState;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             friendNameTextView = itemView.findViewById(R.id.username_label);
-            actionButton = itemView.findViewById(R.id.action_button);
+            friendState = itemView.findViewById(R.id.relationship_State);
         }
     }
 }
