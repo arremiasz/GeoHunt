@@ -31,6 +31,6 @@ public final class ApiConstants {
 
     // Shop Endpoints
     public static final String GET_POINTS_ENDPOINT = "/account/points";
-    public static final String UPDATE_POINTS_ENDPOINT = "/account/points";
+    public static final String PUT_POINTS_ENDPOINT = "/account/points";
 
 }

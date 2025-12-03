@@ -1,8 +1,3 @@
-/**
- * Fragment for the shop view which allows users to purchase
- * items for future games or profile customizations
- * @author Alex Remiasz
- */
 package com.jubair5.geohunt.menu;
 
 import android.content.Context;
@@ -37,8 +32,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Fragment for the Shop feature.
- * Allows users to view their points and purchase items.
+ * Fragment for the shop view which allows users to purchase
+ * items for future games or profile customizations
+ * @author Alex Remiasz
  */
 public class ShopFragment extends Fragment {
 
@@ -70,6 +66,9 @@ public class ShopFragment extends Fragment {
         return root;
     }
 
+    /**
+     * Sets up the shop items with their titles and costs.
+     */
     private void setupShopItems() {
         shopItems = new ArrayList<>();
         shopItems.add(new ShopItem("Heading Hint", 100));
@@ -96,7 +95,7 @@ public class ShopFragment extends Fragment {
                     try {
                         // Assuming response is a simple integer string or JSON with "points" field
                         // If it's a raw integer string:
-                         currentPoints = Integer.parseInt(response.trim());
+                        currentPoints = Integer.parseInt(response.trim());
                         // If it's JSON:
                         // JSONObject json = new JSONObject(response);
                         // currentPoints = json.getInt("points");
@@ -123,6 +122,7 @@ public class ShopFragment extends Fragment {
 
     private void updatePointsDisplay() {
         if (currentPointsView != null) {
+            fetchPoints();
             currentPointsView.setText("Current Points: " + currentPoints);
         }
     }
@@ -158,7 +158,7 @@ public class ShopFragment extends Fragment {
         int userId = prefs.getInt(KEY_USER_ID, -1);
         if (userId == -1) return;
 
-        String url = ApiConstants.BASE_URL + ApiConstants.UPDATE_POINTS_ENDPOINT + "?id=" + userId; // Assuming ID is query param or in body
+        String url = ApiConstants.BASE_URL + ApiConstants.PUT_POINTS_ENDPOINT + "?id=" + userId; // Assuming ID is query param or in body
 
         JSONObject requestBody = new JSONObject();
         try {
@@ -171,7 +171,6 @@ public class ShopFragment extends Fragment {
         StringRequest request = new StringRequest(Request.Method.PUT, url,
                 response -> {
                     Log.d(TAG, "Points updated successfully");
-                    currentPoints = newPoints;
                     updatePointsDisplay();
                     Toast.makeText(getContext(), "Purchased " + item.getTitle() + "!", Toast.LENGTH_SHORT).show();
                 },
