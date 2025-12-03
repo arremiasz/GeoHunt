@@ -77,10 +77,8 @@ public class GeohuntService {
 
         try {
 
-            // Convert miles to meters for Places API
             int radiusMeters = (int) (rad * 1609.34);
 
-            // Example query: “tourist attractions”, “landmarks”, “parks”, etc.
             String placesUrl = String.format(
                     "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=%f,%f&radius=%d,&key=%s",
                     lat, lon, radiusMeters, apiKey

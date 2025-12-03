@@ -1,7 +1,3 @@
-/**
- * Signup page
- * @author Alex Remiasz
- */
 package com.jubair5.geohunt.auth;
 
 import android.app.Activity;
@@ -41,6 +37,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+/**
+ * Signup page
+ * @author Alex Remiasz
+ */
 public class SignupFragment extends Fragment {
 
     private static final String TAG = "SignupFragment";

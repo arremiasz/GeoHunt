@@ -36,6 +36,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Fragment used to find and see current friends and requests
+ * @author Nathan Imig
+ */
 public class FriendFragment extends Fragment implements FriendAdapter.OnFriendClickListener {
 
 
@@ -85,6 +89,7 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
         friendsRecycleViewer.setLayoutManager(new LinearLayoutManager((getContext())));
         getStartingFriends();
 
+        // All use of search bar
         searchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextChange(String newText) {
@@ -109,6 +114,9 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
         return root;
     }
 
+    /**
+     * Used to update the friends list
+     */
     @Override
     public void onResume(){
         super.onResume();
@@ -118,6 +126,10 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
 
     }
 
+    /**
+     * gets the account based off of its name and displays it
+     * @param name
+     */
     private void searchForAccount(String name){
         String searchURL = ApiConstants.BASE_URL + ApiConstants.GET_ACCOUNT_BY_USERNAME_ENDPOINT + "?name=" + name;
 
@@ -149,6 +161,7 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
                         if (volleyError.networkResponse.statusCode == 404) {
                             friendList.clear();
                             startingFriendAdapter.notifyDataSetChanged();
+                            Toast.makeText(getContext(), "No account found", Toast.LENGTH_LONG).show();
                         } else {
                             Toast.makeText(getContext(), "Finding Account failed. Server error: " + volleyError.networkResponse.statusCode, Toast.LENGTH_LONG).show();
                         }
@@ -160,6 +173,11 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
         VolleySingleton.getInstance(getContext()).addToRequestQueue(jsonObjReq);
     }
 
+    /**
+     * When searching an account, sets the state of their relationship
+     * @param accountId
+     * @param account
+     */
     private void setAccountState(int accountId, Friend account) {
         if(friendsId.contains(accountId)){
             account.setState(3);
@@ -177,6 +195,9 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
     }
 
 
+    /**
+     * Get accounts current friends and their requests
+     */
     private void getStartingFriends(){
         Log.e(TAG, "Made it into the function");
         int userId = prefs.getInt(KEY_USER_ID, -1);
@@ -287,6 +308,10 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
 
     }
 
+    /**
+     * Goes to an activity displaying the friend
+     * @param friend
+     */
     @Override
     public void onFriendClick(Friend friend) {
         Intent intent = new Intent(getActivity(), SingleFriendActivity.class);

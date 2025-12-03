@@ -68,6 +68,11 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
 
     }
 
+    /**
+     *  Sets the current status of relationship to the view of the account
+     * @param holder
+     * @param friend
+     */
     @SuppressLint("SetTextI18n")
     private void setStateText(ViewHolder holder, Friend friend) {
         if (friend.getState() == SingleFriendActivity.RECEIVED_REQUEST_STATE) {
@@ -88,6 +93,9 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
         return this.friends.size();
     }
 
+    /**
+     * ViewHolder class for the adapter.
+     */
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView pfp;
         TextView friendNameTextView;

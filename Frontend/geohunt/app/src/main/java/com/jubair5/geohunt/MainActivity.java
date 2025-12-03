@@ -1,7 +1,3 @@
-/**
- * Activity that hosts the main navigation and fragments
- * @author Alex Remiasz
- */
 package com.jubair5.geohunt;
 
 import android.os.Bundle;
@@ -15,6 +11,10 @@ import com.jubair5.geohunt.menu.HomeFragment;
 import com.jubair5.geohunt.menu.FriendFragment;
 import com.jubair5.geohunt.menu.ProfileFragment;
 
+/**
+ * Activity that hosts the main navigation and fragments
+ * @author Alex Remiasz
+ */
 public class MainActivity extends AppCompatActivity {
 
     private BottomNavigationView botNav;

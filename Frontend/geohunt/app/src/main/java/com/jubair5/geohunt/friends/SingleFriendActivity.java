@@ -1,6 +1,6 @@
 /**
  * Activity used to display another account so that you can view stats or friend them
- * @author Alex Remiasz
+ * @author Nathan Imig
  */
 package com.jubair5.geohunt.friends;
 
@@ -82,6 +82,9 @@ public class SingleFriendActivity extends AppCompatActivity {
     }
 
 
+    /**
+     * Sets up main button based on relationship state
+     */
     private void mainButtonClicked() {
         if(state == NOT_FRIENDS_STATE){
             sendFriendRequest();
@@ -95,6 +98,9 @@ public class SingleFriendActivity extends AppCompatActivity {
         setState();
     }
 
+    /**
+     * Sets up second button based on relationship if needed
+     */
     private void secondaryButtonClicked() {
         if (state == RECEIVED_REQUEST_STATE) {
             rejectFriend();
@@ -102,11 +108,13 @@ public class SingleFriendActivity extends AppCompatActivity {
         else if (state == ARE_FRIENDS_STATE) {
             removeFriend();;
         }
-
         setState();
     }
 
 
+    /**
+     * Sends a Friend Request to from your account to the currently viewed one
+     */
     private void sendFriendRequest() {
         String friendsURL = ApiConstants.BASE_URL + ApiConstants.Send_Friend_Request_ENDPOINT + "?primaryId=" + userId + "&targetId=" + friendID;
 
@@ -131,6 +139,9 @@ public class SingleFriendActivity extends AppCompatActivity {
         VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(sendRequest);
     }
 
+    /**
+     * Accepts their friend request if they sent on to you
+     */
     private void accpetFriendRequest() {
         String friendsURL = ApiConstants.BASE_URL + ApiConstants.Accept_Friend_Request_ENDPOINT + "?primaryId=" + userId + "&targetId=" + friendID ;
 
@@ -154,6 +165,9 @@ public class SingleFriendActivity extends AppCompatActivity {
         VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(acceptRequest);
     }
 
+    /**
+     * Rejects their friend request if they sent on to you
+     */
     private void rejectFriend() {
 
         String friendsURL = ApiConstants.BASE_URL + ApiConstants.Reject_Friend_Request_ENDPOINT + "?primaryId=" + userId + "&targetId=" + friendID ;
@@ -178,9 +192,15 @@ public class SingleFriendActivity extends AppCompatActivity {
         VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(rejectRequest);
     }
 
+    /**
+     * Challenges a Friend and sends request to multiplayer lobby
+     */
     private void challengeFriend() {
     }
 
+    /**
+     * Removes a friend
+     */
     private void removeFriend() {
         String friendsURL = ApiConstants.BASE_URL + ApiConstants.Remove_FRIEND + "?primaryId=" + userId + "&targetId=" + friendID ;
 
@@ -204,6 +224,10 @@ public class SingleFriendActivity extends AppCompatActivity {
         VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(removeRequest);
     }
 
+    /**
+     * Sets the state of relationship
+     * Help when a button is clicked to change relationship
+     */
     private void setState() {
         if(state == NOT_FRIENDS_STATE){
             friendRequestButton.setText("Send Request");
@@ -225,6 +249,9 @@ public class SingleFriendActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Gets all the information from the account
+     */
     private void getFriendProfile() {
         nameText.setText(friendUsername);
 
