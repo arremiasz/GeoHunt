@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AddPlaceActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.jubair5.geohunt.places</a> &gt; <span class="el_source">AddPlaceActivity.java</span></div><h1>AddPlaceActivity.java</h1><pre class="source lang-java linenums">/**
+ * Activity for adding places
+ * @author Alex Remiasz
+ */
+package com.jubair5.geohunt.places;
+
+import android.Manifest;
+import android.app.Activity;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.Bundle;
+import android.util.Base64;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.Toast;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.StringRequest;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.jubair5.geohunt.R;
+import com.jubair5.geohunt.network.ApiConstants;
+import com.jubair5.geohunt.network.VolleySingleton;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+
+<span class="nc" id="L51">public class AddPlaceActivity extends AppCompatActivity implements OnMapReadyCallback {</span>
+
+    private static final String TAG = &quot;AddPlaceActivity&quot;;
+
+    private ImageView capturedImage;
+    private MapView mapView;
+    private Button submitButton;
+    private Uri imageUri;
+    private FusedLocationProviderClient fusedLocationClient;
+    private GoogleMap googleMap;
+    private double latitude;
+    private double longitude;
+
+    /**
+     * This method is called when the user has taken a picture.
+     */
+<span class="nc" id="L67">    private final ActivityResultLauncher&lt;Uri&gt; takePictureLauncher = registerForActivityResult(</span>
+            new ActivityResultContracts.TakePicture(),
+            success -&gt; {
+<span class="nc bnc" id="L70" title="All 2 branches missed.">                if (success) {</span>
+<span class="nc" id="L71">                    Log.d(TAG, &quot;Image capture successful.&quot;);</span>
+<span class="nc" id="L72">                    capturedImage.setImageURI(imageUri);</span>
+<span class="nc" id="L73">                    fetchLocation();</span>
+                } else {
+<span class="nc" id="L75">                    Log.w(TAG, &quot;Image capture cancelled or failed.&quot;);</span>
+<span class="nc" id="L76">                    Toast.makeText(this, &quot;Cancelled.&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L77">                    finish();</span>
+                }
+<span class="nc" id="L79">            });</span>
+
+    /**
+     * This method handles getting the camera permission.
+     */
+<span class="nc" id="L84">    private final ActivityResultLauncher&lt;String&gt; requestCameraPermissionLauncher = registerForActivityResult(</span>
+            new ActivityResultContracts.RequestPermission(),
+            isGranted -&gt; {
+<span class="nc bnc" id="L87" title="All 2 branches missed.">                if (isGranted) {</span>
+<span class="nc" id="L88">                    Log.d(TAG, &quot;Camera permission granted.&quot;);</span>
+<span class="nc" id="L89">                    launchCamera();</span>
+                } else {
+<span class="nc" id="L91">                    Log.w(TAG, &quot;Camera permission denied.&quot;);</span>
+<span class="nc" id="L92">                    Toast.makeText(this, &quot;Camera permission is required to add a place.&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L93">                    finish();</span>
+                }
+<span class="nc" id="L95">            });</span>
+
+    /**
+     * This method handles getting the location permission.
+     */
+<span class="nc" id="L100">    private final ActivityResultLauncher&lt;String&gt; requestLocationPermissionLauncher = registerForActivityResult(</span>
+            new ActivityResultContracts.RequestPermission(),
+            isGranted -&gt; {
+<span class="nc bnc" id="L103" title="All 2 branches missed.">                if (isGranted) {</span>
+<span class="nc" id="L104">                    Log.d(TAG, &quot;Location permission granted.&quot;);</span>
+<span class="nc" id="L105">                    getCurrentLocation();</span>
+                } else {
+<span class="nc" id="L107">                    Log.w(TAG, &quot;Location permission denied.&quot;);</span>
+<span class="nc" id="L108">                    Toast.makeText(this, &quot;Location permission is required to add a place.&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L109">                    finish();</span>
+                }
+<span class="nc" id="L111">            });</span>
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L115">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L116">        setContentView(R.layout.add_place_activity);</span>
+
+<span class="nc bnc" id="L118" title="All 2 branches missed.">        if (getSupportActionBar() != null) {</span>
+<span class="nc" id="L119">            getSupportActionBar().setTitle(&quot;Upload Place&quot;);</span>
+        }
+
+<span class="nc" id="L122">        capturedImage = findViewById(R.id.captured_image);</span>
+<span class="nc" id="L123">        mapView = findViewById(R.id.map_view);</span>
+<span class="nc" id="L124">        submitButton = findViewById(R.id.submit_button);</span>
+
+<span class="nc" id="L126">        submitButton.setOnClickListener(v -&gt; submitPlace());</span>
+
+<span class="nc" id="L128">        mapView.onCreate(savedInstanceState);</span>
+
+<span class="nc" id="L130">        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);</span>
+
+<span class="nc bnc" id="L132" title="All 2 branches missed.">        if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {</span>
+<span class="nc" id="L133">            requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA);</span>
+        } else {
+<span class="nc" id="L135">            launchCamera();</span>
+        }
+<span class="nc" id="L137">    }</span>
+
+    /**
+     * Checks for location permissions and then gets the current location.
+     */
+    private void fetchLocation() {
+<span class="nc bnc" id="L143" title="All 2 branches missed.">        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {</span>
+<span class="nc" id="L144">            requestLocationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);</span>
+        } else {
+<span class="nc" id="L146">            getCurrentLocation();</span>
+        }
+<span class="nc" id="L148">    }</span>
+
+    /**
+     * Handles the submission of the new place by converting the image to Base64 and sending
+     * all data in a JSON object via a POST request.
+     */
+    private void submitPlace() {
+<span class="nc" id="L155">        SharedPreferences prefs = getSharedPreferences(&quot;GeoHuntPrefs&quot;, Context.MODE_PRIVATE);</span>
+<span class="nc" id="L156">        int userId = prefs.getInt(&quot;userId&quot;, -1);</span>
+
+<span class="nc bnc" id="L158" title="All 2 branches missed.">        if (userId == -1) {</span>
+<span class="nc" id="L159">            Toast.makeText(this, &quot;Error: User not logged in.&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L160">            Log.e(TAG, &quot;User ID not found in shared preferences for submission.&quot;);</span>
+<span class="nc" id="L161">            return;</span>
+        }
+
+        String imageString;
+        try {
+<span class="nc" id="L166">            InputStream inputStream = getContentResolver().openInputStream(imageUri);</span>
+<span class="nc" id="L167">            Bitmap bitmap = BitmapFactory.decodeStream(inputStream);</span>
+<span class="nc" id="L168">            imageString = bitmapToString(bitmap);</span>
+<span class="nc" id="L169">        } catch (IOException e) {</span>
+<span class="nc" id="L170">            Log.e(TAG, &quot;Failed to read image file.&quot;, e);</span>
+<span class="nc" id="L171">            Toast.makeText(this, &quot;Error processing image.&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L172">            return;</span>
+<span class="nc" id="L173">        }</span>
+
+<span class="nc" id="L175">        String url = ApiConstants.BASE_URL + ApiConstants.SUBMIT_PLACE_ENDPOINT + &quot;?lat=&quot; + latitude + &quot;&amp;lng=&quot; + longitude + &quot;&amp;uid=&quot; + userId;</span>
+
+<span class="nc" id="L177">        StringRequest postRequest = new StringRequest(Request.Method.POST, url,</span>
+                response -&gt; {
+<span class="nc" id="L179">                    Log.d(TAG, &quot;Submission successful: &quot; + response);</span>
+<span class="nc" id="L180">                    Toast.makeText(this, &quot;Place submitted successfully!&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L181">                    setResult(Activity.RESULT_OK);</span>
+<span class="nc" id="L182">                    finish();</span>
+<span class="nc" id="L183">                },</span>
+                error -&gt; {
+<span class="nc" id="L185">                    Log.e(TAG, &quot;Submission failed&quot;, error);</span>
+<span class="nc" id="L186">                    Toast.makeText(this, &quot;Submission failed. Please try again.&quot;, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L187">                }</span>
+<span class="nc" id="L188">        ) {</span>
+            @Override
+            public byte[] getBody() {
+<span class="nc" id="L191">                return imageString.getBytes(StandardCharsets.UTF_8);</span>
+            }
+
+            @Override
+            public String getBodyContentType() {
+<span class="nc" id="L196">                return &quot;text/plain; charset=utf-8&quot;;</span>
+            }
+        };
+
+<span class="nc" id="L200">        VolleySingleton.getInstance(this).addToRequestQueue(postRequest);</span>
+<span class="nc" id="L201">    }</span>
+
+    /**
+     * Converts a Bitmap image to a Base64 encoded string.
+     * @param bitmap The bitmap to be converted.
+     * @return The Base64 encoded string representation of the bitmap.
+     */
+    private String bitmapToString(Bitmap bitmap) {
+<span class="nc" id="L209">        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();</span>
+<span class="nc" id="L210">        bitmap.compress(Bitmap.CompressFormat.JPEG, 70, byteArrayOutputStream);</span>
+<span class="nc" id="L211">        byte[] byteArray = byteArrayOutputStream.toByteArray();</span>
+<span class="nc" id="L212">        return Base64.encodeToString(byteArray, Base64.DEFAULT);</span>
+    }
+
+    /**
+     * Uses the FusedLocationProviderClient to get the current live location.
+     */
+    private void getCurrentLocation() {
+        // Suppressing the permission check here because this method is only called after the permission has been granted.
+        // noinspection MissingPermission
+<span class="nc" id="L221">        fusedLocationClient.getCurrentLocation(LocationRequest.PRIORITY_HIGH_ACCURACY, null)</span>
+<span class="nc" id="L222">                .addOnSuccessListener(this, location -&gt; {</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">                    if (location != null) {</span>
+<span class="nc" id="L224">                        latitude = location.getLatitude();</span>
+<span class="nc" id="L225">                        longitude = location.getLongitude();</span>
+<span class="nc" id="L226">                        Log.d(TAG, &quot;Location found: Lat: &quot; + latitude + &quot;, Lon: &quot; + longitude);</span>
+
+<span class="nc" id="L228">                        mapView.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L229">                        submitButton.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L230">                        mapView.getMapAsync(this);</span>
+                    } else {
+<span class="nc" id="L232">                        Log.w(TAG, &quot;FusedLocationProvider returned null location.&quot;);</span>
+<span class="nc" id="L233">                        Toast.makeText(this, &quot;Could not get location. Please ensure GPS is enabled.&quot;, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L234">                        finish();</span>
+                    }
+<span class="nc" id="L236">                });</span>
+<span class="nc" id="L237">    }</span>
+
+    /**
+     * Creates a temporary file URI and launches the camera intent.
+     */
+    private void launchCamera() {
+<span class="nc" id="L243">        imageUri = createImageUri();</span>
+<span class="nc bnc" id="L244" title="All 2 branches missed.">        if (imageUri != null) {</span>
+<span class="nc" id="L245">            takePictureLauncher.launch(imageUri);</span>
+        } else {
+<span class="nc" id="L247">            Log.e(TAG, &quot;Failed to create image URI.&quot;);</span>
+<span class="nc" id="L248">            Toast.makeText(this, &quot;Error preparing for camera.&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L249">            finish();</span>
+        }
+<span class="nc" id="L251">    }</span>
+
+    /**
+     * Creates a content Uri for a temporary file in the app's cache directory.
+     * @return The Uri for the temporary image file.
+     */
+    private Uri createImageUri() {
+<span class="nc" id="L258">        File imageFile = new File(getCacheDir(), &quot;camera_photo.jpg&quot;);</span>
+<span class="nc" id="L259">        return FileProvider.getUriForFile(this, getPackageName() + &quot;.provider&quot;, imageFile);</span>
+    }
+
+    @Override
+    public void onMapReady(@NonNull GoogleMap googleMap) {
+<span class="nc" id="L264">        this.googleMap = googleMap;</span>
+<span class="nc" id="L265">        LatLng location = new LatLng(latitude, longitude);</span>
+<span class="nc" id="L266">        googleMap.addMarker(new MarkerOptions().position(location).title(&quot;Your Location&quot;));</span>
+<span class="nc" id="L267">        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15f));</span>
+<span class="nc" id="L268">    }</span>
+
+    @Override
+    protected void onResume() {
+<span class="nc" id="L272">        super.onResume();</span>
+<span class="nc" id="L273">        mapView.onResume();</span>
+<span class="nc" id="L274">    }</span>
+
+    @Override
+    protected void onStart() {
+<span class="nc" id="L278">        super.onStart();</span>
+<span class="nc" id="L279">        mapView.onStart();</span>
+<span class="nc" id="L280">    }</span>
+
+    @Override
+    protected void onStop() {
+<span class="nc" id="L284">        super.onStop();</span>
+<span class="nc" id="L285">        mapView.onStop();</span>
+<span class="nc" id="L286">    }</span>
+
+    @Override
+    protected void onPause() {
+<span class="nc" id="L290">        super.onPause();</span>
+<span class="nc" id="L291">        mapView.onPause();</span>
+<span class="nc" id="L292">    }</span>
+
+    @Override
+    protected void onDestroy() {
+<span class="nc" id="L296">        super.onDestroy();</span>
+<span class="nc" id="L297">        mapView.onDestroy();</span>
+<span class="nc" id="L298">    }</span>
+
+    @Override
+    public void onLowMemory() {
+<span class="nc" id="L302">        super.onLowMemory();</span>
+<span class="nc" id="L303">        mapView.onLowMemory();</span>
+<span class="nc" id="L304">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Generated by the Android Gradle plugin 8.13.0</div></body></html>

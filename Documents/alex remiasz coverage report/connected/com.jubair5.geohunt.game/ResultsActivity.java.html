@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ResultsActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.jubair5.geohunt.game</a> &gt; <span class="el_source">ResultsActivity.java</span></div><h1>ResultsActivity.java</h1><pre class="source lang-java linenums">package com.jubair5.geohunt.game;
+
+import android.content.Intent;
+import android.graphics.Color;
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.jubair5.geohunt.R;
+
+import java.util.Locale;
+
+import nl.dionsegijn.konfetti.KonfettiView;
+import nl.dionsegijn.konfetti.models.Shape;
+import nl.dionsegijn.konfetti.models.Size;
+
+/**
+ * Page for displaying the results from a game.
+ * @author Alex Remiasz
+ */
+<span class="nc" id="L23">public class ResultsActivity extends AppCompatActivity {</span>
+
+    protected TextView distanceText;
+    protected TextView distanceUnitLabel;
+    protected Button playAgainButton;
+    protected Button goHomeButton;
+    protected KonfettiView konfettiView;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L33">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L34">        setContentView(R.layout.results_activity);</span>
+
+<span class="nc bnc" id="L36" title="All 2 branches missed.">        if (getSupportActionBar() != null) {</span>
+<span class="nc" id="L37">            getSupportActionBar().setTitle(&quot;Results&quot;);</span>
+        }
+
+<span class="nc" id="L40">        setupViews();</span>
+<span class="nc" id="L41">        displayResults();</span>
+<span class="nc" id="L42">        setupButtons();</span>
+<span class="nc" id="L43">        startConfetti();</span>
+<span class="nc" id="L44">    }</span>
+
+    /**
+     * Initializes the views from the layout file.
+     */
+    protected void setupViews() {
+<span class="nc" id="L50">        distanceText = findViewById(R.id.distance_text);</span>
+<span class="nc" id="L51">        distanceUnitLabel = findViewById(R.id.distance_unit_label);</span>
+<span class="nc" id="L52">        playAgainButton = findViewById(R.id.play_again_button);</span>
+<span class="nc" id="L53">        goHomeButton = findViewById(R.id.go_home_button);</span>
+<span class="nc" id="L54">        konfettiView = findViewById(R.id.konfetti_view);</span>
+<span class="nc" id="L55">    }</span>
+
+    /**
+     * Parses the results from the intent and updates the UI.
+     */
+    protected void displayResults() {
+<span class="nc" id="L61">        double results = getIntent().getDoubleExtra(&quot;results&quot;, -1);</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">        if (results != -1) {</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">            if (results &lt;= 0.1) {</span>
+<span class="nc" id="L64">                double distanceInFeet = results * 5280;</span>
+<span class="nc" id="L65">                distanceText.setText(String.format(Locale.getDefault(), &quot;%.0f&quot;, distanceInFeet));</span>
+<span class="nc" id="L66">                distanceUnitLabel.setText(&quot;feet&quot;);</span>
+<span class="nc" id="L67">            } else {</span>
+<span class="nc" id="L68">                distanceText.setText(String.format(Locale.getDefault(), &quot;%.2f&quot;, results));</span>
+<span class="nc" id="L69">                distanceUnitLabel.setText(&quot;miles&quot;);</span>
+            }
+
+<span class="nc" id="L72">            distanceUnitLabel.append(&quot; from target&quot;);</span>
+        } else {
+<span class="nc" id="L74">            distanceText.setText(&quot;?&quot;);</span>
+<span class="nc" id="L75">            distanceUnitLabel.setText(&quot;Error&quot;);</span>
+        }
+<span class="nc" id="L77">    }</span>
+
+    /**
+     * Sets up the click listeners for the buttons.
+     */
+    protected void setupButtons() {
+<span class="nc" id="L83">        playAgainButton.setOnClickListener(v -&gt; onPlayAgainClicked());</span>
+<span class="nc" id="L84">        goHomeButton.setOnClickListener(v -&gt; onGoHomeClicked());</span>
+<span class="nc" id="L85">    }</span>
+
+    /**
+     * Navigates to the GameActivity when the &quot;Play Again&quot; button is clicked.
+     */
+    protected void onPlayAgainClicked() {
+<span class="nc" id="L91">        Intent intent = new Intent(ResultsActivity.this, GameActivity.class);</span>
+<span class="nc" id="L92">        startActivity(intent);</span>
+<span class="nc" id="L93">        finish();</span>
+<span class="nc" id="L94">    }</span>
+
+    /**
+     * Finishes the activity when the &quot;Go Home&quot; button is clicked.
+     */
+    protected void onGoHomeClicked() {
+<span class="nc" id="L100">        finish();</span>
+<span class="nc" id="L101">    }</span>
+
+    /**
+     * Configures and starts the confetti animation.
+     */
+    protected void startConfetti() {
+<span class="nc" id="L107">        konfettiView.build()</span>
+<span class="nc" id="L108">                .addColors(Color.rgb(168, 100, 253),</span>
+<span class="nc" id="L109">                        Color.rgb(41, 205, 255),</span>
+<span class="nc" id="L110">                        Color.rgb(120, 255, 68),</span>
+<span class="nc" id="L111">                        Color.rgb(255, 113, 141),</span>
+<span class="nc" id="L112">                        Color.rgb(253, 255, 106))</span>
+<span class="nc" id="L113">                .setDirection(0.0, 180.0)</span>
+<span class="nc" id="L114">                .setSpeed(1f, 4f)</span>
+<span class="nc" id="L115">                .setFadeOutEnabled(true)</span>
+<span class="nc" id="L116">                .setTimeToLive(3000L)</span>
+<span class="nc" id="L117">                .addShapes(Shape.Square.INSTANCE, Shape.Circle.INSTANCE)</span>
+<span class="nc" id="L118">                .addSizes(new Size(12, 5f))</span>
+<span class="nc" id="L119">                .setPosition(getResources().getDisplayMetrics().widthPixels / 2f, 20)</span>
+<span class="nc" id="L120">                .streamFor(150, 1600L);</span>
+<span class="nc" id="L121">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Generated by the Android Gradle plugin 8.13.0</div></body></html>

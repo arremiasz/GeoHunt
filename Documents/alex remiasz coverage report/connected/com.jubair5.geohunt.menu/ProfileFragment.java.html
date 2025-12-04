@@ -1,0 +1,446 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProfileFragment.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.jubair5.geohunt.menu</a> &gt; <span class="el_source">ProfileFragment.java</span></div><h1>ProfileFragment.java</h1><pre class="source lang-java linenums">package com.jubair5.geohunt.menu;
+
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.google.android.material.textfield.TextInputLayout;
+import com.jubair5.geohunt.LauncherActivity;
+import com.jubair5.geohunt.R;
+import com.jubair5.geohunt.places.AddPlaceActivity;
+import com.jubair5.geohunt.places.Place;
+import com.jubair5.geohunt.places.PlaceDetailActivity;
+import com.jubair5.geohunt.places.PlacesAdapter;
+import com.jubair5.geohunt.network.ApiConstants;
+import com.jubair5.geohunt.network.VolleySingleton;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Profile Page Fragment
+ * Displays user information, places, statistics and account settings.
+ * @author Alex Remiasz
+ */
+<span class="fc" id="L52">public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceClickListener {</span>
+
+    private static final String TAG = &quot;ProfileFragment&quot;;
+    private static final String SHARED_PREFS_NAME = &quot;GeoHuntPrefs&quot;;
+    private static final String KEY_USER_NAME = &quot;userName&quot;;
+    private static final String KEY_USER_ID = &quot;userId&quot;;
+    private static final String KEY_USER_EMAIL = &quot;userEmail&quot;;
+    private static final String KEY_USER_PFP = &quot;userPfp&quot;;
+
+    private LinearLayout displayContainer, editContainer;
+    private TextView usernameLabel;
+    private TextInputLayout editUsernameLayout, editEmailLayout, editNewPasswordLayout, editCurrentPasswordLayout;
+    private EditText editUsername, editEmail, editNewPassword, editCurrentPassword;
+    private Button editButton, deleteButton, saveChangesButton, cancelButton, logoutButton;
+    private RecyclerView placesRecyclerView;
+    private PlacesAdapter placesAdapter;
+    private List&lt;Place&gt; placesList;
+
+    private SharedPreferences prefs;
+    private View root;
+
+<span class="fc" id="L73">    private final ActivityResultLauncher&lt;Intent&gt; activityLauncher = registerForActivityResult(</span>
+            new ActivityResultContracts.StartActivityForResult(),
+            result -&gt; {
+<span class="nc bnc" id="L76" title="All 2 branches missed.">                if (result.getResultCode() == Activity.RESULT_OK) {</span>
+<span class="nc" id="L77">                    Log.d(TAG, &quot;Returned from an activity with success. Refreshing submissions.&quot;);</span>
+<span class="nc" id="L78">                    fetchSubmissions();</span>
+                }
+<span class="nc" id="L80">            });</span>
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+<span class="fc" id="L85">        root = inflater.inflate(R.layout.profile_fragment, container, false);</span>
+<span class="fc" id="L86">        prefs = requireActivity().getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);</span>
+
+<span class="fc" id="L88">        displayContainer = root.findViewById(R.id.display_container);</span>
+<span class="fc" id="L89">        editContainer = root.findViewById(R.id.edit_container);</span>
+<span class="fc" id="L90">        usernameLabel = root.findViewById(R.id.username_label);</span>
+<span class="fc" id="L91">        editUsernameLayout = root.findViewById(R.id.edit_username_layout);</span>
+<span class="fc" id="L92">        editUsername = root.findViewById(R.id.edit_username);</span>
+<span class="fc" id="L93">        editEmailLayout = root.findViewById(R.id.edit_email_layout);</span>
+<span class="fc" id="L94">        editEmail = root.findViewById(R.id.edit_email);</span>
+<span class="fc" id="L95">        editNewPasswordLayout = root.findViewById(R.id.edit_new_password_layout);</span>
+<span class="fc" id="L96">        editNewPassword = root.findViewById(R.id.edit_new_password);</span>
+<span class="fc" id="L97">        editCurrentPasswordLayout = root.findViewById(R.id.edit_current_password_layout);</span>
+<span class="fc" id="L98">        editCurrentPassword = root.findViewById(R.id.edit_current_password);</span>
+<span class="fc" id="L99">        editButton = root.findViewById(R.id.edit_account_button);</span>
+<span class="fc" id="L100">        deleteButton = root.findViewById(R.id.delete_account_button);</span>
+<span class="fc" id="L101">        saveChangesButton = root.findViewById(R.id.save_changes_button);</span>
+<span class="fc" id="L102">        cancelButton = root.findViewById(R.id.cancel_button);</span>
+<span class="fc" id="L103">        logoutButton = root.findViewById(R.id.logout_button);</span>
+<span class="fc" id="L104">        placesRecyclerView = root.findViewById(R.id.places_recycler_view);</span>
+
+<span class="fc" id="L106">        String username = prefs.getString(KEY_USER_NAME, &quot;User&quot;);</span>
+<span class="fc" id="L107">        usernameLabel.setText(&quot;@&quot; + username);</span>
+
+<span class="fc" id="L109">        setupRecyclerView();</span>
+<span class="fc" id="L110">        fetchSubmissions();</span>
+
+<span class="fc" id="L112">        editButton.setOnClickListener(v -&gt; showEditOptions());</span>
+<span class="pc" id="L113">        deleteButton.setOnClickListener(v -&gt; showDeleteConfirmationDialog());</span>
+<span class="pc" id="L114">        saveChangesButton.setOnClickListener(v -&gt; updatePreface());</span>
+<span class="fc" id="L115">        cancelButton.setOnClickListener(v -&gt; showDisplayOptions());</span>
+<span class="fc" id="L116">        logoutButton.setOnClickListener(v -&gt; logout());</span>
+
+<span class="fc" id="L118">        editCurrentPassword.setOnKeyListener((v, keyCode, event) -&gt; {</span>
+<span class="nc" id="L119">            editCurrentPasswordLayout.setError(null);</span>
+<span class="nc" id="L120">            return false;</span>
+        });
+
+<span class="fc" id="L123">        return root;</span>
+    }
+
+    /**
+     * Sets up the RecyclerView for displaying places.
+     */
+    private void setupRecyclerView() {
+<span class="fc" id="L130">        placesList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L131">        placesAdapter = new PlacesAdapter(getContext(), placesList, this);</span>
+<span class="fc" id="L132">        placesRecyclerView.setAdapter(placesAdapter);</span>
+<span class="fc" id="L133">    }</span>
+
+    /**
+     * Fetches the user's submissions from the server.
+     */
+    private void fetchSubmissions() {
+<span class="fc" id="L139">        int userId = prefs.getInt(KEY_USER_ID, -1);</span>
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">        if (userId == -1) {</span>
+<span class="nc" id="L141">            Log.e(TAG, &quot;User ID not found in shared preferences.&quot;);</span>
+<span class="nc" id="L142">            return;</span>
+        }
+
+<span class="fc" id="L145">        String url = ApiConstants.BASE_URL + ApiConstants.GET_SUBMITTED_PLACES_ENDPOINT + &quot;?id=&quot; + userId;</span>
+
+<span class="fc" id="L147">        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null,</span>
+                response -&gt; {
+<span class="nc" id="L149">                    Log.d(TAG, &quot;Response: &quot; + response.toString());</span>
+                    try {
+<span class="nc" id="L151">                        placesList.clear();</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">                        for (int i = response.length() - 1; i &gt;= 0; i--) {</span>
+<span class="nc" id="L153">                            JSONObject placeObject = response.getJSONObject(i);</span>
+<span class="nc" id="L154">                            placesList.add(new Place(placeObject));</span>
+                        }
+<span class="nc" id="L156">                        placesAdapter.notifyDataSetChanged();</span>
+<span class="nc" id="L157">                    } catch (JSONException e) {</span>
+<span class="nc" id="L158">                        Log.e(TAG, &quot;Error parsing places JSON&quot;, e);</span>
+<span class="nc" id="L159">                    }</span>
+<span class="nc" id="L160">                },</span>
+                error -&gt; {
+<span class="fc" id="L162">                    Log.e(TAG, &quot;Error fetching places&quot;, error);</span>
+<span class="fc" id="L163">                });</span>
+
+<span class="fc" id="L165">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(jsonArrayRequest);</span>
+<span class="fc" id="L166">    }</span>
+
+
+    /**
+     * Switches the UI to edit mode
+     */
+    private void showEditOptions() {
+<span class="fc" id="L173">        displayContainer.setVisibility(View.GONE);</span>
+<span class="fc" id="L174">        editContainer.setVisibility(View.VISIBLE);</span>
+
+<span class="fc" id="L176">        editUsername.setText(prefs.getString(KEY_USER_NAME, &quot;&quot;));</span>
+<span class="fc" id="L177">        editEmail.setText(prefs.getString(KEY_USER_EMAIL, &quot;&quot;));</span>
+
+<span class="fc" id="L179">        editNewPassword.setText(&quot;&quot;);</span>
+<span class="fc" id="L180">        editCurrentPassword.setText(&quot;&quot;);</span>
+<span class="fc" id="L181">    }</span>
+
+    /**
+     * Switches the UI to display mode
+     */
+    private void showDisplayOptions() {
+<span class="fc" id="L187">        displayContainer.setVisibility(View.VISIBLE);</span>
+<span class="fc" id="L188">        editContainer.setVisibility(View.GONE);</span>
+<span class="fc" id="L189">    }</span>
+
+    /**
+     * Initiates the update process by validating inputs and current password.
+     */
+    private void updatePreface() {
+<span class="nc" id="L195">        editUsernameLayout.setError(null);</span>
+<span class="nc" id="L196">        editEmailLayout.setError(null);</span>
+<span class="nc" id="L197">        editNewPasswordLayout.setError(null);</span>
+<span class="nc" id="L198">        editCurrentPasswordLayout.setError(null);</span>
+
+<span class="nc" id="L200">        String newUsername = editUsername.getText().toString().trim();</span>
+<span class="nc" id="L201">        String newEmail = editEmail.getText().toString().trim();</span>
+<span class="nc" id="L202">        String newPassword = editNewPassword.getText().toString().trim();</span>
+<span class="nc" id="L203">        String currentPassword = editCurrentPassword.getText().toString().trim();</span>
+
+<span class="nc bnc" id="L205" title="All 2 branches missed.">        if (TextUtils.isEmpty(currentPassword)) {</span>
+<span class="nc" id="L206">            editCurrentPasswordLayout.setError(&quot;Enter your current password to save changes&quot;);</span>
+<span class="nc" id="L207">            editCurrentPassword.requestFocus();</span>
+<span class="nc" id="L208">            return;</span>
+        }
+
+<span class="nc" id="L211">        validatePasswordAndContinue(newUsername, newEmail, newPassword, currentPassword);</span>
+<span class="nc" id="L212">    }</span>
+
+    /**
+     * Validates the current password by attempting to log in.
+     * If successful, proceeds with the update.
+     * @param newUsername The new username to set (can be empty to keep unchanged).
+     * @param newEmail The new email to set (can be empty to keep unchanged).
+     * @param newPassword The new password to set (can be empty to keep unchanged).
+     * @param currentPassword The current password for validation.
+     */
+    private void validatePasswordAndContinue(String newUsername, String newEmail, String newPassword, String currentPassword) {
+<span class="nc" id="L223">        String currentUsername = prefs.getString(KEY_USER_NAME, &quot;&quot;);</span>
+
+<span class="nc" id="L225">        JSONObject loginBody = new JSONObject();</span>
+        try {
+<span class="nc" id="L227">            loginBody.put(&quot;username&quot;, currentUsername);</span>
+<span class="nc" id="L228">            loginBody.put(&quot;password&quot;, currentPassword);</span>
+<span class="nc" id="L229">        } catch (JSONException e) {</span>
+<span class="nc" id="L230">            Log.e(TAG, &quot;Error creating login JSON for validation&quot;, e);</span>
+<span class="nc" id="L231">            return;</span>
+<span class="nc" id="L232">        }</span>
+
+<span class="nc" id="L234">        StringRequest loginRequest = new StringRequest(Request.Method.POST, ApiConstants.BASE_URL + ApiConstants.LOGIN_ENDPOINT,</span>
+                response -&gt; {
+<span class="nc" id="L236">                    Log.d(TAG, &quot;Password validation successful. Proceeding with update.&quot;);</span>
+<span class="nc" id="L237">                    performUpdate(newUsername, newEmail, newPassword);</span>
+<span class="nc" id="L238">                },</span>
+                error -&gt; {
+<span class="nc" id="L240">                    Log.e(TAG, &quot;Password validation failed&quot;, error);</span>
+<span class="nc" id="L241">                    editCurrentPasswordLayout.setError(&quot;Incorrect password&quot;);</span>
+<span class="nc" id="L242">                    editCurrentPassword.requestFocus();</span>
+<span class="nc" id="L243">                }</span>
+<span class="nc" id="L244">        ) {</span>
+            @Override
+            public byte[] getBody() {
+<span class="nc" id="L247">                return loginBody.toString().getBytes(StandardCharsets.UTF_8);</span>
+            }
+            @Override
+            public String getBodyContentType() {
+<span class="nc" id="L251">                return &quot;application/json; charset=utf-8&quot;;</span>
+            }
+        };
+
+<span class="nc" id="L255">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(loginRequest);</span>
+<span class="nc" id="L256">    }</span>
+
+    /**
+     * Sends the update request to the server with the new account details.
+     * @param newUsername The new username to set (can be empty to keep unchanged).
+     * @param newEmail The new email to set (can be empty to keep unchanged).
+     * @param newPassword The new password to set (can be empty to keep unchanged).
+     */
+    private void performUpdate(String newUsername, String newEmail, String newPassword) {
+<span class="nc" id="L265">        int userId = prefs.getInt(KEY_USER_ID, -1);</span>
+<span class="nc bnc" id="L266" title="All 2 branches missed.">        if (userId == -1) {</span>
+<span class="nc" id="L267">            Toast.makeText(getContext(), &quot;An Error Occurred&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L268">            Log.e(TAG, &quot;User ID not found in shared preferences.&quot;);</span>
+<span class="nc" id="L269">            return;</span>
+        }
+
+<span class="nc" id="L272">        JSONObject requestBody = new JSONObject();</span>
+        try {
+<span class="nc" id="L274">            requestBody.put(&quot;id&quot;, userId);</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">            if (newUsername.equals(prefs.getString(KEY_USER_NAME, &quot;&quot;))) {</span>
+<span class="nc" id="L276">                newUsername = &quot;&quot;;</span>
+            }
+<span class="nc bnc" id="L278" title="All 2 branches missed.">            if (newEmail.equals(prefs.getString(KEY_USER_EMAIL, &quot;&quot;))) {</span>
+<span class="nc" id="L279">                newEmail = &quot;&quot;;</span>
+            }
+<span class="nc bnc" id="L281" title="All 2 branches missed.">            if (newPassword.isEmpty()) {</span>
+<span class="nc" id="L282">                newPassword = &quot;&quot;;</span>
+            }
+
+<span class="nc" id="L285">            requestBody.put(&quot;username&quot;, newUsername);</span>
+<span class="nc" id="L286">            requestBody.put(&quot;email&quot;, newEmail);</span>
+<span class="nc" id="L287">            requestBody.put(&quot;pfp&quot;, &quot;&quot;); // TODO: Implement profile picture update</span>
+<span class="nc" id="L288">            requestBody.put(&quot;password&quot;, newPassword);</span>
+
+
+<span class="nc" id="L291">        } catch (JSONException e) {</span>
+<span class="nc" id="L292">            Log.e(TAG, &quot;Error creating JSON for update&quot;, e);</span>
+<span class="nc" id="L293">            return;</span>
+<span class="nc" id="L294">        }</span>
+
+<span class="nc" id="L296">        StringRequest updateRequest = getUpdateRequest(newUsername, newEmail, requestBody, userId);</span>
+
+<span class="nc" id="L298">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(updateRequest);</span>
+<span class="nc" id="L299">    }</span>
+
+    /**
+     * Creates a StringRequest for updating the user account.
+     * @param newUsername The new username to set (can be empty to keep unchanged).
+     * @param newEmail The new email to set (can be empty to keep unchanged).
+     * @param requestBody The JSON body containing update details.
+     * @return The configured StringRequest.
+     */
+    private StringRequest getUpdateRequest(String newUsername, String newEmail, JSONObject requestBody, int userId) {
+<span class="nc" id="L309">        String url = ApiConstants.BASE_URL + ApiConstants.UPDATE_ACCOUNT_ENDPOINT + &quot;?id=&quot; + userId;</span>
+<span class="nc" id="L310">        StringRequest updateRequest = new StringRequest(Request.Method.PUT, url,</span>
+                response -&gt; {
+<span class="nc" id="L312">                    Log.d(TAG, &quot;Account updated successfully&quot;);</span>
+<span class="nc" id="L313">                    Toast.makeText(getContext(), &quot;Profile updated!&quot;, Toast.LENGTH_SHORT).show();</span>
+
+<span class="nc" id="L315">                    SharedPreferences.Editor editor = prefs.edit();</span>
+<span class="nc bnc" id="L316" title="All 2 branches missed.">                    if (!newUsername.isBlank()) {</span>
+<span class="nc" id="L317">                        editor.putString(KEY_USER_NAME, newUsername);</span>
+<span class="nc" id="L318">                        usernameLabel.setText(&quot;@&quot; + newUsername);</span>
+                    }
+<span class="nc bnc" id="L320" title="All 2 branches missed.">                    if (!newEmail.isBlank()) {</span>
+<span class="nc" id="L321">                        editor.putString(KEY_USER_EMAIL, newEmail);</span>
+                    }
+<span class="nc" id="L323">                    editor.apply();</span>
+
+<span class="nc" id="L325">                    showDisplayOptions();</span>
+<span class="nc" id="L326">                },</span>
+                error -&gt; {
+<span class="nc" id="L328">                    Log.e(TAG, &quot;Error updating account&quot;, error);</span>
+<span class="nc" id="L329">                    Toast.makeText(getContext(), &quot;Failed to update profile.&quot;, Toast.LENGTH_LONG).show();</span>
+<span class="nc bnc" id="L330" title="All 2 branches missed.">                    if (error.networkResponse != null) {</span>
+<span class="nc" id="L331">                        Log.e(TAG, &quot;Update Profile Error code: &quot; + error.networkResponse.statusCode);</span>
+<span class="nc" id="L332">                        String responseBody = &quot;&quot;;</span>
+<span class="nc bnc" id="L333" title="All 2 branches missed.">                        if(error.networkResponse.data != null) {</span>
+<span class="nc" id="L334">                            responseBody = new String(error.networkResponse.data, StandardCharsets.UTF_8);</span>
+                        }
+<span class="nc" id="L336">                        Log.e(TAG, &quot;Signup error response body: &quot; + responseBody);</span>
+
+<span class="nc bnc" id="L338" title="All 2 branches missed.">                        if (error.networkResponse.statusCode == 409) {</span>
+<span class="nc" id="L339">                            Toast.makeText(getContext(), responseBody, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L340">                            editUsernameLayout.setError(&quot;This email or username might already be taken.&quot;);</span>
+<span class="nc" id="L341">                            editEmailLayout.setError(&quot;This email or username might already be taken.&quot;);</span>
+                        } else {
+<span class="nc" id="L343">                            Toast.makeText(getContext(), &quot;Signup failed. Server error: &quot; + error.networkResponse.statusCode, Toast.LENGTH_LONG).show();</span>
+                        }
+                    }
+<span class="nc" id="L346">                }) {</span>
+            @Override
+            public byte[] getBody() {
+<span class="nc" id="L349">                return requestBody.toString().getBytes(StandardCharsets.UTF_8);</span>
+            }
+
+            @Override
+            public String getBodyContentType() {
+<span class="nc" id="L354">                return &quot;application/json; charset=utf-8&quot;;</span>
+            }
+        };
+<span class="nc" id="L357">        return updateRequest;</span>
+    }
+
+    /**
+     * Displays a confirmation dialog before deleting the account.
+     */
+    private void showDeleteConfirmationDialog() {
+<span class="nc" id="L364">        new AlertDialog.Builder(getContext())</span>
+<span class="nc" id="L365">                .setTitle(&quot;Account Deletion Confirmation&quot;)</span>
+<span class="nc" id="L366">                .setMessage(&quot;Are you sure you want to PERMANENTLY delete your account? This action cannot be undone.&quot;)</span>
+<span class="nc" id="L367">                .setNegativeButton(&quot;Cancel&quot;, null)</span>
+<span class="nc" id="L368">                .setPositiveButton(&quot;Yes&quot;, (dialog, which) -&gt; {</span>
+<span class="nc" id="L369">                    int userId = prefs.getInt(KEY_USER_ID, -1);</span>
+<span class="nc bnc" id="L370" title="All 2 branches missed.">                    if (userId != -1) {</span>
+<span class="nc" id="L371">                        deleteAccount(userId);</span>
+                    } else {
+<span class="nc" id="L373">                        Toast.makeText(getContext(), &quot;Error: Could not find user ID.&quot;, Toast.LENGTH_SHORT).show();</span>
+                    }
+<span class="nc" id="L375">                })</span>
+<span class="nc" id="L376">                .show();</span>
+<span class="nc" id="L377">    }</span>
+
+    /**
+     * Sends a DELETE request to the server to delete the user account.
+     * On success, clears SharedPreferences and navigates to LauncherActivity.
+     * @param userId The ID of the user to delete.
+     */
+    private void deleteAccount(int userId) {
+<span class="nc" id="L385">        String url = ApiConstants.BASE_URL + ApiConstants.DELETE_ACCOUNT_ENDPOINT + &quot;?id=&quot; + userId;</span>
+<span class="nc" id="L386">        StringRequest deleteRequest = new StringRequest(Request.Method.DELETE, url,</span>
+                response -&gt; {
+<span class="nc" id="L388">                    Log.d(TAG, &quot;Account deleted successfully: &quot; + response);</span>
+<span class="nc" id="L389">                    Toast.makeText(getContext(), &quot;Account deleted successfully.&quot;, Toast.LENGTH_SHORT).show();</span>
+
+<span class="nc" id="L391">                    prefs.edit().clear().apply();</span>
+
+<span class="nc bnc" id="L393" title="All 2 branches missed.">                    if (getActivity() != null) {</span>
+<span class="nc" id="L394">                        Intent intent = new Intent(getActivity(), LauncherActivity.class);</span>
+<span class="nc" id="L395">                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);</span>
+<span class="nc" id="L396">                        startActivity(intent);</span>
+<span class="nc" id="L397">                        getActivity().finish();</span>
+                    }
+<span class="nc" id="L399">                },</span>
+                error -&gt; {
+<span class="nc" id="L401">                    Log.e(TAG, &quot;Failed to delete account&quot;, error);</span>
+<span class="nc" id="L402">                    Toast.makeText(getContext(), &quot;Failed to delete account. Please try again.&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L403">                });</span>
+
+<span class="nc" id="L405">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(deleteRequest);</span>
+<span class="nc" id="L406">    }</span>
+
+    /**
+     * Logs out the user by clearing SharedPreferences and navigates to LauncherActivity.
+     */
+    private void logout() {
+<span class="fc" id="L412">        prefs.edit().clear().apply();</span>
+
+<span class="pc bpc" id="L414" title="1 of 2 branches missed.">        if (getActivity() != null) {</span>
+<span class="fc" id="L415">            Intent intent = new Intent(getActivity(), LauncherActivity.class);</span>
+<span class="fc" id="L416">            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);</span>
+<span class="fc" id="L417">            Log.d(TAG, &quot;Logging out of &quot; + prefs.getString(KEY_USER_NAME, &quot;account&quot;));</span>
+<span class="fc" id="L418">            Toast.makeText(getContext(), &quot;Logging out&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="fc" id="L419">            startActivity(intent);</span>
+<span class="fc" id="L420">            getActivity().finish();</span>
+        }
+<span class="fc" id="L422">    }</span>
+
+    @Override
+    public void onAddPlaceClick() {
+<span class="nc" id="L426">        Intent intent = new Intent(getActivity(), AddPlaceActivity.class);</span>
+<span class="nc" id="L427">        activityLauncher.launch(intent);</span>
+<span class="nc" id="L428">    }</span>
+
+    @Override
+    public void onPlaceClick(Place place) {
+<span class="nc" id="L432">        Intent intent = new Intent(getActivity(), PlaceDetailActivity.class);</span>
+<span class="nc" id="L433">        int uid = prefs.getInt(KEY_USER_ID, -1);</span>
+<span class="nc bnc" id="L434" title="All 2 branches missed.">        if (uid == -1) {</span>
+<span class="nc" id="L435">            Log.e(TAG, &quot;User ID not found in shared preferences.&quot;);</span>
+<span class="nc" id="L436">            return;</span>
+        }
+<span class="nc" id="L438">        intent.putExtra(&quot;UID&quot;, uid);</span>
+<span class="nc" id="L439">        intent.putExtra(&quot;CID&quot;, place.getId());</span>
+<span class="nc" id="L440">        intent.putExtra(&quot;IMAGE_URL&quot;, place.getPhotoData());</span>
+<span class="nc" id="L441">        intent.putExtra(&quot;LATITUDE&quot;, place.getLatitude());</span>
+<span class="nc" id="L442">        intent.putExtra(&quot;LONGITUDE&quot;, place.getLongitude());</span>
+<span class="nc" id="L443">        activityLauncher.launch(intent);</span>
+<span class="nc" id="L444">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Generated by the Android Gradle plugin 8.13.0</div></body></html>

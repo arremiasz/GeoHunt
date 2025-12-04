@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MainActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.jubair5.geohunt</a> &gt; <span class="el_source">MainActivity.java</span></div><h1>MainActivity.java</h1><pre class="source lang-java linenums">package com.jubair5.geohunt;
+
+import android.os.Bundle;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.jubair5.geohunt.menu.HomeFragment;
+import com.jubair5.geohunt.menu.MapFragment;
+import com.jubair5.geohunt.menu.ProfileFragment;
+
+/**
+ * Activity that hosts the main navigation and fragments
+ * @author Alex Remiasz
+ */
+<span class="fc" id="L18">public class MainActivity extends AppCompatActivity {</span>
+
+    private BottomNavigationView botNav;
+<span class="fc" id="L21">    private final FragmentManager fm = getSupportFragmentManager();</span>
+<span class="fc" id="L22">    private final Fragment homeFragment = new HomeFragment();</span>
+<span class="fc" id="L23">    private final Fragment mapFragment = new MapFragment();</span>
+<span class="fc" id="L24">    private final Fragment profileFragment = new ProfileFragment();</span>
+    private Fragment active;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="fc" id="L29">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L30">        setContentView(R.layout.main_activity);</span>
+
+<span class="fc" id="L32">        active = homeFragment;</span>
+<span class="fc" id="L33">        botNav = findViewById(R.id.bottom_navigation);</span>
+
+<span class="pc bpc" id="L35" title="1 of 2 branches missed.">        if (savedInstanceState == null) {</span>
+<span class="fc" id="L36">            fm.beginTransaction().add(R.id.fragment_container, profileFragment, &quot;3&quot;).hide(profileFragment).commit();</span>
+<span class="fc" id="L37">            fm.beginTransaction().add(R.id.fragment_container, mapFragment, &quot;2&quot;).hide(mapFragment).commit();</span>
+<span class="fc" id="L38">            fm.beginTransaction().add(R.id.fragment_container, homeFragment, &quot;1&quot;).commit();</span>
+
+<span class="pc bpc" id="L40" title="1 of 2 branches missed.">            if (getSupportActionBar() != null) {</span>
+<span class="fc" id="L41">                getSupportActionBar().setTitle(&quot;Home&quot;);</span>
+            }
+        }
+
+<span class="fc" id="L45">        onNavItemSelected();</span>
+<span class="fc" id="L46">    }</span>
+
+    /**
+     * Sets up the listener for bottom navigation item selection.
+     */
+    public void onNavItemSelected() {
+<span class="fc" id="L52">        botNav.setOnItemSelectedListener(item -&gt; {</span>
+<span class="fc" id="L53">            Fragment selectedFragment = null;</span>
+<span class="fc" id="L54">            String title = &quot;&quot;;</span>
+
+<span class="fc" id="L56">            int itemId = item.getItemId();</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">            if (itemId == R.id.nav_home) {</span>
+<span class="fc" id="L58">                selectedFragment = homeFragment;</span>
+<span class="fc" id="L59">                title = &quot;Home&quot;;</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">            } else if (itemId == R.id.nav_map) {</span>
+<span class="fc" id="L61">                selectedFragment = mapFragment;</span>
+<span class="fc" id="L62">                title = &quot;Map&quot;;</span>
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">            } else if (itemId == R.id.nav_profile) {</span>
+<span class="fc" id="L64">                selectedFragment = profileFragment;</span>
+<span class="fc" id="L65">                title = &quot;Profile&quot;;</span>
+            }
+
+<span class="pc bpc" id="L68" title="1 of 2 branches missed.">            if (selectedFragment != null) {</span>
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">                if (getSupportActionBar() != null) {</span>
+<span class="fc" id="L70">                    getSupportActionBar().setTitle(title);</span>
+                }
+<span class="fc" id="L72">                fm.beginTransaction().hide(active).show(selectedFragment).commit();</span>
+<span class="fc" id="L73">                active = selectedFragment;</span>
+<span class="fc" id="L74">                return true;</span>
+            }
+<span class="nc" id="L76">            return false;</span>
+        });
+<span class="fc" id="L78">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Generated by the Android Gradle plugin 8.13.0</div></body></html>
