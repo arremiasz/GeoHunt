@@ -302,11 +302,8 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
         VolleySingleton.getInstance(getContext()).addToRequestQueue(jsonArrayRequest);
 
         startingFriendAdapter.notifyDataSetChanged();
-
-
-
-
     }
+
 
     /**
      * Goes to an activity displaying the friend

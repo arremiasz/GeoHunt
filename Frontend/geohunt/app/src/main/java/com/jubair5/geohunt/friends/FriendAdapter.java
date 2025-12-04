@@ -7,6 +7,9 @@ package com.jubair5.geohunt.friends;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -64,8 +67,25 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
         // Name and state
         holder.friendNameTextView.setText(friend.getUsername());
         setStateText(holder, friend);
+        loadProfilePicture(holder, friend);
         holder.itemView.setOnClickListener(v -> listener.onFriendClick(friend));
 
+    }
+
+
+    /**
+     * Loads the user's profile picture from pfp string.
+     * Falls back to the placeholder icon if no profile picture is available.
+     */
+    private void loadProfilePicture(ViewHolder holder, Friend friend) {
+        String pfp = friend.getPhoto();
+        if (pfp != null && !pfp.isEmpty()) {
+            byte[] decodedImage = Base64.decode(pfp, Base64.DEFAULT);
+            Bitmap bitmap = BitmapFactory.decodeByteArray(decodedImage, 0, decodedImage.length);
+            holder.pfp.setImageBitmap(bitmap);
+        } else {
+            holder.pfp.setImageResource(android.R.drawable.ic_menu_gallery);
+        }
     }
 
     /**

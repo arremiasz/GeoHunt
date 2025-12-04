@@ -10,8 +10,6 @@ public class Friend {
     private int id;
     private String username;
     private int state;
-
-    // Future Use
     private String photoUrl;
 
 
@@ -30,7 +28,7 @@ public class Friend {
      * Gets the decoded image data as a byte array.
      * @return The photo data, ready to be loaded by Glide.
      */
-    private String getPhotoUrl(){return photoUrl;}
+    public String getPhoto(){return photoUrl;}
 
     /**
      * returns the id of the account

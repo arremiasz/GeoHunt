@@ -6,7 +6,10 @@ package com.jubair5.geohunt.friends;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -264,7 +267,14 @@ public class SingleFriendActivity extends AppCompatActivity {
                 response -> {
                     Log.d(TAG, "Account Search Response: "+ response.toString());
 
-                    // Display Information
+                    String pfp = response.optString("pfp");
+                    if (pfp != null && !pfp.isEmpty()) {
+                        byte[] decodedImage = Base64.decode(pfp, Base64.DEFAULT);
+                        Bitmap bitmap = BitmapFactory.decodeByteArray(decodedImage, 0, decodedImage.length);
+                        profilePic.setImageBitmap(bitmap);
+                    } else {
+                        profilePic.setImageResource(android.R.drawable.ic_menu_gallery);
+                    }
                     // Stats later on
                 },
                 volleyError -> {
