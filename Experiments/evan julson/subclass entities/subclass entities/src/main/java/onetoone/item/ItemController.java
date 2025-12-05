@@ -5,6 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 public class ItemController {
     @Autowired
@@ -12,6 +14,9 @@ public class ItemController {
 
     @Autowired
     ToolRepository toolRepository;
+
+    @Autowired
+    ItemService itemService;
 
     @PostMapping("/items/food")
     public Item createFood(@RequestBody Food food){
@@ -27,13 +32,21 @@ public class ItemController {
 
     @GetMapping("/items/{id}")
     public Item getItem(@PathVariable Long id){
-        Item item = null;
-        if(toolRepository.findById(id).isPresent()){
-            item = toolRepository.findById(id).get();
-        }
-        if(foodRepository.findById(id).isPresent()){
-            item = foodRepository.findById(id).get();
-        }
-        return item;
+        return itemService.getItem(id);
+    }
+
+    @GetMapping("/items")
+    public List<Item> listItems(){
+        return itemService.listItem();
+    }
+
+    @GetMapping("/items/food")
+    public List<Food> listFood(){
+        return itemService.listFood();
+    }
+
+    @GetMapping("/items/tool")
+    public List<Tool> listTools(){
+        return itemService.listTool();
     }
 }
