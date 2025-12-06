@@ -41,7 +41,7 @@ public class RewardService {
         return rewardRepository.findAll();
     }
 
-    public List<Customization> filterRewardsByCustomization(List<Reward> unfilteredList){
+    public List<Customization> getCustomizations(List<Reward> unfilteredList){
         List<Customization> filteredList = new ArrayList<>();
         for(Reward reward : unfilteredList){
             if(reward instanceof Customization){
@@ -68,10 +68,26 @@ public class RewardService {
 
 
     // Grade Submission and Assign Reward
-    public Reward gradeSubmissionAndAssignReward(Submissions submission){
-        // Return random reward with a higher weight to rewards with a similar point value.
-        int submissionValue = submission.getSubmissionPoints();
-        return null;
+    public Reward gradeSubmissionAndAssignReward(int value){
+        // Return random reward using weights based on value and submission score.
+        // Get submission value
+        int submissionValue = value;
+
+        // Get reward list
+        Reward[] rewards = getAllRewards().toArray(new Reward[0]);
+        double[] weights = new double[rewards.length];
+
+        // For each, get weight and add to array
+        for(int i = 0; i < rewards.length; i++){
+            weights[i] = getRewardWeight(submissionValue, rewards[i].getValue());
+        }
+
+        // Get random index
+        int randIndex = chooseRandom(weights);
+
+        // Return given reward
+        Reward output = rewards[randIndex];
+        return output;
     }
 
     private double getRewardWeight(int submissionValue, int rewardValue){
@@ -86,11 +102,11 @@ public class RewardService {
             totalWeight += weight;
         }
 
-        double random = Math.random();
+        double random = totalWeight*Math.random();
         double totalAtIndex = 0;
         int i = 0;
 
-        while (i < weights.length && totalAtIndex < random){
+        while (i < weights.length-1 && totalAtIndex < random){
             totalAtIndex += weights[i];
             i++;
         }

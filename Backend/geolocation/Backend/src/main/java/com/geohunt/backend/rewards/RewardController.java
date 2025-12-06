@@ -21,9 +21,10 @@ public class RewardController {
 
     // Assign Reward from Submission
 
-    @PostMapping("/rewards/gradesubmission/{sid}")
-    public ResponseEntity<Reward> gradeSubmission(@PathVariable long sid){
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    @PostMapping("/rewards/gradesubmission/{value}")
+    public ResponseEntity<Reward> gradeSubmission(@PathVariable int value){
+        Reward out = rewardService.gradeSubmissionAndAssignReward(value);
+        return ResponseEntity.ok(out);
     }
 
     // User Inventory
@@ -45,7 +46,7 @@ public class RewardController {
         }
         Account account = accountRepository.findById(id).get();
         List<Reward> userInventory = rewardService.getUserInventory(account);
-        List<Customization> customizationList = rewardService.filterRewardsByCustomization(userInventory);
+        List<Customization> customizationList = rewardService.getCustomizations(userInventory);
         return ResponseEntity.ok(customizationList);
     }
 

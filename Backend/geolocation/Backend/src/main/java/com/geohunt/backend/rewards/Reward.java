@@ -17,7 +17,7 @@ public abstract class Reward {
     private long id;
     private String type;
     private String name;
-    private double value;
+    private int value;
 
 //    @OneToOne
 //    public Image rewardImage;
