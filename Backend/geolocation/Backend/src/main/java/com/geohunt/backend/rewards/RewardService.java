@@ -5,32 +5,48 @@ import com.geohunt.backend.database.Submissions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class RewardService {
 
-    @Autowired CustomizationRepository customizationRepository;
+    @Autowired RewardRepository rewardRepository;
 
 
-    public boolean saveReward(Reward reward){
-        if(reward instanceof Customization){
-            customizationRepository.save((Customization) reward);
-            return true;
-        }
-        return false;
+    public void saveReward(Reward reward){
+        rewardRepository.save(reward);
     }
 
     public Reward getReward(long id){
-        if(customizationRepository.findById(id).isPresent()){
-            return customizationRepository.findById(id).get();
+        if(rewardRepository.findById(id).isPresent()){
+            return rewardRepository.findById(id).get();
         }
         return null;
     }
 
     public boolean deleteReward(long id){
+        if(rewardRepository.findById(id).isPresent()){
+            rewardRepository.deleteById(id);
+            return true;
+        }
         return false;
+    }
+
+    public List<Reward> getAllRewards(){
+        return rewardRepository.findAll();
+    }
+
+    public List<Customization> filterRewardsByCustomization(List<Reward> unfilteredList){
+        List<Customization> filteredList = new ArrayList<>();
+        for(Reward reward : unfilteredList){
+            if(reward instanceof Customization){
+                filteredList.add((Customization) reward);
+            }
+        }
+        return filteredList;
+        // Todo: Generalize method for different subclasses of Reward
     }
 
 
