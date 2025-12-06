@@ -10,35 +10,39 @@ import java.util.List;
 public class ItemService {
 
     @Autowired
-    FoodRepository foodRepository;
-    @Autowired
-    ToolRepository toolRepository;
+    ItemRepository itemRepository;
 
     public Item getItem(long id){
-        Item item = null;
-        if(toolRepository.findById(id).isPresent()){
-            item = toolRepository.findById(id).get();
+        if(itemRepository.findById(id).isPresent()){
+            return itemRepository.findById(id).get();
         }
-        if(foodRepository.findById(id).isPresent()){
-            item = foodRepository.findById(id).get();
-        }
-        return item;
+        return null;
     }
 
     public List<Item> listItem(){
-        List<Item> itemList = new ArrayList<>();
-        itemList.addAll(listFood());
-        itemList.addAll(listTool());
+        List<Item> itemList = itemRepository.findAll();
         return itemList;
     }
 
     public List<Food> listFood(){
-        List<Food> foodList = foodRepository.findAll();
+        List<Item> itemList = itemRepository.findAll();
+        List<Food> foodList = new ArrayList<>();
+        for(Item item : itemList){
+            if(item instanceof Food){
+                foodList.add((Food) item);
+            }
+        }
         return foodList;
     }
 
     public List<Tool> listTool(){
-        List<Tool> toolList = toolRepository.findAll();
+        List<Item> itemList = itemRepository.findAll();
+        List<Tool> toolList = new ArrayList<>();
+        for(Item item : itemList){
+            if(item instanceof Tool){
+                toolList.add((Tool) item);
+            }
+        }
         return toolList;
     }
 

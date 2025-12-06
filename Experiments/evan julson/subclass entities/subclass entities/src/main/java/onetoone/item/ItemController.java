@@ -10,23 +10,20 @@ import java.util.List;
 @RestController
 public class ItemController {
     @Autowired
-    FoodRepository foodRepository;
-
-    @Autowired
-    ToolRepository toolRepository;
+    ItemRepository itemRepository;
 
     @Autowired
     ItemService itemService;
 
     @PostMapping("/items/food")
     public Item createFood(@RequestBody Food food){
-        foodRepository.save(food);
+        itemRepository.save(food);
         return food;
     }
 
     @PostMapping("/items/tool")
     public Item createTool(@RequestBody Tool tool){
-        toolRepository.save(tool);
+        itemRepository.save(tool);
         return tool;
     }
 
