@@ -1,29 +1,38 @@
 package com.geohunt.backend.rewards;
 
-import com.geohunt.backend.Services.AccountService;
-import com.geohunt.backend.database.Submissions;
-import com.geohunt.backend.database.SubmissionsService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class RewardController {
 
+    @Autowired
+    RewardService rewardService;
+
     // Assign Reward from Submission
 
 
-    // Post
+    // Universal
 
-    // Get
+    @GetMapping("/rewards/{id}")
+    public ResponseEntity<Reward> getCustomization(@PathVariable long id){
+        Reward reward = rewardService.getReward(id);
+        if(reward == null){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.ok(reward);
+    }
 
-    // Update
+    // Customizations
 
-    // Delete
+    @PostMapping("/rewards/customizations")
+    public ResponseEntity<Customization> submitCustomization(@RequestBody Customization customization){
+        rewardService.saveReward(customization);
+        return ResponseEntity.ok(customization);
+    }
 
-    // List
+
 }

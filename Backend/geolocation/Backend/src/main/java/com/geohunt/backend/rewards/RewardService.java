@@ -1,5 +1,6 @@
 package com.geohunt.backend.rewards;
 
+import com.geohunt.backend.Services.AccountService;
 import com.geohunt.backend.database.Account;
 import com.geohunt.backend.database.Submissions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,13 +8,15 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class RewardService {
 
     @Autowired RewardRepository rewardRepository;
+    @Autowired AccountService accountService;
 
+
+    // Interface with database
 
     public void saveReward(Reward reward){
         rewardRepository.save(reward);
@@ -49,9 +52,23 @@ public class RewardService {
         // Todo: Generalize method for different subclasses of Reward
     }
 
+    // User inventories
 
-    // Assign Reward from Submission
-    public Reward assignReward(Submissions submission){
+    public List<Reward> getUserInventory(Account account){
+        return account.getInventory();
+    }
+
+    public void addRewardToUserInventory(Account account, Reward reward){
+        account.getInventory().add(reward);
+    }
+
+    public void removeRewardFromUserInventory(Account account, Reward reward){
+        account.getInventory().remove(reward);
+    }
+
+
+    // Grade Submission and Assign Reward
+    public Reward gradeSubmissionAndAssignReward(Submissions submission){
         // Return random reward with a higher weight to rewards with a similar point value.
         int submissionValue = submission.getSubmissionPoints();
         return null;

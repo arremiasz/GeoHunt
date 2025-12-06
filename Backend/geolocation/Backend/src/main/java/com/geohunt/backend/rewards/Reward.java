@@ -1,7 +1,5 @@
 package com.geohunt.backend.rewards;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.geohunt.backend.images.Image;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,8 +16,8 @@ public abstract class Reward {
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     public long id;
     public String name;
-    public double valueInPoints;
+    public double value;
 
-    @OneToOne
-    public Image rewardImage;
+//    @OneToOne
+//    public Image rewardImage;
 }
