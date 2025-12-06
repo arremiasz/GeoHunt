@@ -4,6 +4,7 @@ package com.geohunt.backend.rewards;
 import com.geohunt.backend.Services.AccountService;
 import com.geohunt.backend.database.Account;
 import com.geohunt.backend.database.AccountRepository;
+import com.geohunt.backend.database.Submissions;
 import com.geohunt.backend.database.SubmissionsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,10 +22,16 @@ public class RewardController {
 
     // Assign Reward from Submission
 
-    @PostMapping("/rewards/gradesubmission/{value}")
-    public ResponseEntity<Reward> gradeSubmission(@PathVariable int value){
-        Reward out = rewardService.gradeSubmissionAndAssignReward(value);
-        return ResponseEntity.ok(out);
+    @PostMapping("/rewards/gradesubmission/{sid}")
+    public ResponseEntity<Reward> gradeSubmission(@PathVariable long sid){
+        try{
+            Submissions submissions = submissionsService.getSubmissionById(sid);
+            Reward out = rewardService.gradeSubmissionAndAssignReward(submissions);
+            return ResponseEntity.ok(out);
+        }
+        catch (IllegalArgumentException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
     }
 
     // User Inventory
