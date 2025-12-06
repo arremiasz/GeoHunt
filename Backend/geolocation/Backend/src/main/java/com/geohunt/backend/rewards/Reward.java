@@ -14,9 +14,10 @@ import java.util.List;
 public abstract class Reward {
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
-    public long id;
-    public String name;
-    public double value;
+    private long id;
+    private String type;
+    private String name;
+    private double value;
 
 //    @OneToOne
 //    public Image rewardImage;
