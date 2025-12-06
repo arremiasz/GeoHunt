@@ -11,20 +11,15 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
-public class Reward {
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "reward_type", discriminatorType = DiscriminatorType.STRING)
+public abstract class Reward {
+    @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
-    public @Id long id;
+    public long id;
     public String name;
-    public String rewardType;
     public double valueInPoints;
 
     @OneToOne
     public Image rewardImage;
-
-    public void update(Reward other){
-        this.name = other.getName();
-        this.rewardType = other.getRewardType();
-        this.valueInPoints = other.valueInPoints;
-        this.rewardImage = other.rewardImage;
-    }
 }

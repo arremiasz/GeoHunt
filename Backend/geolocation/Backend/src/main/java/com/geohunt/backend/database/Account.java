@@ -48,7 +48,7 @@ public class Account {
     private Set<Friends> receivedFriendRequests;
 
     @OneToMany()
-    private List<Reward> rewards;
+    private List<Reward> inventory;
 
     public Account(String username, String password){
         this.username = username;

@@ -10,56 +10,35 @@ import java.util.Optional;
 
 @Service
 public class RewardService {
-    @Autowired
-    RewardRepository rewardRepository;
+
+    @Autowired CustomizationRepository customizationRepository;
+
+
+    public boolean saveReward(Reward reward){
+        if(reward instanceof Customization){
+            customizationRepository.save((Customization) reward);
+            return true;
+        }
+        return false;
+    }
+
+    public Reward getReward(long id){
+        if(customizationRepository.findById(id).isPresent()){
+            return customizationRepository.findById(id).get();
+        }
+        return null;
+    }
+
+    public boolean deleteReward(long id){
+        return false;
+    }
+
 
     // Assign Reward from Submission
     public Reward assignReward(Submissions submission){
         // Return random reward with a higher weight to rewards with a similar point value.
         int submissionValue = submission.getSubmissionPoints();
-    }
-
-    // Save
-
-    public long saveReward(Reward reward){
-        rewardRepository.save(reward);
-        return reward.getId();
-    }
-
-    // Get
-
-    public Reward getRewardById(Long id){
-        Optional<Reward> rewardOptional = rewardRepository.findById(id);
-        if(rewardOptional.isEmpty()){
-            return null;
-        }
-        return rewardOptional.get();
-    }
-
-    public List<Reward> getRewardsByAccount(Account owner){
-        return owner.getRewards();
-    }
-
-    // Update
-
-    public Reward updateReward(Long id, Reward rewardNew){
-        Reward reward = getRewardById(id);
-        if(reward == null){
-            return null;
-        }
-
-        reward.update(rewardNew);
-
-        rewardRepository.save(reward);
-
-        return reward;
-
-    }
-
-    // Delete
-
-    public void removeReward(Reward reward){
-        rewardRepository.delete(reward);
+        return null;
     }
 
     private double getRewardWeight(int submissionValue, int rewardValue){
