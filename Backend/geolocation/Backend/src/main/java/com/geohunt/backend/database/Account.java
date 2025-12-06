@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-
 import java.util.List;
 import java.util.Set;
 
@@ -17,11 +16,16 @@ import java.util.Set;
 @NoArgsConstructor
 @JsonIgnoreProperties({"challenges", "submissions", "sentFriendRequests", "receivedFriendRequests", "notifications"})
 public class Account {
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
-    private @Id long id;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
+
     private String username;
+
     @Column(columnDefinition = "mediumtext")
     private String pfp;
+
     private String password;
     private String email;
 
@@ -29,27 +33,29 @@ public class Account {
     @JsonManagedReference("account-challenges")
     private List<Challenges> challenges;
 
-    @OneToMany(mappedBy="submitter")
+    @OneToMany(mappedBy = "submitter")
     @JsonManagedReference("account-submissions")
     private List<Submissions> submissions;
-
 
     @OneToMany(mappedBy = "primary")
     @JsonManagedReference("primary-friends")
     private Set<Friends> sentFriendRequests;
 
-    @OneToMany(mappedBy="target")
+    @OneToMany(mappedBy = "target")
     @JsonManagedReference("account-notifications")
     private List<Notifications> notifications;
-
 
     @OneToMany(mappedBy = "target")
     @JsonManagedReference("target-friends")
     private Set<Friends> receivedFriendRequests;
 
-    public Account(String username, String password){
+    @OneToMany(mappedBy = "user")
+    @JsonManagedReference("transactions-user")
+    private List<Transactions> transactions;
+
+    public Account(String username, String password) {
         this.username = username;
         this.password = password;
     }
-
 }
+
