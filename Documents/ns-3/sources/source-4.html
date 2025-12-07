@@ -1,0 +1,188 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > notifController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.geohunt.backend.Controllers</a>
+</div>
+
+<h1>Coverage Summary for Class: notifController (com.geohunt.backend.Controllers)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">notifController</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    20%
+  </span>
+  <span class="absValue">
+    (1/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    10%
+  </span>
+  <span class="absValue">
+    (1/10)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.geohunt.backend.Controllers;
+&nbsp;
+&nbsp;import com.geohunt.backend.Services.NotificationsService;
+&nbsp;import com.geohunt.backend.database.Notifications;
+&nbsp;import io.swagger.v3.oas.annotations.Operation;
+&nbsp;import io.swagger.v3.oas.annotations.Parameter;
+&nbsp;import io.swagger.v3.oas.annotations.media.ArraySchema;
+&nbsp;import io.swagger.v3.oas.annotations.media.Content;
+&nbsp;import io.swagger.v3.oas.annotations.media.Schema;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponse;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponses;
+&nbsp;import io.swagger.v3.oas.annotations.tags.Tag;
+&nbsp;import org.springframework.beans.factory.annotation.Autowired;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;@Tag(name = &quot;Notifications Controller&quot;, description = &quot;Operations relating to notifications. Creating is managed through the websocket feature, where any notification sent gets added to the database.&quot;)
+&nbsp;@RestController
+&nbsp;@RequestMapping(&quot;/notifications&quot;)
+<b class="fc">&nbsp;public class notifController {</b>
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    private NotificationsService notificationsService;
+&nbsp;
+&nbsp;    // Get all notifications for a user
+&nbsp;    @Operation(summary = &quot;Get notifications for a specific user&quot;, description = &quot;Queries database to get all notifications where target is userId. Returns NoContent if not found, or OK if found.&quot;)
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Notifications retrieved&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            array = @ArraySchema(schema = @Schema(implementation = Notifications.class)))),
+&nbsp;            @ApiResponse(responseCode = &quot;204&quot;, description = &quot;Notifications not found.&quot;, content = @Content)})
+&nbsp;    @GetMapping
+&nbsp;    public ResponseEntity&lt;List&lt;Notifications&gt;&gt; getNotifs(@Parameter(description = &quot;users id&quot;, required = true) @RequestParam long userId) {
+<b class="nc">&nbsp;        List&lt;Notifications&gt; notifs = notificationsService.getMyNotifs(userId);</b>
+<b class="nc">&nbsp;        if (notifs.isEmpty()) {</b>
+<b class="nc">&nbsp;            return ResponseEntity.noContent().build();</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return ResponseEntity.ok(notifs);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Delete Notification based on notification id&quot;, description = &quot;Queries database to delete notification if the id matches the parameter. Nothing happens if notification not found.&quot;)
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Notifications deleted&quot;,
+&nbsp;                    content = @Content)})
+&nbsp;    @DeleteMapping(&quot;/{notifId}&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; deleteNotif(@Parameter(description = &quot;notification id&quot;, required = true) @PathVariable Long notifId) {
+<b class="nc">&nbsp;        notificationsService.deleteNotification(notifId);</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok().build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Mark notification as read&quot;, description = &quot;Marks notification as read. Nothing happens if not found or was already read&quot;)
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Notifications marked as read&quot;,
+&nbsp;                    content = @Content)})
+&nbsp;    @PutMapping(&quot;/{notifId}/read&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; markAsRead(@Parameter(description = &quot;notification id&quot;, required = true) @PathVariable Long notifId) {
+<b class="nc">&nbsp;        notificationsService.markAsRead(notifId);</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok().build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Edit notification body based on notification id&quot;, description = &quot;Edit notifications body. Also resets read to false and timestamp to when it was edited. Nothing happens if notif not found. If message is empty, notification will be empty.&quot;)
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Notification edited&quot;,
+&nbsp;                    content = @Content)})
+&nbsp;    @PutMapping(&quot;/editMsg&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; changeMessage(@Parameter(description = &quot;notification id&quot;, required = true) @RequestParam long notifId, @Parameter(description = &quot;message to change notification to&quot;, required = true) @RequestParam String message) {
+<b class="nc">&nbsp;        return notificationsService.editNotification(notifId, message);</b>
+&nbsp;    }
+&nbsp;}
+&nbsp;
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-06 21:25</div>
+</div>
+</body>
+</html>
