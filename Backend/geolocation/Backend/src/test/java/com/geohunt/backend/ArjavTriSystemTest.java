@@ -50,13 +50,13 @@ public class ArjavTriSystemTest {
             FileInputStream fis = new FileInputStream(imageFile);
             fis.read(imageBytes);
             Account acc = new Account();
-            acc.setUsername("arjavTriSystemTest");
+            acc.setUsername("arjavTriSystem");
             acc.setPassword("arjavTriSystemTest");
-            acc.setEmail("arjavTriSystemTest@gmail.com");
+            acc.setEmail("arjavTriSystemTest2@gmail.com");
             acc.setPfp(Base64.getEncoder().encodeToString(imageBytes));
             accountService.createAccount(acc);
-            Account a = accountService.getAccountByUsername("arjavTriSystemTest");
-            assertTrue(a.getUsername().equals("arjavTriSystemTest"));
+            Account a = accountService.getAccountByUsername("arjavTriSystem");
+            assertTrue(a.getUsername().equals("arjavTriSystem"));
         } catch(Exception e){
             Assertions.fail(e.getMessage());
         }
@@ -85,9 +85,9 @@ public class ArjavTriSystemTest {
     public void testUpdateNotification(){
         long notifid = 1;
         assertNotNull(notificationsService.getNotificationById(notifid));
-        assertEquals("changed.", notificationsService.getNotificationById(notifid).getMessage());
-        notificationsService.editNotification(notifid, "heyyy");
-        assertEquals("heyyy", notificationsService.getNotificationById(notifid).getMessage());
+        assertEquals("hey", notificationsService.getNotificationById(notifid).getMessage());
+        notificationsService.editNotification(notifid, "hello");
+        assertEquals("hello", notificationsService.getNotificationById(notifid).getMessage());
 
 
     }
