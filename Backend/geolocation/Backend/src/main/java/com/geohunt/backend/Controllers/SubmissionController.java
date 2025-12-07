@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * @author evan juslon
+ */
 @Tag(name = "Submission Handler", description = "Operations related to submissions to challenges")
 @RestController
 public class SubmissionController {
