@@ -24,6 +24,7 @@ public class Account {
     private String pfp;
     private String password;
     private String email;
+    private long totalPoints;
 
     @OneToMany(mappedBy = "creator")
     @JsonManagedReference("account-challenges")
@@ -53,6 +54,18 @@ public class Account {
     public Account(String username, String password){
         this.username = username;
         this.password = password;
+    }
+
+    public void incrementPoints(long value){
+        totalPoints += value;
+    }
+
+    public boolean chargePoints(long value){
+        if(value > totalPoints){
+            return false;
+        }
+        totalPoints -= value;
+        return true;
     }
 
 }

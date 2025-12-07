@@ -31,8 +31,13 @@ public class RewardController {
         try{
             Account account = accountService.getAccountById(uid);
             Submissions submissions = submissionsService.getSubmissionById(sid);
-            Reward reward = rewardService.gradeSubmissionAndAssignReward(submissions);
+
+            int submissionValue = submissions.getSubmissionPoints();
+            account.incrementPoints(submissionValue);
+
+            Reward reward = rewardService.gradeSubmissionAndAssignReward(submissionValue);
             rewardService.addRewardToUserInventory(account, reward);
+
             return ResponseEntity.ok(reward);
         }
         catch (IllegalArgumentException e){

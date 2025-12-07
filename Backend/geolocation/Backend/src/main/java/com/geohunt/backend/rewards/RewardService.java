@@ -68,10 +68,9 @@ public class RewardService {
 
 
     // Grade Submission and Assign Reward
-    public Reward gradeSubmissionAndAssignReward(Submissions submissions){
+    public Reward gradeSubmissionAndAssignReward(int submissionValue){
         // Return random reward using weights based on value and submission score.
         // Get submission value
-        int submissionValue = submissions.getSubmissionPoints();
 
         // Get reward list
         Reward[] rewards = getAllRewards().toArray(new Reward[0]);
