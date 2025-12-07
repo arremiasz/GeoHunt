@@ -67,7 +67,7 @@ public class PowerupService {
     }
 
     public ResponseEntity generate(long chalid, Location loc) {
-        Powerup pUp = repository.getRandomPowerup();
+        Powerup pUp = repository.getRandomPowerupPortable();
         Optional<Challenges> c = challengesRepository.findById(chalid);
 
         if(c.isEmpty()){
