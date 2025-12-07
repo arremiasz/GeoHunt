@@ -115,4 +115,29 @@ public class ArjavTriSystemTest {
         System.out.println(rgd.getLon());
         assertTrue(true);
     }
+
+    @Test
+    public void testTimeDecrease(){
+        int chalId = 254;
+        Location nowLoc = new Location(42.033860, -93.642763);
+        Location pup = new Location(42.040481119999995, -93.64477338920923);
+
+        int time = powerupService.deduceTimeDeduction(chalId, nowLoc, pup);
+        System.out.println(time);
+        assertTrue(time > 0);
+    }
+
+    @Test
+    public void generalClue(){
+        int chalId = 254;
+        System.out.println(powerupService.generalClue(chalId));
+        assertTrue(true);
+    }
+
+    @Test
+    public void specificClue(){
+        int chalId = 254;
+        System.out.println(powerupService.specificClue(chalId));
+        assertTrue(true);
+    }
 }

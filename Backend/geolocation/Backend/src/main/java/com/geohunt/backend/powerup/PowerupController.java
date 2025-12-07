@@ -40,4 +40,9 @@ public class PowerupController {
     public ResponseEntity challenge(@RequestParam long chalid, @RequestBody Location loc) {
         return service.generate(chalid, loc);
     }
+
+    @PostMapping("/getAffect")
+    public ResponseEntity powerupAffect(@RequestParam long powerupId, @RequestParam long uid, @RequestParam long chalid, @RequestParam double powerupLat, @RequestParam double powerupLon, @RequestBody Location loc) {
+        return service.deduce(powerupId, uid, chalid, loc, new Location(powerupLat, powerupLon));
+    }
 }
