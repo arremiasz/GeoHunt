@@ -6,6 +6,11 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
+/**
+ * @author Evan Julson
+ */
 @Entity
 @Setter
 @Getter
@@ -20,11 +25,14 @@ public class Comment {
     @ManyToOne
     private Challenges challenge;
 
-    private String text;
+    private String comment;
 
-    public Comment(Account author, Challenges challenge, String text){
+    private LocalDateTime timeStamp;
+
+    public Comment(Account author, Challenges challenge, String comment){
         this.author = author;
         this.challenge = challenge;
-        this.text = text;
+        this.comment = comment;
+        timeStamp = LocalDateTime.now();
     }
 }
