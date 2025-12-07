@@ -144,6 +144,39 @@ public class PowerupController {
     }
 
     @Operation(
+            summary = "Generate a deterministic powerup location",
+            description = "Creates a powerup spawn point between the player's current location and the challenge goal. " +
+                    "This endpoint uses a specific powerup ID instead of picking one randomly.",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Player's current GPS location",
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(implementation = Location.class),
+                            examples = @ExampleObject(
+                                    name = "PlayerLocationExample",
+                                    description = "Example player location",
+                                    value = "{\"latitude\": 42.03386, \"longitude\": -93.642763}\""
+                            )
+                    )
+            )
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Deterministic powerup generated",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = RandomGenerationDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Powerup or Challenge not found", content = @Content)
+    })
+    @PostMapping("/DeterministicGenerate")
+    public ResponseEntity challengeDeterministic(
+            @Parameter(description = "Challenge ID", required = true) @RequestParam long chalid,
+            @Parameter(description = "Powerup ID to use (non-random)", required = true) @RequestParam long powerupId,
+            @RequestBody Location loc
+    ) {
+        return service.generate(chalid, loc, powerupId);
+    }
+
+
+    @Operation(
             summary = "Apply the effect of a collected powerup",
             description = """
                     Determines how the selected powerup affects the player:

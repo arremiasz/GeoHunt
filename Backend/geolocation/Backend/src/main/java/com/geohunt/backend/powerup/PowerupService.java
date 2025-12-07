@@ -26,7 +26,6 @@ public class PowerupService {
 
     @Autowired
     private PowerupRepository repository;
-
     @Autowired
     private GeohuntService geohuntService;
     @Autowired
@@ -66,8 +65,20 @@ public class PowerupService {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
+    public ResponseEntity generate(long chalid, Location loc, long powerid){
+        Optional<Powerup> p = repository.findById(powerid);
+        if(p.isEmpty()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Powerup not found.");
+        }
+        return getCoords(chalid, loc, p.get());
+    }
+
     public ResponseEntity generate(long chalid, Location loc) {
         Powerup pUp = repository.getRandomPowerupPortable();
+        return getCoords(chalid, loc, pUp);
+    }
+
+    public ResponseEntity getCoords(long chalid, Location loc, Powerup pUp) {
         Optional<Challenges> c = challengesRepository.findById(chalid);
 
         if(c.isEmpty()){
@@ -171,7 +182,7 @@ public class PowerupService {
 
         double offset = perpendicularDistance(loc, endLoc, pup);
 
-        double timeDeduction = baseTime + (totalDistance * 0.1) + (offset*0.01);
+        double timeDeduction = baseTime + (totalDistance * 0.02) + (offset*0.01);
 
         return (int) Math.round(timeDeduction);
     }
