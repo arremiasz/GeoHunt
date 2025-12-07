@@ -24,14 +24,6 @@ public class SubmissionController {
     @Autowired
     SubmissionsService submissionsService;
 
-    @Autowired
-    ChallengesRepository challengesRepository;
-
-    @Autowired
-    AccountService accountService;
-
-
-
     @Operation(summary = "Submit submission")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Submission success, returns distance in miles", content = {
