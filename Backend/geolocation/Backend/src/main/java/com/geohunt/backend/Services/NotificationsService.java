@@ -70,4 +70,8 @@ public class NotificationsService {
         return ResponseEntity.ok().build();
     }
 
+    public Notifications getNotificationById(Long notifId) {
+        return notificationsRepository.findById(notifId).orElse(null);
+    }
+
 }
