@@ -53,6 +53,17 @@ public class CommentController {
     }
 
     // Put
+    @PutMapping("/comments/{id}")
+    public ResponseEntity<Comment> updateComment(@PathVariable long id, @RequestBody String newComment){
+        if(commentRepository.findById(id).isEmpty()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        Comment comment = commentRepository.findById(id).get();
+        comment.setText(newComment);
+        commentRepository.save(comment);
+
+        return ResponseEntity.ok(comment);
+    }
 
     // Delete
     @DeleteMapping("/comments/{id}")
