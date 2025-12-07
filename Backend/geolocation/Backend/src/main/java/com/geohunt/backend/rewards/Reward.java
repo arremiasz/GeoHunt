@@ -1,10 +1,9 @@
 package com.geohunt.backend.rewards;
 
+import com.geohunt.backend.images.Image;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.List;
 
 @Entity
 @Getter
@@ -19,6 +18,6 @@ public abstract class Reward {
     private String name;
     private int value;
 
-//    @OneToOne
-//    public Image rewardImage;
+    @OneToOne
+    public Image rewardImage;
 }

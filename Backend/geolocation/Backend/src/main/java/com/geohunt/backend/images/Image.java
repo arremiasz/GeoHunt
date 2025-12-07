@@ -1,5 +1,6 @@
 package com.geohunt.backend.images;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -14,7 +15,10 @@ public class Image {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
-    private String filePath;
+    @JsonIgnore
+    private String localPath;
+    @JsonIgnore
+    private String absolutePath;
 
     public Image() {}
 }

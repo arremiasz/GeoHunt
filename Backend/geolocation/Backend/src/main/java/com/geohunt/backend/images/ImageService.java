@@ -11,7 +11,7 @@ import java.nio.file.Files;
 @Service
 public class ImageService {
 
-    // replace this before pushing to main. refers to the base directory where images are stored.
+    // TODO: replace this before pushing to main. refers to the base directory where images are stored.
     private static String directory = "C:/Users/evan/2_jubair_5"; // local - evan
 
     @Autowired
@@ -30,7 +30,8 @@ public class ImageService {
 
             imageFile.transferTo(destinationFile);
 
-            image.setFilePath(destinationFile.getAbsolutePath());
+            image.setAbsolutePath(destinationFile.getAbsolutePath());
+            image.setLocalPath(folder + File.separator + imageFile.getOriginalFilename());
             imageRepository.save(image);
 
             return image;
@@ -56,7 +57,7 @@ public class ImageService {
         if(image == null){
             return null;
         }
-        File imageFile = new File(image.getFilePath());
+        File imageFile = new File(image.getAbsolutePath());
         return Files.readAllBytes(imageFile.toPath());
     }
 
@@ -67,7 +68,7 @@ public class ImageService {
             return false;
         }
 
-        File imageFile = new File(image.getFilePath());
+        File imageFile = new File(image.getAbsolutePath());
 
         if(imageFile.delete()){
             imageRepository.delete(image);

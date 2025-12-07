@@ -1,11 +1,12 @@
 package com.geohunt.backend.rewards;
 
 
-import com.geohunt.backend.Services.AccountService;
 import com.geohunt.backend.database.Account;
 import com.geohunt.backend.database.AccountRepository;
 import com.geohunt.backend.database.Submissions;
 import com.geohunt.backend.database.SubmissionsService;
+import com.geohunt.backend.images.Image;
+import com.geohunt.backend.images.ImageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ public class RewardController {
     @Autowired RewardService rewardService;
     @Autowired AccountRepository accountRepository;
     @Autowired SubmissionsService submissionsService;
+    @Autowired ImageService imageService;
 
     // Assign Reward from Submission
 
@@ -76,6 +78,18 @@ public class RewardController {
         else{
             return ResponseEntity.badRequest().body("Reward does not exist");
         }
+    }
+
+    @PutMapping("/rewards/{rid}/image")
+    public ResponseEntity<Reward> setRewardImage(@RequestParam long imageId, @PathVariable long rid){
+        Reward reward = rewardService.getReward(rid);
+        Image image = imageService.getImageObj(imageId);
+        if(reward == null || image == null){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        reward.setRewardImage(image);
+        rewardService.saveReward(reward);
+        return ResponseEntity.ok(reward);
     }
 
     // Customizations
