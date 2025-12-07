@@ -21,17 +21,28 @@ public class Challenges {
     private @Id long id;
     double latitude;
     double longitude;
+
     @Column(unique = true, columnDefinition = "MEDIUMTEXT")
     private String streetviewurl;
+
     @ManyToOne
     @JoinColumn(name="account_id")
     @JsonIgnore
     private Account creator;
+
     LocalDate creationdate;
+
     @OneToMany(mappedBy="challenge")
     @JsonManagedReference("challenges-submissions")
     private List<Submissions> submissions;
+
     @OneToMany(mappedBy = "challenge")
     @JsonManagedReference("challenges-comment")
     private List<Comment> comments;
+
+    private List<Integer> challengeRatings;
+
+    public void addRating(int rating){
+        challengeRatings.add(rating);
+    }
 }
