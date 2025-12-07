@@ -1,6 +1,7 @@
 package com.geohunt.backend.rewards;
 
 
+import com.geohunt.backend.Services.AccountService;
 import com.geohunt.backend.database.Account;
 import com.geohunt.backend.database.AccountRepository;
 import com.geohunt.backend.database.Submissions;
@@ -19,17 +20,20 @@ public class RewardController {
 
     @Autowired RewardService rewardService;
     @Autowired AccountRepository accountRepository;
+    @Autowired AccountService accountService;
     @Autowired SubmissionsService submissionsService;
     @Autowired ImageService imageService;
 
     // Assign Reward from Submission
 
-    @PostMapping("/rewards/gradesubmission/{sid}")
-    public ResponseEntity<Reward> gradeSubmission(@PathVariable long sid){
+    @PostMapping("account/{uid}/rewards/gradesubmission/{sid}")
+    public ResponseEntity<Reward> gradeSubmission(@PathVariable long sid, @PathVariable long uid){
         try{
+            Account account = accountService.getAccountById(uid);
             Submissions submissions = submissionsService.getSubmissionById(sid);
-            Reward out = rewardService.gradeSubmissionAndAssignReward(submissions);
-            return ResponseEntity.ok(out);
+            Reward reward = rewardService.gradeSubmissionAndAssignReward(submissions);
+            rewardService.addRewardToUserInventory(account, reward);
+            return ResponseEntity.ok(reward);
         }
         catch (IllegalArgumentException e){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
