@@ -6,14 +6,17 @@ import com.geohunt.backend.Services.GeohuntService;
 import com.geohunt.backend.Services.NotificationsService;
 import com.geohunt.backend.database.Account;
 import com.geohunt.backend.database.ChallengesRepository;
-import org.junit.jupiter.api.BeforeAll;
+import com.geohunt.backend.powerup.Powerup;
+import com.geohunt.backend.powerup.PowerupService;
+import com.geohunt.backend.powerup.RandomGenerationDTO;
+import com.geohunt.backend.util.Location;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.io.FileInputStream;
 
@@ -39,6 +42,8 @@ public class ArjavTriSystemTest {
     @Autowired
     private NotificationsService notificationsService;
 
+    @Autowired
+    private PowerupService powerupService;
 
     @Test
     public void testAccount(){
@@ -88,7 +93,26 @@ public class ArjavTriSystemTest {
         assertEquals("hey", notificationsService.getNotificationById(notifid).getMessage());
         notificationsService.editNotification(notifid, "hello");
         assertEquals("hello", notificationsService.getNotificationById(notifid).getMessage());
+    }
 
+    @Test
+    public void testPowerupGenerationRandom(){
+        ResponseEntity a = powerupService.get("general_hint");
+        HttpStatus s = (HttpStatus) a.getStatusCode();
+        if(s == HttpStatus.NOT_FOUND){
+            Assertions.fail("Cant get powerup from DB");
+        }
+        Powerup found = (Powerup) a.getBody();
+        assertEquals(found.getId(), 1);
 
+        ResponseEntity gen = powerupService.generate(254, new Location(42.033860, -93.642763));
+        if(gen.getStatusCode() != HttpStatus.CREATED){
+            Assertions.fail("Cant generate random powerup");
+        }
+        RandomGenerationDTO rgd = (RandomGenerationDTO) gen.getBody();
+        System.out.println(rgd.getPowerup().getName());
+        System.out.println(rgd.getLat());
+        System.out.println(rgd.getLon());
+        assertTrue(true);
     }
 }
