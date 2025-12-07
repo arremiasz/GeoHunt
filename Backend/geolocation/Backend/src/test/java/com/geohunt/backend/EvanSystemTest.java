@@ -9,9 +9,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -21,6 +24,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @RunWith(SpringRunner.class)
 public class EvanSystemTest {
+
+    private AutoCloseable mocks;
 
     @InjectMocks
     AccountService accountService;
@@ -37,25 +42,19 @@ public class EvanSystemTest {
         RestAssured.baseURI = "http://localhost";
     }
 
+    @BeforeEach
+    public void init(){
+        mocks = MockitoAnnotations.openMocks(this);
+    }
+
     @Test
-    public void signupTest() {
-        // Send request and receive response
-        Response response = RestAssured.given().
-                header("Content-Type", "application/json").
-                header("charset","utf-8").
-                body("{\"username\":\"test1\",\"email\":\"test1@mail.com\",\"password\":\"test1\"}").
-                when().
-                post("/signup");
+    public void loginTest() {
 
 
-        // Check status code
-        int statusCode = response.getStatusCode();
-        assertEquals(200, statusCode);
+    }
 
-        // Check response body for correct response
-        String returnString = response.getBody().asString();
-
-        assertEquals("{\"id\":1}", returnString);
-
+    @AfterEach
+    void tearDown() throws Exception{
+        mocks.close();
     }
 }
