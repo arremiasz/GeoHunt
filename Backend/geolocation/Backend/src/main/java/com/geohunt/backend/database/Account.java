@@ -2,6 +2,7 @@ package com.geohunt.backend.database;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.geohunt.backend.rewards.Reward;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -45,6 +46,9 @@ public class Account {
     @OneToMany(mappedBy = "target")
     @JsonManagedReference("target-friends")
     private Set<Friends> receivedFriendRequests;
+
+    @OneToMany()
+    private List<Reward> inventory;
 
     public Account(String username, String password){
         this.username = username;

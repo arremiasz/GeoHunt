@@ -1,9 +1,9 @@
+package com.jubair5.geohunt.network;
+
 /**
  * A final class to hold all global API constants for the application.
  * @author Alex Remiasz
  */
-package com.jubair5.geohunt.network;
-
 public final class ApiConstants {
 
     private ApiConstants() {}
