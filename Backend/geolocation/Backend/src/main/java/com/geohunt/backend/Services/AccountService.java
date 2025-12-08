@@ -136,4 +136,11 @@ public class AccountService {
         return ResponseEntity.ok("Account updated successfully!");
     }
 
+    public ResponseEntity<String> getPfp(long id) {
+        Optional<Account> accountOptional = accountRepository.findById(id);
+        if (accountOptional.isPresent()) {
+            return ResponseEntity.ok(accountOptional.get().getPfp());
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
 }
