@@ -8,6 +8,7 @@ import com.geohunt.backend.Services.NotificationsService;
 import com.geohunt.backend.database.*;
 import com.geohunt.backend.powerup.*;
 import com.geohunt.backend.util.Location;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,6 +20,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 
@@ -206,6 +208,7 @@ public class ArjavTriSystemTest {
     }
 
     @Test
+    @Transactional
     @Order(8)
     public void testDeleteAccountById_deletesSuccessfully() {
         Account acc = new Account();
@@ -642,6 +645,7 @@ public class ArjavTriSystemTest {
     }
 
     @Test
+    @Transactional
     @Order(36)
     public void friendAdd_AndDelete(){
         Account acc = new Account();
@@ -677,6 +681,7 @@ public class ArjavTriSystemTest {
     }
 
     @Test
+    @Transactional
     @Order(37)
     public void friendAccept(){
         Account acc = new Account();
@@ -796,6 +801,106 @@ public class ArjavTriSystemTest {
         ResponseEntity del2 = powerupService.delete((long)100);
         assertEquals(HttpStatus.NOT_FOUND, del2.getStatusCode());
     }
+
+    @Test
+    @Transactional
+    @Order(41)
+    public void testDeleteAccount_RemovesPowerupAssociations() {
+        Account acc = new Account();
+        acc.setUsername("delUser");
+        acc.setPassword("pass");
+        acc.setEmail("delUser@gmail.com");
+        accountService.createAccount(acc);
+        long delUid = acc.getId();
+
+        Powerup pu = new Powerup();
+        pu.setName("TestPU-" + UUID.randomUUID());
+        pu.setAffect("NULL");
+        pu.setType(PowerupEffects.OTHER);
+        powerupRepository.save(pu);
+        long puId = pu.getId();
+
+        ResponseEntity addResp = powerupService.addToAcc(puId, delUid);
+        assertEquals(HttpStatus.CREATED, addResp.getStatusCode());
+
+        Account loaded = accountService.getAccountById(delUid);
+        assertTrue(loaded.getPowerups().contains(pu));
+        assertTrue(pu.getAccounts().contains(loaded));
+
+        boolean deleted = accountService.deleteAccountByID(delUid);
+        assertTrue(deleted);
+
+        assertThrows(IllegalArgumentException.class, () ->
+                accountService.getAccountById(delUid));
+
+        Powerup reloadedPU = powerupRepository.findById(puId).orElseThrow();
+        assertFalse(reloadedPU.getAccounts().stream()
+                        .anyMatch(a -> a.getId() == delUid),
+                "Powerup still contains deleted account");
+
+        Set<Account> ownersSet = powerupService.getPowerupOwners(puId);
+        assertNotNull(ownersSet);
+        assertTrue(ownersSet.isEmpty());
+    }
+
+    @Test
+    @Transactional
+    @Order(42)
+    public void testDeleteAccount_NoPowerupsStillDeletes() {
+        Account acc = new Account();
+        acc.setUsername("nopower");
+        acc.setPassword("pass");
+        acc.setEmail("nopower@gmail.com");
+        accountService.createAccount(acc);
+        long id = acc.getId();
+
+        Account loaded = accountService.getAccountById(id);
+        assertTrue(loaded.getPowerups().isEmpty());
+
+        boolean deleted = accountService.deleteAccountByID(id);
+        assertTrue(deleted);
+
+        assertThrows(IllegalArgumentException.class, () ->
+                accountService.getAccountById(id));
+    }
+
+    @Test
+    @Transactional
+    @Order(44)
+    public void testDeleteAccount_RemovesMultiplePowerups() {
+        Account acc = new Account();
+        acc.setUsername("multiPU");
+        acc.setPassword("pass");
+        acc.setEmail("multiPU@gmail.com");
+        accountService.createAccount(acc);
+        long id = acc.getId();
+
+        Powerup a = new Powerup();
+        a.setName("P-UA-" + UUID.randomUUID());
+        a.setType(PowerupEffects.OTHER);
+        a.setAffect("NULL");
+        powerupRepository.save(a);
+
+        Powerup b = new Powerup();
+        b.setName("P-UB-" + UUID.randomUUID());
+        b.setType(PowerupEffects.OTHER);
+        b.setAffect("NULL");
+        powerupRepository.save(b);
+
+        powerupService.addToAcc(a.getId(), id);
+        powerupService.addToAcc(b.getId(), id);
+
+        Account loaded = accountService.getAccountById(id);
+        assertEquals(2, loaded.getPowerups().size());
+
+        boolean deleted = accountService.deleteAccountByID(id);
+        assertTrue(deleted);
+
+        assertFalse(a.getAccounts().stream().anyMatch(ac -> ac.getId() == id));
+        assertFalse(b.getAccounts().stream().anyMatch(ac -> ac.getId() == id));
+    }
+
+
 
 
 }
