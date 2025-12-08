@@ -33,7 +33,7 @@ public class PowerupController {
             description = "Creates a new powerup entry in the database. Intended for development/testing only."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Powerup created successfully",
+            @ApiResponse(responseCode = "200", description = "returns powerup id",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = Powerup.class))),
             @ApiResponse(responseCode = "400", description = "Invalid powerup data", content = @Content)

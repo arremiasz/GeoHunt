@@ -40,7 +40,7 @@ public class PowerupService {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
         repository.save(powerup);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return ResponseEntity.status(HttpStatus.CREATED).body(powerup.getId());
     }
 
     public ResponseEntity delete(long id) {
