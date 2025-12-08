@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -39,7 +38,7 @@ public class PowerupController {
                             schema = @Schema(implementation = Powerup.class))),
             @ApiResponse(responseCode = "400", description = "Invalid powerup data", content = @Content)
     })
-    @RequestBody(
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "Powerup object with name, affect text, and type. Some already implemented. Please ask before adding your own.",
             required = true,
             content = @Content(
@@ -121,7 +120,7 @@ public class PowerupController {
                     content = @Content(schema = @Schema(implementation = RandomGenerationDTO.class))),
             @ApiResponse(responseCode = "404", description = "Challenge not found")
     })
-    @RequestBody(
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true,
             description = "The player's current GPS location.",
             content = @Content(
@@ -194,7 +193,7 @@ public class PowerupController {
                     content = @Content(schema = @Schema(implementation = PowerupEffectDTO.class))),
             @ApiResponse(responseCode = "404", description = "Powerup or account or challenge not found"),
     })
-    @RequestBody(
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true,
             description = "The player's current GPS location when picking up the powerup.",
             content = @Content(
