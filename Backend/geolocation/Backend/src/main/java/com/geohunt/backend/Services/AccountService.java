@@ -1,6 +1,7 @@
 package com.geohunt.backend.Services;
 
 import com.geohunt.backend.database.*;
+import com.geohunt.backend.powerup.Powerup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -71,12 +72,26 @@ public class AccountService {
         submissionsRepository.deleteById(id);
     }
 
+    public void deletePowerups(long id){
+        Optional<Account> accOpt = accountRepository.findById(id);
+
+        Account acc = accOpt.get();
+
+        for(Powerup p : acc.getPowerups()) {
+            p.getAccounts().remove(acc);
+        }
+
+        acc.getPowerups().clear();
+        
+    }
+
     public boolean deleteAccountByID(Long id) {
         if(accountRepository.findById(id).isPresent()) {
             deleteFriends(id);
             deleteSubmissions(id);
             deleteChallenges(id);
             deleteNotifications(id);
+            deletePowerups(id);
             accountRepository.deleteById(id);
             return true;
         } else {
