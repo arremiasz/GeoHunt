@@ -1,5 +1,6 @@
-package com.geohunt.backend.database;
+package com.geohunt.backend.Shop;
 
+import com.geohunt.backend.database.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

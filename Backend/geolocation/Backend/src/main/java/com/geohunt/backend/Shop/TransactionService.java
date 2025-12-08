@@ -1,8 +1,7 @@
-package com.geohunt.backend.Services;
+package com.geohunt.backend.Shop;
 
+import com.geohunt.backend.Services.AccountService;
 import com.geohunt.backend.database.Account;
-import com.geohunt.backend.database.Transactions;
-import com.geohunt.backend.database.TransactionsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
