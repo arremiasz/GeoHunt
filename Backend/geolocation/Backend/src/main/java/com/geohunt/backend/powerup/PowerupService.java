@@ -376,6 +376,7 @@ public class PowerupService {
 
     }
 
+    @Transactional
     public ResponseEntity removePowerupForAccount(long uid, long powerupId) {
         Account acc;
         try{

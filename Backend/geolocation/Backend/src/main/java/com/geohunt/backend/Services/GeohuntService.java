@@ -32,7 +32,7 @@ public class GeohuntService {
     @Autowired
     private SubmissionsRepository submissionsRepository;
 
-    private double haversine(double lat1, double lon1, double lat2, double lon2) {
+    public double haversine(double lat1, double lon1, double lat2, double lon2) {
         double R = 3959; // miles
         double dLat = Math.toRadians(lat2 - lat1);
         double dLon = Math.toRadians(lon2 - lon1);

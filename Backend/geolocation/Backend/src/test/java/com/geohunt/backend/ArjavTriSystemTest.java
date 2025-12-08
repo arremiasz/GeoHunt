@@ -15,16 +15,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.io.FileInputStream;
-
-
-import java.io.File;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 
 import static org.junit.jupiter.api.Assertions.*;
-
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -36,7 +34,6 @@ public class ArjavTriSystemTest {
 
     @Autowired
     private PowerupRepository powerupRepository;
-
 
     @Autowired
     private PowerupService powerupService;
@@ -52,13 +49,19 @@ public class ArjavTriSystemTest {
 
     @Autowired
     private NotificationsService notificationsService;
+
     @Autowired
     private NotificationsRepository notificationsRepository;
 
-    @BeforeEach
-    void printProfiles(@Autowired org.springframework.core.env.Environment env) {
-        System.out.println("ACTIVE PROFILES = " + String.join(", ", env.getActiveProfiles()));
-    }
+    @Autowired
+    private FriendsService friendsService;
+
+    private long uid;
+    private long uid2;
+    private long cid;
+    private long pid;
+    private long nid;
+
 
     @BeforeAll
     void setup(@Autowired PowerupRepository repo,
@@ -70,6 +73,7 @@ public class ArjavTriSystemTest {
         p.setAffect("NULL");
         p.setType(PowerupEffects.LOCATION_HINT_GENERAL);
         repo.save(p);
+        pid = p.getId();
 
         Powerup a = new Powerup();
         a.setName("Specific Hint");
@@ -100,19 +104,29 @@ public class ArjavTriSystemTest {
         ch.setLatitude(45.0);
         ch.setCreationdate(LocalDate.now());
         crepo.save(ch);
+        cid = ch.getId();
 
         Account ac = new Account();
         ac.setUsername("test");
         ac.setEmail("test@gmail.com");
         ac.setPassword("abc");
         accountService.createAccount(ac);
+        uid = ac.getId();
+
+        Account ac2 = new Account();
+        ac2.setUsername("t");
+        ac2.setEmail("t@gmail.com");
+        ac2.setPassword("abc");
+        accountService.createAccount(ac2);
+        uid2 = ac2.getId();
+
 
         System.out.println(ac.getId());
 
         Challenges cha = new Challenges();
 
-        cha.setLongitude(-97.0);
-        cha.setLatitude(45.0);
+        cha.setLongitude(-90.0);
+        cha.setLatitude(41.0);
         cha.setCreationdate(LocalDate.now());
         cha.setCreator(ac);
         crepo.save(cha);
@@ -124,6 +138,7 @@ public class ArjavTriSystemTest {
         n.setSentAt(LocalDateTime.now());
         n.setReadStatus(true);
         notificationsRepository.save(n);
+        nid = n.getId();
     }
 
     @Order(1)
@@ -132,60 +147,255 @@ public class ArjavTriSystemTest {
         powerupRepository.count();
     }
 
-    @Order(2)
     @Test
-    public void testAccount(){
+    @Order(2)
+    public void testGetAccountByUsername_returnsAccount() {
+        Account a = accountService.getAccountByUsername("test");
+        assertNotNull(a);
+        assertEquals("test", a.getUsername());
+    }
 
-        File imageFile = new File("src/test/java/com/geohunt/backend/cy_logo_05 (1).png");
-        byte[] imageBytes = new byte[(int) imageFile.length()];
+    @Test
+    @Order(3)
+    public void testGetIdByUsername_returnsCorrectId() {
+        long foundId = accountService.getIdByUsername("test");
+        assertEquals(uid, foundId);
+    }
 
+    @Test
+    @Order(4)
+    public void testGetAccountById_returnsCorrectAccount() {
+        Account a = accountService.getAccountById(uid);
+        assertNotNull(a);
+        assertEquals(uid, a.getId());
+        assertEquals("test", a.getUsername());
+    }
+
+    @Test
+    @Order(5)
+    public void testGetAccountById_throwsOnMissingId() {
+        assertThrows(IllegalArgumentException.class, () ->
+                accountService.getAccountById((long)999999)
+        );
+    }
+
+    @Test
+    @Order(6)
+    public void testCreateAccount_success() {
+        Account a2 = new Account();
+        a2.setUsername("newUser");
+        a2.setEmail("new@gmail.com");
+        a2.setPassword("abc");
+
+        long newId = accountService.createAccount(a2);
+
+        assertTrue(newId > 0);
+        assertEquals(newId, accountService.getIdByUsername("newUser"));
+    }
+
+    @Test
+    @Order(7)
+    public void testCreateAccount_emailConflict() {
+        Account dup = new Account();
+        dup.setUsername("uniqueUser");
+        dup.setEmail("test@gmail.com");
+        dup.setPassword("abc");
+
+        long result = accountService.createAccount(dup);
+        assertEquals(-2, result);
+    }
+
+    @Test
+    @Order(8)
+    public void testDeleteAccountById_deletesSuccessfully() {
+        Account acc = new Account();
+        acc.setUsername("tempUser");
+        acc.setEmail("temp@gmail.com");
+        acc.setPassword("abc");
+        accountService.createAccount(acc);
+
+        long id = acc.getId();
+
+        boolean deleted = accountService.deleteAccountByID(id);
+        assertTrue(deleted);
+
+        assertThrows(IllegalArgumentException.class, () ->
+                accountService.getAccountById(id)
+        );
+    }
+
+    @Test
+    @Order(9)
+    public void testDeleteAccountById_missingUserReturnsFalse() {
+        boolean result = accountService.deleteAccountByID((long) 123456);
+        assertFalse(result);
+    }
+
+    @Test
+    @Order(10)
+    public void testUpdatedAccount_updatesUsername() {
+        Account acc = new Account();
+        acc.setUsername("oldName");
+        acc.setEmail("old@gmail.com");
+        acc.setPassword("abc");
+        accountService.createAccount(acc);
+
+        Account update = new Account();
+        update.setUsername("newName");
+
+        accountService.updatedAccount(acc.getId(), update);
+
+        Account updated = accountService.getAccountByUsername("newName");
+        assertNotNull(updated);
+    }
+
+    @Test
+    @Order(11)
+    public void testDeleteAccountByUsername_deletesSuccessfully() {
+        Account acc = new Account();
+        acc.setUsername("deleteMe");
+        acc.setEmail("deleteMe@gmail.com");
+        acc.setPassword("abc");
+        accountService.createAccount(acc);
+
+        boolean deleted = accountService.deleteAccountByUsername("deleteMe");
+        assertTrue(deleted);
+    }
+
+    @Test
+    @Order(12)
+    public void testUpdatedAccount_duplicateUsernameConflict() {
+        Account a1 = new Account();
+        a1.setUsername("userA");
+        a1.setEmail("a@gmail.com");
+        a1.setPassword("abc");
+        accountService.createAccount(a1);
+
+        Account a2 = new Account();
+        a2.setUsername("userB");
+        a2.setEmail("b@gmail.com");
+        a2.setPassword("abc");
+        accountService.createAccount(a2);
+
+        // Try to rename userB to userA
+        Account update = new Account();
+        update.setUsername("userA"); // duplicate
+
+        ResponseEntity<String> response =
+                accountService.updatedAccount(a2.getId(), update);
+
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+    }
+
+
+    @Test
+    @Order(13)
+    public void testGeohuntDeleteUsersChallenges() {
+        double lat = 40.0;
+        double lon = -91.0;
+        String url = "delete-me-url";
+
+        ResponseEntity resp = geohuntService.customChallenge(lat, lon, uid, url);
+        assertEquals(HttpStatus.OK, resp.getStatusCode());
+
+        Challenges created = (Challenges) resp.getBody();
+        assertNotNull(created);
+        long newCid = created.getId();
+
+        ResponseEntity deleteResp = geohuntService.deleteUsersChallenges(uid, newCid);
+
+        assertEquals(HttpStatus.OK, deleteResp.getStatusCode());
+        assertFalse(challengesRepository.existsById(newCid));
+    }
+
+    @Test
+    @Order(14)
+    public void testSaveNotification_savesCorrectly() {
+        Account a = accountService.getAccountByUsername("test");
+
+        notificationsService.saveNotification(a, "unitTestMsg");
+
+        Notifications saved = notificationsRepository.getNotificationsByMessage("unitTestMsg");
+        assertNotNull(saved);
+        assertEquals("unitTestMsg", saved.getMessage());
+        assertEquals(a.getId(), saved.getTarget().getId());
+        assertFalse(saved.isReadStatus());
+    }
+
+    @Test
+    @Order(15)
+    public void testMarkAsRead_updatesReadStatus() {
+        Notifications n = notificationsRepository.getNotificationsByMessage("Hello!");
+        assertNotNull(n);
+
+        notificationsService.markAsRead(n.getId());
+
+        Notifications updated = notificationsRepository.findById(n.getId()).orElseThrow();
+        assertTrue(updated.isReadStatus());
+    }
+
+    @Test
+    @Order(16)
+    public void testDeleteNotification(){
+        List<Notifications> not = notificationsService.getMyNotifs(uid);
+        assertFalse(not.isEmpty());
+        assertTrue(not.size() == 2); //2 if all tests run due to previous code. 1 if only this one.
+
+
+        Account a2 = accountService.getAccountById(uid2);
+
+        notificationsService.sendNotificationToUser(a2.getUsername(), "test2");
+        assertTrue((notificationsService.getMyNotifs(a2.getId()).size() == 1));
+
+        notificationsService.deleteNotification(notificationsRepository.getNotificationsByMessage("test2").getId());
+        assertTrue((notificationsService.getMyNotifs(a2.getId()).size() == 0));
+    }
+
+    @Test
+    @Order(17)
+    public void testGetMyNotifs_returnsCorrectList() {
+        List<Notifications> notifs = notificationsService.getMyNotifs(uid);
+        assertNotNull(notifs);
+        assertFalse(notifs.isEmpty());
+    }
+
+    @Test
+    @Order(18)
+    public void testDeleteNotification_removesNotification() {
+        Account user = accountService.getAccountById(uid2);
+
+        notificationsService.sendNotificationToUser(user.getUsername(), "deleteTest");
+
+        Notifications n = notificationsRepository.getNotificationsByMessage("deleteTest");
+        assertNotNull(n);
+
+        notificationsService.deleteNotification(n.getId());
+
+        assertFalse(notificationsRepository.existsById(n.getId()));
+    }
+
+    @Test
+    @Order(19)
+    public void testEditNotification_updatesMessageAndResetsReadStatus() {
+        Notifications n;
         try{
-            FileInputStream fis = new FileInputStream(imageFile);
-            fis.read(imageBytes);
-            Account a = accountService.getAccountByUsername("test");
-            assertTrue(a.getUsername().equals("test"));
-        } catch(Exception e){
+            n = notificationsRepository.findById(nid).orElseThrow();
+            assertTrue(n.isReadStatus());
+        } catch (Exception e){
+            Assertions.fail(e.getMessage());
+        }
+        notificationsService.editNotification(nid, "editedMsg");
+        Notifications updated;
+        try{
+            updated = notificationsRepository.findById(nid).orElseThrow();
+            assertEquals("editedMsg", updated.getMessage());
+            assertFalse(updated.isReadStatus());
+        } catch (Exception e){
             Assertions.fail(e.getMessage());
         }
     }
 
-    @Order(3)
-    @Test
-    public void testAccountChange(){
-        Account acc = accountService.getAccountByUsername("test");
-        Account newAc = new Account();
-        newAc.setUsername("testChange");
-        accountService.updatedAccount(acc.getId(), newAc);
-        assertTrue(accountService.getAccountByUsername("testChange") != null);
-    }
-
-    @Order(4)
-    @Test
-    public void testGeohuntDeleteUsersChallenges(){
-        long uid = 1;
-        long cid = 2;
-
-        geohuntService.deleteUsersChallenges(uid, cid);
-
-        assertFalse(challengesRepository.existsById(cid));
-
-    }
-
-    @Order(5)
-    @Test
-    public void testUpdateNotification(){
-        long notifid = 1;
-        assertNotNull(notificationsService.getNotificationById(notifid));
-        Notifications notif = notificationsService.getNotificationById(notifid);
-        assertEquals("Hello!", notif.getMessage());
-        assertTrue(notif.isReadStatus());
-        notificationsService.editNotification(notifid, "hello");
-        notif = notificationsService.getNotificationById(notifid);
-        assertEquals("hello", notif.getMessage());
-        assertFalse(notif.isReadStatus());
-    }
-
-    @Order(6)
+    @Order(20)
     @Test
     public void testPowerupGenerationRandom(){
         long challengeId = 1;
@@ -209,7 +419,7 @@ public class ArjavTriSystemTest {
                 "Generated point must be within 30–70% toward the goal");
     }
 
-    @Order(7)
+    @Order(21)
     @Test
     public void testTimeDecrease(){
         long chalId = 1;
@@ -233,7 +443,7 @@ public class ArjavTriSystemTest {
                 "Time deduction calculation must match formula exactly");
     }
 
-    @Order(8)
+    @Order(22)
     @Test
     public void generalClue() {
         int chalId = 1;
@@ -246,7 +456,7 @@ public class ArjavTriSystemTest {
         System.out.println(clue);
     }
 
-    @Order(9)
+    @Order(23)
     @Test
     public void specificClue(){
         int chalId = 1;
@@ -257,6 +467,336 @@ public class ArjavTriSystemTest {
         assertFalse(clue.isBlank());
 
         System.out.println(clue);
+    }
+
+    @Test
+    @Order(24)
+    public void testHaversine_zeroDistance() {
+        double zero = 0;
+        double d = geohuntService.haversine(zero, zero, zero, zero);
+        assertEquals(zero, d, 0.001);
+    }
+
+    @Test
+    @Order(25)
+    public void testHaversine_knownDistance() {
+        double lat1 = 43;
+        double lon1 = -97;
+        double lat2 = 43.239723;
+        double lon2 = -96.242;
+
+        double ans = geohuntService.haversine(lat1, lon1, lat2, lon2);
+        assertEquals(41.664524189723, ans, 0.0001);
+    }
+
+    @Test
+    @Order(26)
+    public void testGetPossibleChallenges_closeToOne() {
+        double lat1, lon1, r1;
+        lat1 = 41.01;
+        lon1 = -90.01;
+        r1 = 2;
+        List<Challenges> c = geohuntService.getPossibleChallenges(lat1, lon1, r1);
+        assertEquals(1, c.size());
 
     }
+
+    @Test
+    @Order(27)
+    public void testGetPossibleChallenges_closeToTwo() {
+        double lat1, lon1, r1;
+        lat1 = 41.01;
+        lon1 = -90.01;
+        r1 = 1000;
+        List<Challenges> c = geohuntService.getPossibleChallenges(lat1, lon1, r1);
+        assertEquals(2, c.size());
+
+    }
+
+    @Test
+    @Order(28)
+    public void testGetPossibleChallenges_closeToNone() {
+        double lat1, lon1, r1;
+
+        lat1 = 41.01;
+        lon1 = -90.01;
+        r1 = 0.5;
+        List<Challenges> c = geohuntService.getPossibleChallenges(lat1, lon1, r1);
+        assertEquals(0, c.size());
+
+    }
+    @Test
+    @Order(29)
+    public void testGetPossibleChallenges_ExactlyOnOne() {
+        double lat1, lon1, r1;
+
+        lat1 = 41;
+        lon1 = -90;
+        r1 = 0;
+        List<Challenges> c = geohuntService.getPossibleChallenges(lat1, lon1, r1);
+        assertEquals(1, c.size());
+
+    }
+
+    @Test
+    @Order(30)
+    public void testGetChallenge_Distance() {
+        double lat1, lon1, r1;
+
+        lat1 = 40;
+        lon1 = -91;
+        r1 = 0.5;
+        Challenges c = geohuntService.getChallenge(lat1, lon1, r1);
+        double haversine = geohuntService.haversine(lat1, lon1, c.getLatitude(), c.getLongitude());
+        assertNotNull(c);
+        assertTrue(c.getId() > 0);
+    }
+
+    @Test
+    @Order(31)
+    public void testGetChallenge_NotNull() {
+        double lat1, lon1, r1;
+
+        lat1 = 40;
+        lon1 = -91;
+        r1 = 10;
+        Challenges c = geohuntService.getChallenge(lat1, lon1, r1);
+        assertTrue(c.getId() > -1);
+
+    }
+
+    @Test
+    @Order(32)
+    public void testFallbackGenerate_CountAndInDB() {
+        double lat1, lon1, r1;
+        lat1 = 40;
+        lon1 = -91;
+        r1 = 10;
+        List<Challenges> cFB = geohuntService.fallbackGenerate(lat1, lon1, r1, 2);
+        assertTrue(cFB.size() == 2);
+        boolean found = true;
+        for(int i = 0; i < cFB.size(); i++) {
+            Challenges c = cFB.get(i);
+            long cfbid = c.getId();
+            Optional<Challenges> ch = challengesRepository.findById(cfbid);
+            assertTrue(ch.isPresent());
+        }
+    }
+
+    @Test
+    @Order(33)
+    public void testCustomChallenge_Complete() {
+        double lat1, lon1;
+        String url = "www"+ UUID.randomUUID();;
+
+        lat1 = 40;
+        lon1 = -91;
+
+        ResponseEntity a = geohuntService.customChallenge(lat1, lon1, uid, url);
+
+        assertEquals(a.getStatusCode(), HttpStatus.OK);
+        try{
+            Challenges c = (Challenges) a.getBody();
+            assertTrue(c.getLatitude() == lat1);
+            assertTrue(c.getLongitude() == lon1);
+            assertTrue(c.getStreetviewurl().equals(url));
+            assertTrue(c.getCreator().getId() == uid);
+        } catch (Exception e){
+            Assertions.fail(e.getMessage());
+        }
+    }
+
+    @Test
+    @Order(34)
+    public void testUsersChallenges_andDelete() {
+        double lat1, lon1;
+        String url = "www"+ UUID.randomUUID();;
+
+        lat1 = 40;
+        lon1 = -91;
+
+        ResponseEntity a = geohuntService.customChallenge(lat1, lon1, uid, url);
+
+        assertEquals(a.getStatusCode(), HttpStatus.OK);
+
+        ResponseEntity b = geohuntService.getUsersChallenges(uid);
+        assertEquals(b.getStatusCode(), HttpStatus.OK);
+        List<Challenges> bc = (List) b.getBody();
+
+        assertTrue(bc.size() == 3);
+
+        ResponseEntity delete = geohuntService.deleteUsersChallenges(uid, bc.get(0).getId());
+        assertEquals(HttpStatus.OK, delete.getStatusCode());
+
+        ResponseEntity after = geohuntService.getUsersChallenges(uid);
+        List<Challenges> listAfter = (List) after.getBody();
+        assertTrue(listAfter.size() == 2);
+    }
+
+    @Test
+    @Order(35)
+    public void friendsdoesAccountsExist_ValidAndNotValid(){
+        assertEquals(2, friendsService.doesAccountsExist(uid, uid2).stream().count());
+        assertEquals(0, friendsService.doesAccountsExist(uid, 200).stream().count());
+        assertEquals(0, friendsService.doesAccountsExist(100, 101).stream().count());
+    }
+
+    @Test
+    @Order(36)
+    public void friendAdd_AndDelete(){
+        Account acc = new Account();
+        acc.setUsername("username");
+        acc.setPassword("password");
+        acc.setEmail("email");
+
+        Account acc2 = new Account();
+        acc2.setUsername("username2");
+        acc2.setPassword("password2");
+        acc2.setEmail("email2");
+
+        accountService.createAccount(acc);
+        accountService.createAccount(acc2);
+
+        friendsService.addFriend(acc2.getId(), acc.getId());
+
+        ResponseEntity<List<Account>> friends = friendsService.getFriendRequestsRecieved(acc.getId());
+        assertEquals(HttpStatus.OK, friends.getStatusCode());
+        assertTrue(friends.getBody().size() == 1);
+        assertEquals((friends.getBody().get(0).getUsername()), acc2.getUsername());
+
+        ResponseEntity<List<Account>> friend = friendsService.getFriendRequestsSent(acc2.getId());
+        assertEquals(HttpStatus.OK, friend.getStatusCode());
+        assertTrue(friend.getBody().size() == 1);
+        assertEquals((friend.getBody().get(0).getUsername()), acc.getUsername());
+
+        accountService.deleteAccountByID(acc.getId());
+        accountService.deleteAccountByID(acc2.getId());
+
+        friend = friendsService.getFriendRequestsSent(acc2.getId());
+        assertTrue(friend.getBody().size() == 0);
+    }
+
+    @Test
+    @Order(37)
+    public void friendAccept(){
+        Account acc = new Account();
+        acc.setUsername("username");
+        acc.setPassword("password");
+        acc.setEmail("email");
+
+        Account acc2 = new Account();
+        acc2.setUsername("username2");
+        acc2.setPassword("password2");
+        acc2.setEmail("email2");
+
+        accountService.createAccount(acc);
+        accountService.createAccount(acc2);
+
+        friendsService.addFriend(acc2.getId(), acc.getId());
+
+        friendsService.acceptFriend(acc2.getId(), acc.getId());
+
+        ResponseEntity<List<Account>> friends = friendsService.getFriendRequestsRecieved(acc.getId());
+        assertEquals(HttpStatus.OK, friends.getStatusCode());
+        assertTrue(friends.getBody().size() == 0);
+
+        ResponseEntity<List<Account>> friendacc = friendsService.getFriends(acc.getId());
+        assertEquals(HttpStatus.OK, friendacc.getStatusCode());
+        assertTrue(friendacc.getBody().size() == 1);
+
+        accountService.deleteAccountByID(acc.getId());
+        accountService.deleteAccountByID(acc2.getId());
+
+        friendacc = friendsService.getFriends(acc.getId());
+        assertEquals(HttpStatus.NOT_FOUND, friendacc.getStatusCode());
+        assertTrue(friendacc.getBody().size() == 0);
+    }
+
+    @Test
+    @Order(38)
+    public void powerupAdd_AndDelete(){
+        Powerup up = new Powerup();
+        up.setName("General Hint");
+        up.setAffect("whatever");
+        up.setType(PowerupEffects.OTHER);
+        ResponseEntity error = powerupService.add(up);
+        assertEquals(HttpStatus.CONFLICT, error.getStatusCode());
+
+        up.setName("testingtesting");
+        ResponseEntity fine = powerupService.add(up);
+        assertEquals(HttpStatus.CREATED, fine.getStatusCode());
+        long id = (long)fine.getBody();
+        ResponseEntity fine2 = powerupService.get("testingtesting");
+        assertEquals(HttpStatus.OK, fine2.getStatusCode());
+        Powerup id2 = (Powerup) fine2.getBody();
+        assertEquals(id, id2.getId());
+
+        ResponseEntity del = powerupService.delete(id);
+        assertEquals(HttpStatus.OK, del.getStatusCode());
+
+        ResponseEntity del2 = powerupService.delete((long)100);
+        assertEquals(HttpStatus.NOT_FOUND, del2.getStatusCode());
+    }
+
+    @Test
+    @Order(39)
+    public void powerupGetId(){
+
+        Powerup up = new Powerup();
+        up.setName("testingtesting");
+        ResponseEntity fine = powerupService.add(up);
+        assertEquals(HttpStatus.CREATED, fine.getStatusCode());
+        long id = (long)fine.getBody();
+        ResponseEntity fine2 = powerupService.get(id);
+        assertEquals(HttpStatus.OK, fine2.getStatusCode());
+        Powerup id2 = (Powerup)fine2.getBody();
+        assertEquals(id, id2.getId());
+
+        ResponseEntity del = powerupService.delete(id);
+        assertEquals(HttpStatus.OK, del.getStatusCode());
+
+    }
+
+    @Test
+    @Order(40)
+    public void powerupDeduce(){
+        Powerup up = new Powerup();
+
+        up.setName("testingtesting");
+        up.setType(PowerupEffects.LOCATION_HINT_SPECIFIC);
+        ResponseEntity fine = powerupService.add(up);
+        assertEquals(HttpStatus.CREATED, fine.getStatusCode());
+        long id = up.getId();
+
+        Powerup up2 = new Powerup();
+
+        up2.setName("testingtestinggg");
+        up2.setType(PowerupEffects.MINUS_MINUTES);
+        ResponseEntity fine2 = powerupService.add(up2);
+        assertEquals(HttpStatus.CREATED, fine2.getStatusCode());
+        long id2 = up2.getId();
+
+
+
+        ResponseEntity deduce = powerupService.deduce(id, uid, cid, new Location(42, -97), new Location(42.05, -96.99));
+        assertEquals(HttpStatus.OK, deduce.getStatusCode());
+        PowerupEffectDTO p = (PowerupEffectDTO) deduce.getBody();
+        System.out.println(p.getLocationName());
+
+
+
+        deduce = powerupService.deduce(id2, uid, cid, new Location(42, -97), new Location(42.05, -96.99));
+        assertEquals(HttpStatus.OK, deduce.getStatusCode());
+        PowerupEffectDTO p2 = (PowerupEffectDTO) deduce.getBody();
+        System.out.println(p2.getTimeDecreaseInSeconds());
+
+        ResponseEntity del = powerupService.delete(id);
+        assertEquals(HttpStatus.OK, del.getStatusCode());
+
+        ResponseEntity del2 = powerupService.delete((long)100);
+        assertEquals(HttpStatus.NOT_FOUND, del2.getStatusCode());
+    }
+
+
 }
+
