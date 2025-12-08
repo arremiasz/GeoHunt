@@ -1,18 +1,11 @@
-package com.geohunt.backend.Controllers;
+package com.geohunt.backend.Shop;
 
-import com.geohunt.backend.Services.ShopService;
-import com.geohunt.backend.database.Account;
 import com.geohunt.backend.database.AccountRepository;
-import com.geohunt.backend.database.ShopRepository;
-import com.geohunt.backend.util.PaymentDTO;
-import com.geohunt.backend.util.SHOP_ITEM_TYPE;
-import com.geohunt.backend.database.Shop;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/shop")

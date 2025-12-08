@@ -1,4 +1,4 @@
-package com.geohunt.backend.Controllers;
+package com.geohunt.backend.Shop;
 
 import com.geohunt.backend.database.*;
 import com.stripe.model.Event;

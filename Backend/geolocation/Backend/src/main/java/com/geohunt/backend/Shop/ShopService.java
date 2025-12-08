@@ -1,11 +1,7 @@
-package com.geohunt.backend.Services;
+package com.geohunt.backend.Shop;
 
 import com.geohunt.backend.database.Account;
 import com.geohunt.backend.database.AccountRepository;
-import com.geohunt.backend.util.PaymentDTO;
-import com.geohunt.backend.util.SHOP_ITEM_TYPE;
-import com.geohunt.backend.database.Shop;
-import com.geohunt.backend.database.ShopRepository;
 import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;

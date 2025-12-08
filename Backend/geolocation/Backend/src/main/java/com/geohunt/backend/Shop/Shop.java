@@ -1,7 +1,7 @@
-package com.geohunt.backend.database;
+package com.geohunt.backend.Shop;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.geohunt.backend.util.SHOP_ITEM_TYPE;
+import com.geohunt.backend.database.Transactions;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

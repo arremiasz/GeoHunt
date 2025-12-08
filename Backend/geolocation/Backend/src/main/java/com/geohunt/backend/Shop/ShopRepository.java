@@ -1,7 +1,6 @@
-package com.geohunt.backend.database;
+package com.geohunt.backend.Shop;
 
 
-import com.geohunt.backend.util.SHOP_ITEM_TYPE;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
