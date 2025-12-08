@@ -22,6 +22,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.Request;
@@ -61,7 +62,7 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
     private static final String KEY_USER_PFP = "userPfp";
 
     private LinearLayout displayContainer, editContainer;
-    private TextView usernameLabel;
+    private TextView usernameLabel, placesLabel, powerUpLabel;
     private TextInputLayout editUsernameLayout, editEmailLayout, editNewPasswordLayout, editCurrentPasswordLayout;
     private EditText editUsername, editEmail, editNewPassword, editCurrentPassword;
     private Button editButton, deleteButton, saveChangesButton, cancelButton, logoutButton;
@@ -69,6 +70,7 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
     private PlacesAdapter placesAdapter;
     private List<Place> placesList;
     private RecyclerView powerUpsRecyclerView;
+    private LinearLayoutManager powerLayoutManager;
     private PowerUpAdapter powerUpAdapter;
     private List<PowerUp> powerUpList;
 
@@ -106,6 +108,8 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         saveChangesButton = root.findViewById(R.id.save_changes_button);
         cancelButton = root.findViewById(R.id.cancel_button);
         logoutButton = root.findViewById(R.id.logout_button);
+        placesLabel = root.findViewById(R.id.places_label);
+        powerUpLabel = root.findViewById(R.id.powerUps_label);
         placesRecyclerView = root.findViewById(R.id.places_recycler_view);
         powerUpsRecyclerView = root.findViewById(R.id.powerUp_recycler_view);
 
@@ -145,13 +149,15 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
     private void setupPowerUpRecyclerView() {
         powerUpList = new ArrayList<>();
         powerUpAdapter = new PowerUpAdapter(getContext(), powerUpList, this);
+        powerLayoutManager = new LinearLayoutManager(getContext(),LinearLayoutManager.HORIZONTAL,false);
+        powerUpsRecyclerView.setLayoutManager(powerLayoutManager);
         powerUpsRecyclerView.setAdapter(powerUpAdapter);
     }
 
     /**
      * Fetches the user's submissions from the server.
      */
-    private void getSubmissions() {
+    private void getPowerUps() {
         int userId = prefs.getInt(KEY_USER_ID, -1);
         if (userId == -1) {
             Log.e(TAG, "User ID not found in shared preferences.");
@@ -160,18 +166,21 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
 
         String url = ApiConstants.BASE_URL + ApiConstants.GET_POWERUPS_ENDPOINT + "?id=" + userId;
 
-        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null,
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(
+                Request.Method.GET,
+                url,
+                null,
                 response -> {
-                    Log.d(TAG, "Custom Location Response: " + response.toString());
+                    Log.d(TAG, "Account Power Ups Response: " + response.toString());
                     try {
-                        placesList.clear();
-                        for (int i = response.length() - 1; i >= 0; i--) {
+                        powerUpList.clear();
+                        for (int i = 0; i < response.length(); i++) {
                             JSONObject placeObject = response.getJSONObject(i);
                             placesList.add(new Place(placeObject));
                         }
-                        placesAdapter.notifyDataSetChanged();
+                        powerUpAdapter.notifyDataSetChanged();
                     } catch (JSONException e) {
-                        Log.e(TAG, "Error parsing places JSON", e);
+                        Log.e(TAG, "Error parsing power ups JSON", e);
                     }
                 },
                 error -> {

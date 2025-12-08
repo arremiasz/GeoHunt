@@ -27,7 +27,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
 
-        android:textSize="80sp"
+        android:textSize="60sp"
         android:textStyle="bold"
 
         android:layout_marginTop="25dp"
@@ -41,9 +41,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="24sp"
+        app:layout_constraintBottom_toBottomOf="@+id/distance_text"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/distance_text"
+        app:layout_constraintStart_toEndOf="@+id/distance_text"
+        app:layout_constraintTop_toTopOf="@+id/distance_text"
         tools:text="miles" />
 
     <TextView
@@ -51,12 +52,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
 
-        android:textSize="80sp"
+        android:textSize="60sp"
 
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/distance_unit_label"
+        app:layout_constraintTop_toBottomOf="@+id/distance_text"
         tools:text="6:20" />
 
     <TextView
@@ -64,9 +65,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="24sp"
+        app:layout_constraintBottom_toBottomOf="@+id/time_text"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/time_text"
+        app:layout_constraintStart_toEndOf="@+id/time_text"
+        app:layout_constraintTop_toTopOf="@+id/time_text"
         tools:text="seconds" />
 
     <TextView
@@ -75,12 +77,72 @@
         android:layout_height="wrap_content"
 
         android:textSize="80sp"
-
         android:textStyle="bold"
+        android:textColor="@android:color/holo_purple"
+
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/time_unit_label"
+        app:layout_constraintTop_toBottomOf="@+id/time_text"
         tools:text="500" />
+
+    <TextView
+        android:id="@+id/currency_unit_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/holo_purple"
+
+        app:layout_constraintBottom_toBottomOf="@+id/currency_text"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/currency_text"
+        app:layout_constraintTop_toTopOf="@+id/currency_text"
+        tools:text="points" />
+
+    <TextView
+        android:id="@+id/unlock_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:layout_marginTop="25dp"
+        android:textColor="@android:color/holo_purple"
+        android:textSize="24sp"
+        android:textStyle="bold"
+
+
+        app:layout_constraintBottom_toTopOf="@+id/new_PowerUp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/currency_text"
+        tools:text="New Power Up Aquired" />
+
+    <ImageView
+        android:id="@+id/new_PowerUp"
+        android:layout_width="85dp"
+        android:layout_height="85dp"
+
+        android:layout_margin="30dp"
+        android:src="@drawable/time_reduction_pu"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/unlock_text" />
+
+    <TextView
+        android:id="@+id/powerUp_description"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/holo_purple"
+
+        app:layout_constraintBottom_toBottomOf="@+id/currency_text"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/currency_text"
+        app:layout_constraintTop_toTopOf="@+id/currency_text"
+        tools:text="points" />
 
     <Button
         android:id="@+id/play_again_button"
