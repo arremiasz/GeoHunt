@@ -225,4 +225,106 @@ public class PowerupController {
                 new Location(powerupLat, powerupLon)
         );
     }
+
+    @Operation(
+            summary = "Add a powerup to a user's inventory",
+            description = """
+                Associates a powerup with a specific user account.
+                
+                This creates a many-to-many relationship entry between:
+                • The selected Powerup  
+                • The target Account  
+                
+                Returns 201 if successfully added, or 404 if the powerup or account does not exist.
+                """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Powerup successfully added to user"),
+            @ApiResponse(responseCode = "404", description = "Account or powerup not found", content = @Content),
+    })
+    @PutMapping("/add")
+    public ResponseEntity addPowerup(
+            @Parameter(description = "ID of the powerup to add", required = true)
+            @RequestParam long powerupId,
+
+            @Parameter(description = "ID of the user who will receive the powerup", required = true)
+            @RequestParam long uid
+    ) {
+        return service.addToAcc(powerupId, uid);
+    }
+
+
+    @Operation(
+            summary = "Retrieve all powerups owned by a user",
+            description = """
+                Returns the full set of powerups associated with a specific user.
+                
+                Useful for mobile clients to display the player's inventory or
+                determine which powerups they can activate.
+                """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved user's powerups",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Powerup.class))),
+            @ApiResponse(responseCode = "500", description = "Account not found or cannot load powerups")
+    })
+    @GetMapping("/user")
+    public ResponseEntity user(
+            @Parameter(description = "ID of the user whose powerups to fetch", required = true)
+            @RequestParam long uid
+    ) {
+        return service.getPowerupsForAccount(uid);
+    }
+
+    @Operation(
+            summary = "Remove a powerup from a user's account",
+            description = """
+                Removes a specific powerup from the given user's inventory.
+                
+                This modifies the many-to-many relationship between Accounts and Powerups.
+                The user must already own the powerup — otherwise a 404 is returned.
+                """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Powerup successfully removed from user",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    value = "\"Successfully removed powerup from user\""
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Account not found, powerup not found, or user does not own the powerup",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    value = "\"User does not own this powerup\""
+                            )
+                    )
+            )
+    })
+
+    @DeleteMapping("/remove")
+    public ResponseEntity removePowerupForAccount(
+            @Parameter(
+                    description = "The ID of the user whose inventory should be modified",
+                    required = true
+            )
+            @RequestParam long uid,
+
+            @Parameter(
+                    description = "The ID of the powerup to be removed from the user",
+                    required = true
+            )
+            @RequestParam long powerupId
+    ) {
+        return service.removePowerupForAccount(uid, powerupId);
+    }
+
+
 }

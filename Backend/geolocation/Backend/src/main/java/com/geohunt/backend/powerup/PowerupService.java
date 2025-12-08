@@ -5,9 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.geohunt.backend.Services.AccountService;
 import com.geohunt.backend.Services.GeohuntService;
 import com.geohunt.backend.database.Account;
+import com.geohunt.backend.database.AccountRepository;
 import com.geohunt.backend.database.Challenges;
 import com.geohunt.backend.database.ChallengesRepository;
 import com.geohunt.backend.util.Location;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,13 +19,13 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.Random;
-import java.util.Optional;
-import java.util.random.RandomGenerator;
+import java.util.*;
+
 
 @Service
 public class PowerupService {
-
+    @Autowired
+    private AccountRepository accountRepository;
     @Autowired
     private PowerupRepository repository;
     @Autowired
@@ -337,5 +339,78 @@ public class PowerupService {
         }
 
         return null;
+    }
+
+    @Transactional
+    public ResponseEntity addToAcc(long powerupId, long uid) {
+        Account acc;
+        try{
+            acc = accountService.getAccountById(uid);
+        } catch(IllegalArgumentException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Account not found");
+        }
+
+        Optional<Powerup> powerup = repository.findById(powerupId);
+        if(powerup.isEmpty()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Powerup not found");
+        }
+
+        acc.getPowerups().add(powerup.get());
+        powerup.get().getAccounts().add(acc);
+
+        accountRepository.save(acc);
+        return ResponseEntity.status(HttpStatus.CREATED).body("Successfully added power up to user");
+    }
+
+    @Transactional
+    public ResponseEntity getPowerupsForAccount(long uid) {
+        Set<Powerup> p;
+        try{
+            p = accountRepository.findById(uid)
+                    .orElseThrow()
+                    .getPowerups();
+            return ResponseEntity.ok(p);
+        } catch(NoSuchElementException e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Account Not Found or No Powerups.");
+        }
+
+    }
+
+    public ResponseEntity removePowerupForAccount(long uid, long powerupId) {
+        Account acc;
+        try{
+            acc = accountService.getAccountById(uid);
+        } catch (IllegalArgumentException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Account not found");
+        }
+        Optional<Powerup> powerup = repository.findById(powerupId);
+        if(powerup.isEmpty()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Powerup not found");
+        }
+
+        Powerup p = powerup.get();
+
+        boolean removedFromUser = acc.getPowerups().remove(p);
+        boolean removedFromPowerup = p.getAccounts().remove(acc);
+
+        if (!removedFromUser) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("User does not own this powerup");
+        }
+
+        accountRepository.save(acc);
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body("Successfully removed powerup from user");
+    }
+
+    public Set<Account> getPowerupOwners(long pid){
+        Optional<Powerup> powerup = repository.findById(pid);
+        if(powerup.isEmpty()){
+            return new HashSet<>();
+        }
+
+        Powerup p = powerup.get();
+        return p.getAccounts();
     }
 }
