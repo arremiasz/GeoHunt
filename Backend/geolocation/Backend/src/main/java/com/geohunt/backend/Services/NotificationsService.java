@@ -24,7 +24,7 @@ public class NotificationsService {
     // Create and store a new notification by username
     public void sendNotificationToUser(String username, String message) {
         Optional<Account> target = accountRepository.findByUsername(username);
-        if (target != null) {
+        if (target.isPresent()) {
             Notifications notif = new Notifications();
             notif.setMessage(message);
             notif.setTarget(target.get());

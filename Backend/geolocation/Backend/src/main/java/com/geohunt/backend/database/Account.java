@@ -53,6 +53,15 @@ public class Account {
         this.password = password;
     }
 
+    @ManyToMany
+    @JoinTable(
+            name = "account_powerups",
+            joinColumns = @JoinColumn(name = "account_id"),
+            inverseJoinColumns = @JoinColumn(name = "powerup_id")
+    )
+    @JsonIgnoreProperties("accounts")
+    private Set<Powerup> powerups = new HashSet<>();
+
     public void incrementPoints(long value){
         totalPoints += value;
     }
