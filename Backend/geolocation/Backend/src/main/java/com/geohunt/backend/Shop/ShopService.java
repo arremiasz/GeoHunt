@@ -2,9 +2,9 @@ package com.geohunt.backend.Shop;
 
 import com.geohunt.backend.database.Account;
 import com.geohunt.backend.database.AccountRepository;
-import com.stripe.exception.StripeException;
-import com.stripe.model.checkout.Session;
-import com.stripe.param.checkout.SessionCreateParams;
+//import com.stripe.exception.StripeException;
+//import com.stripe.model.checkout.Session;
+//import com.stripe.param.checkout.SessionCreateParams;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -62,7 +62,7 @@ public class ShopService {
         return ResponseEntity.status(HttpStatus.OK).body(returnable);
     }
 
-    public ResponseEntity<String> purchaseControl(PaymentDTO paymentDTO) {
+    /**public ResponseEntity<String> purchaseControl(PaymentDTO paymentDTO) {
         Optional<Shop> item = shopRepository.findById(paymentDTO.getShopid());
         Optional<Account> acc = accountRepository.findById(paymentDTO.getUserid());
         if (item.isEmpty() || acc.isEmpty()) {
@@ -106,6 +106,6 @@ public class ShopService {
         }
 
         return ResponseEntity.status(HttpStatus.CREATED).body(session.getUrl());
-    }
+    }**/
 }
 

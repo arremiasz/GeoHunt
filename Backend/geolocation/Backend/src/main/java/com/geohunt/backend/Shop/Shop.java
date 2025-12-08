@@ -34,5 +34,4 @@ public class Shop {
     @OneToMany(mappedBy = "shopItem")
     @JsonManagedReference("transactions-shop")
     private List<Transactions> transactions;
-
 }
