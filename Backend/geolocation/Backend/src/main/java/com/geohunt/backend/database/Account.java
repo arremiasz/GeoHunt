@@ -2,6 +2,7 @@ package com.geohunt.backend.database;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.geohunt.backend.Shop.UserInventory;
 import com.geohunt.backend.powerup.Powerup;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -9,6 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -26,6 +28,7 @@ public class Account {
     private String pfp;
     private String password;
     private String email;
+    private long totalPoints;
 
     @OneToMany(mappedBy = "creator")
     @JsonManagedReference("account-challenges")
@@ -49,6 +52,11 @@ public class Account {
     @JsonManagedReference("target-friends")
     private Set<Friends> receivedFriendRequests;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties("user")
+    private List<UserInventory> usersInventory = new ArrayList<>();
+
+
     public Account(String username, String password){
         this.username = username;
         this.password = password;
@@ -62,5 +70,17 @@ public class Account {
     )
     @JsonIgnoreProperties("accounts")
     private Set<Powerup> powerups = new HashSet<>();
+
+    public void incrementPoints(long value){
+        totalPoints += value;
+    }
+
+    public boolean chargePoints(long value){
+        if(value > totalPoints){
+            return false;
+        }
+        totalPoints -= value;
+        return true;
+    }
 
 }
