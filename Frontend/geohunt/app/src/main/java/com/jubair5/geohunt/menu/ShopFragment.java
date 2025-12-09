@@ -15,6 +15,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.android.volley.Request;
 import com.android.volley.toolbox.StringRequest;
@@ -23,7 +24,6 @@ import com.jubair5.geohunt.network.ApiConstants;
 import com.jubair5.geohunt.network.VolleySingleton;
 import com.jubair5.geohunt.shop.ShopAdapter;
 import com.jubair5.geohunt.shop.ShopItem;
-import com.android.volley.toolbox.JsonArrayRequest;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -46,6 +46,7 @@ public class ShopFragment extends Fragment {
 
     private TextView currentPointsView;
     private RecyclerView shopRecyclerView;
+    private SwipeRefreshLayout swipeRefreshLayout;
     private ShopAdapter shopAdapter;
     private List<ShopItem> shopItems;
     private int currentPoints;
@@ -63,11 +64,21 @@ public class ShopFragment extends Fragment {
         shopRecyclerView = root.findViewById(R.id.shop_recycler_view);
         shopRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
+        swipeRefreshLayout = root.findViewById(R.id.swipe_refresh_layout);
+        swipeRefreshLayout.setOnRefreshListener(this::refreshShop);
+
         setupShopItems();
-        fetchShopItems();
-        fetchPoints();
+        refreshShop();
 
         return root;
+    }
+
+    /**
+     * Refreshes shop items and points when user pulls to refresh.
+     */
+    private void refreshShop() {
+        fetchShopItems();
+        fetchPoints();
     }
 
     /**
@@ -109,11 +120,18 @@ public class ShopFragment extends Fragment {
                     } catch (JSONException e) {
                         Log.e(TAG, "Error parsing shop items", e);
                         Toast.makeText(getContext(), "Error loading shop items.", Toast.LENGTH_SHORT).show();
+                    } finally {
+                        if (swipeRefreshLayout != null) {
+                            swipeRefreshLayout.setRefreshing(false);
+                        }
                     }
                 },
                 error -> {
                     Log.e(TAG, "Error fetching shop items", error);
                     Toast.makeText(getContext(), "Failed to load shop. Please try again.", Toast.LENGTH_SHORT).show();
+                    if (swipeRefreshLayout != null) {
+                        swipeRefreshLayout.setRefreshing(false);
+                    }
                 });
 
         VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);
@@ -186,17 +204,10 @@ public class ShopFragment extends Fragment {
         if (userId == -1)
             return;
 
-        String url = ApiConstants.BASE_URL + ApiConstants.PUT_POINTS_ENDPOINT + "?id=" + userId;
+        String url = ApiConstants.BASE_URL + ApiConstants.PURCHASE_ITEM_ENDPOINT + "?uid=" + userId + "&shopId="
+                + item.getId();
 
-        JSONObject requestBody = new JSONObject();
-        try {
-            requestBody.put("points", newPoints);
-        } catch (JSONException e) {
-            Log.e(TAG, "Error creating update points JSON", e);
-            return;
-        }
-
-        StringRequest request = new StringRequest(Request.Method.PUT, url,
+        StringRequest request = new StringRequest(Request.Method.GET, url,
                 response -> {
                     Log.d(TAG, "Points updated successfully");
                     fetchPoints();
@@ -206,15 +217,6 @@ public class ShopFragment extends Fragment {
                     Log.e(TAG, "Error updating points", error);
                     Toast.makeText(getContext(), "Purchase failed. Please try again.", Toast.LENGTH_SHORT).show();
                 }) {
-            @Override
-            public byte[] getBody() {
-                return requestBody.toString().getBytes(StandardCharsets.UTF_8);
-            }
-
-            @Override
-            public String getBodyContentType() {
-                return "application/json; charset=utf-8";
-            }
         };
 
         VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);

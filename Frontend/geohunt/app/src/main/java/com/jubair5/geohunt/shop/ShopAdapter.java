@@ -45,6 +45,7 @@ public class ShopAdapter extends RecyclerView.Adapter<ShopAdapter.ShopViewHolder
     public void onBindViewHolder(@NonNull ShopViewHolder holder, int position) {
         ShopItem item = shopItems.get(position);
         holder.title.setText(item.getTitle());
+        holder.description.setText(item.getDescription());
         holder.cost.setText("Cost: " + item.getCost() + " pts");
         holder.buyButton.setOnClickListener(v -> listener.onPurchaseClick(item));
     }
@@ -56,12 +57,14 @@ public class ShopAdapter extends RecyclerView.Adapter<ShopAdapter.ShopViewHolder
 
     static class ShopViewHolder extends RecyclerView.ViewHolder {
         TextView title;
+        TextView description;
         TextView cost;
         Button buyButton;
 
         public ShopViewHolder(@NonNull View itemView) {
             super(itemView);
             title = itemView.findViewById(R.id.shop_item_title);
+            description = itemView.findViewById(R.id.shop_item_description);
             cost = itemView.findViewById(R.id.shop_item_cost);
             buyButton = itemView.findViewById(R.id.shop_item_buy_button);
         }

@@ -32,7 +32,7 @@ public final class ApiConstants {
 
     // Shop Endpoints
     public static final String GET_POINTS_ENDPOINT = "/points";
-    public static final String PUT_POINTS_ENDPOINT = "/addPoints";
+    public static final String PURCHASE_ITEM_ENDPOINT = "/shop/purchase";
     public static final String GET_SHOP_ITEMS_ENDPOINT = "/shop/all";
 
 }
