@@ -3,10 +3,8 @@ package com.geohunt.backend.Services;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.geohunt.backend.database.*;
 
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +32,7 @@ public class GeohuntService {
     @Autowired
     private SubmissionsRepository submissionsRepository;
 
-    private double haversine(double lat1, double lon1, double lat2, double lon2) {
+    public double haversine(double lat1, double lon1, double lat2, double lon2) {
         double R = 3959; // miles
         double dLat = Math.toRadians(lat2 - lat1);
         double dLon = Math.toRadians(lon2 - lon1);
