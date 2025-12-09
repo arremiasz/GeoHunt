@@ -1,4 +1,4 @@
-package com.geohunt.backend.Shop;
+package com.geohunt.backend.Shop.DTOs;
 
 import lombok.Data;
 

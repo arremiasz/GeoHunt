@@ -1,9 +1,9 @@
 package com.geohunt.backend.Shop;
 
 import com.geohunt.backend.database.*;
-import com.stripe.model.Event;
-import com.stripe.model.checkout.Session;
-import com.stripe.net.Webhook;
+//import com.stripe.model.Event;
+//import com.stripe.model.checkout.Session;
+//import com.stripe.net.Webhook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +26,7 @@ public class StripeWebhookController {
     @Autowired
     private TransactionsRepository transactionsRepository;
 
-    @PostMapping("/webhook")
+    /**@PostMapping("/webhook")
     public ResponseEntity<String> handleStripeEvents(
             @RequestBody String payload,
             @RequestHeader("Stripe-Signature") String sigHeader) {
@@ -58,7 +58,7 @@ public class StripeWebhookController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Webhook Error: " + e.getMessage());
         }
-    }
+    }**/
 
     @GetMapping("/test")
     public String test() {

@@ -1,6 +1,7 @@
 package com.geohunt.backend.Shop;
 
 import com.geohunt.backend.Services.AccountService;
+import com.geohunt.backend.Shop.DTOs.TransactionDTO;
 import com.geohunt.backend.database.Account;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -31,5 +32,19 @@ public class TransactionService {
         } catch(IllegalArgumentException e){
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
+    }
+
+    public long addTransaction(TransactionDTO transaction){
+        Transactions t = new Transactions();
+        t.setDate(transaction.getDate());
+        t.setPrice(transaction.getPrice());
+        t.setUser(transaction.getUser());
+        t.setShopItem(transaction.getShopItem());
+        transactionsRepository.save(t);
+        return t.getTransactionid();
+    }
+
+    public void deleteTransaction(long id){ //DEVONLY
+        transactionsRepository.deleteById(id);
     }
 }

@@ -1,6 +1,5 @@
 package com.geohunt.backend.Shop;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.geohunt.backend.database.Account;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -13,22 +12,19 @@ import java.util.Date;
 @Getter
 @Setter
 @NoArgsConstructor
-public class Transactions {
-
-    @Id
+public class UserInventory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long transactionid;
-
-    @ManyToOne
-    @JoinColumn(name="shop_id")
-    @JsonBackReference("transactions-shop")
-    private Shop shopItem;
+    private @Id long id;
 
     @ManyToOne
     @JoinColumn(name="user_id")
-    @JsonBackReference("transactions-user")
     private Account user;
 
-    private Date date;
-    private long price;
+    @ManyToOne
+    @JoinColumn(name="shop_id")
+    private Shop shopItem;
+
+    private int quantity;
+    private boolean equipped;
+    private Date acquiredAt;
 }
