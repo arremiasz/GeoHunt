@@ -1,7 +1,3 @@
-/**
- * Activity Handler for login/signup and the main app
- * @author Alex Remiasz
- */
 package com.jubair5.geohunt;
 
 import android.app.Activity;
@@ -17,6 +13,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.jubair5.geohunt.auth.AuthenticationActivity;
 
+/**
+ * Activity Handler for login/signup and the main app
+ * @author Alex Remiasz
+ */
 public class LauncherActivity extends AppCompatActivity {
 
     private static final String TAG = "LauncherActivity";

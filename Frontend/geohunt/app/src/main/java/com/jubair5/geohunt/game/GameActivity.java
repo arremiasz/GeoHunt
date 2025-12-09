@@ -1,7 +1,3 @@
-/**
- * Activity responsible for handling the main game function
- * @author Alex Remiasz
- */
 package com.jubair5.geohunt.game;
 
 import android.Manifest;
@@ -75,6 +71,10 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
+/**
+ * Activity responsible for handling the main game function
+ * @author Alex Remiasz
+ */
 public class GameActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private static final String TAG = "GameActivity";
