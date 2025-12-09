@@ -1,5 +1,8 @@
 package com.geohunt.backend.Services;
 
+import com.geohunt.backend.Shop.ShopRepository;
+import com.geohunt.backend.Shop.TransactionsRepository;
+import com.geohunt.backend.Shop.UserInventoryRepository;
 import com.geohunt.backend.database.*;
 import com.geohunt.backend.powerup.Powerup;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +29,12 @@ public class AccountService {
 
     @Autowired
     private SubmissionsRepository submissionsRepository;
+
+    @Autowired
+    private UserInventoryRepository userInventoryRepository;
+
+    @Autowired
+    private TransactionsRepository transactionsRepository;
 
     public long getIdByUsername(String username) {
         Account a = getAccountByUsername(username);
@@ -54,6 +63,11 @@ public class AccountService {
             return accountRepository.findById(id).get();
         }
         throw new IllegalArgumentException("Account does not exist.");
+    }
+
+    public void giveAccountMoney(Account account, Long amount) {
+        account.setTotalPoints(account.getTotalPoints() + amount);
+        accountRepository.save(account);
     }
 
     public boolean deleteFriends(long id) {
@@ -85,6 +99,18 @@ public class AccountService {
         
     }
 
+    public void deleteUserInventory(long id) {
+        Optional<Account> accOpt = accountRepository.findById(id);
+        Account acc = accOpt.get();
+        userInventoryRepository.deleteAllByUser(acc);
+    }
+
+    public void deleteTransactions(long id) {
+        Optional<Account> accOpt = accountRepository.findById(id);
+        Account acc = accOpt.get();
+        transactionsRepository.deleteAllByUser(acc);
+    }
+
     public boolean deleteAccountByID(Long id) {
         if(accountRepository.findById(id).isPresent()) {
             deleteFriends(id);
@@ -92,6 +118,8 @@ public class AccountService {
             deleteChallenges(id);
             deleteNotifications(id);
             deletePowerups(id);
+            deleteUserInventory(id);
+            deleteTransactions(id);
             accountRepository.deleteById(id);
             return true;
         } else {

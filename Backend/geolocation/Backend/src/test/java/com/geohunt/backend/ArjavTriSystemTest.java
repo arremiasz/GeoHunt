@@ -5,6 +5,8 @@ package com.geohunt.backend;
 import com.geohunt.backend.Services.AccountService;
 import com.geohunt.backend.Services.GeohuntService;
 import com.geohunt.backend.Services.NotificationsService;
+import com.geohunt.backend.Shop.*;
+import com.geohunt.backend.Shop.DTOs.TransactionDTO;
 import com.geohunt.backend.database.*;
 import com.geohunt.backend.powerup.*;
 import com.geohunt.backend.util.Location;
@@ -18,10 +20,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -47,6 +46,9 @@ public class ArjavTriSystemTest {
     private AccountService accountService;
 
     @Autowired
+    private AccountRepository accountRepository;
+
+    @Autowired
     private GeohuntService geohuntService;
 
     @Autowired
@@ -57,6 +59,22 @@ public class ArjavTriSystemTest {
 
     @Autowired
     private FriendsService friendsService;
+
+    @Autowired
+    ShopService shopService;
+
+    @Autowired
+    ShopRepository shopRepository;
+
+    @Autowired
+    UserInventoryRepository uiRepo;
+
+    @Autowired
+    TransactionService transactionService;
+
+    @Autowired
+    TransactionsRepository transactionsRepository;
+
 
     private long uid;
     private long uid2;
@@ -900,8 +918,492 @@ public class ArjavTriSystemTest {
         assertFalse(b.getAccounts().stream().anyMatch(ac -> ac.getId() == id));
     }
 
+    @Test
+    @Transactional
+    @Order(45)
+    public void testPurchase_Success() {
+        Account acc = new Account();
+        acc.setUsername("buyer1");
+        acc.setPassword("pw");
+        acc.setEmail("email1");
+        accountService.createAccount(acc);
+        accountService.giveAccountMoney(acc, (long) 500);
+
+        Shop item = new Shop();
+        item.setName("Test Item");
+        item.setPrice(100);
+        item.setItemType(SHOP_ITEM_TYPE.DECORATION);
+        shopRepository.save(item);
+
+        ResponseEntity<String> result = shopService.purchase(acc.getId(), item.getId());
+
+        assertEquals(200, result.getStatusCodeValue());
+        assertTrue(result.getBody().contains("transaction id"));
+
+        Account updated = accountRepository.findById(acc.getId()).get();
+        assertEquals(400, updated.getTotalPoints());
+
+        accountService.deleteAccountByID(acc.getId());
+    }
+
+    @Test
+    @Order(46)
+    public void testPurchase_AccountNotFound() {
+        Shop item = new Shop();
+        item.setName("AAA");
+        item.setPrice(50);
+        item.setItemType(SHOP_ITEM_TYPE.DECORATION);
+        shopRepository.save(item);
+
+        ResponseEntity<String> result = shopService.purchase(999999, item.getId());
+        assertEquals(404, result.getStatusCodeValue());
+        shopRepository.delete(item);
+    }
+
+    @Test
+    @Transactional
+    @Order(47)
+    public void testPurchase_ItemNotFound() {
+        Account acc = new Account();
+        acc.setUsername("buyer1");
+        acc.setPassword("pw");
+        acc.setEmail("email1");
+        acc.setTotalPoints(100);
+        accountRepository.save(acc);
+
+        ResponseEntity<String> result = shopService.purchase(acc.getId(), 999999);
+        assertEquals(404, result.getStatusCodeValue());
+
+        accountService.deleteAccountByID(acc.getId());
+    }
+
+    @Test
+    @Transactional
+    @Order(48)
+    public void testPurchase_NotEnoughPoints() {
+        Account acc = new Account();
+        acc.setUsername("buyer1");
+        acc.setPassword("pw");
+        acc.setEmail("email1");
+        acc.setTotalPoints(5);
+        accountRepository.save(acc);
+
+        Shop item = new Shop();
+        item.setName("Expensive item");
+        item.setPrice(100);
+        item.setItemType(SHOP_ITEM_TYPE.DECORATION);
+        shopRepository.save(item);
+
+        ResponseEntity<String> result = shopService.purchase(acc.getId(), item.getId());
+        assertEquals(400, result.getStatusCodeValue());
+
+        accountService.deleteAccountByID(acc.getId());
+        shopRepository.deleteById(item.getId());
+    }
+
+    @Test
+    @Transactional
+    @Order(49)
+    public void testPurchase_AlreadyOwnsNonPowerup() {
+        Account acc = new Account();
+        acc.setUsername("buyer1");
+        acc.setPassword("pw");
+        acc.setEmail("email1");
+        acc.setTotalPoints(500);
+        accountRepository.save(acc);
+
+        Shop item = new Shop();
+        item.setName("OneTime");
+        item.setPrice(50);
+        item.setItemType(SHOP_ITEM_TYPE.DECORATION);
+        shopRepository.save(item);
+
+        shopService.purchase(acc.getId(), item.getId());
+        ResponseEntity<String> result = shopService.purchase(acc.getId(), item.getId());
+
+        assertEquals(409, result.getStatusCodeValue());
+        accountService.deleteAccountByID(acc.getId());
+        shopRepository.deleteById(item.getId());
+    }
+
+    @Test
+    @Transactional
+    @Order(50)
+    public void testPurchase_PowerupStacks() {
+        Account acc = new Account();
+        acc.setUsername("buyer1");
+        acc.setPassword("pw");
+        acc.setEmail("email1");
+        acc.setTotalPoints(500);
+        accountRepository.save(acc);
+
+        Powerup pu = new Powerup();
+        pu.setName("SpeedBoost");
+        pu.setAffect("Gives you more time");
+        pu.setType(PowerupEffects.MINUS_MINUTES);
+        powerupRepository.save(pu);
+
+        Shop item = new Shop();
+        item.setName("PowerupShop");
+        item.setPrice(20);
+        item.setItemType(SHOP_ITEM_TYPE.POWERUP);
+        item.setPowerup(pu);
+        shopRepository.save(item);
+
+        shopService.purchase(acc.getId(), item.getId());
+        shopService.purchase(acc.getId(), item.getId());
+
+        UserInventory inv = uiRepo.findByUserIdAndShopItemId(acc.getId(), item.getId()).get();
+        assertEquals(2, inv.getQuantity());
+
+        shopRepository.deleteById(item.getId());
+        accountRepository.deleteById(acc.getId());
+        powerupRepository.deleteById(pu.getId());
+    }
+
+    @Test
+    @Transactional
+    @Order(51)
+    public void testPurchase_CreatesTransaction() {
+        Account acc = new Account();
+        acc.setUsername("buyer1");
+        acc.setPassword("pw");
+        acc.setEmail("email1");
+        acc.setTotalPoints(500);
+        accountRepository.save(acc);
+
+        Shop item = new Shop();
+        item.setName("TransactionItem");
+        item.setPrice(30);
+        item.setItemType(SHOP_ITEM_TYPE.DECORATION);
+        shopRepository.save(item);
+
+        long countBefore = transactionsRepository.count();
+        ResponseEntity a = shopService.purchase(acc.getId(), item.getId());
+        assertEquals(200, a.getStatusCodeValue());
+        String response = a.getBody().toString();
+        String numberOnlyString = response.replaceAll("[^0-9]", "");
+        long transactionId = Integer.parseInt(numberOnlyString);
+        long countAfter = transactionsRepository.count();
+
+        assertEquals(countBefore + 1, countAfter);
+        accountRepository.deleteById(item.getId());
+        shopRepository.deleteById(acc.getId());
+        transactionsRepository.deleteById(transactionId);
+    }
+
+    @Test
+    @Transactional
+    @Order(52)
+    public void testTransaction_GetUserTransactions() {
+        Account acc = new Account();
+        acc.setUsername("buyer1");
+        acc.setPassword("pw");
+        acc.setEmail("email1");
+        accountRepository.save(acc);
+
+        Shop item = new Shop();
+        item.setName("TxItem2");
+        item.setPrice(20);
+        item.setItemType(SHOP_ITEM_TYPE.DECORATION);
+        shopRepository.save(item);
+
+        TransactionDTO dto = new TransactionDTO();
+        dto.setUser(acc);
+        dto.setShopItem(item);
+        dto.setPrice(20);
+        dto.setDate(new Date());
+
+        long id = transactionService.addTransaction(dto);
+
+        ResponseEntity<List<Transactions>> result =
+                transactionService.getUsersTransactions(acc.getId());
+
+        assertEquals(200, result.getStatusCodeValue());
+        assertEquals(1, result.getBody().size());
+        accountService.deleteAccountByID(acc.getId());
+        shopRepository.deleteById(item.getId());
+        transactionsRepository.deleteById(id);
+    }
+
+    @Test
+    @Transactional
+    @Order(53)
+    public void testTransaction_GetById() {
+        Account acc = new Account();
+        acc.setUsername("buyer1");
+        acc.setPassword("pw");
+        acc.setEmail("email1");
+        accountRepository.save(acc);
+
+        Shop item = new Shop();
+        item.setName("TxItem");
+        item.setItemType(SHOP_ITEM_TYPE.DECORATION);
+        item.setPrice(10);
+        shopRepository.save(item);
+
+        TransactionDTO dto = new TransactionDTO();
+        dto.setUser(acc);
+        dto.setShopItem(item);
+        dto.setPrice(10);
+        dto.setDate(new Date());
+
+        long id = transactionService.addTransaction(dto);
+
+        ResponseEntity result = transactionService.getTransactionById(id);
+        assertEquals(200, result.getStatusCodeValue());
+        accountService.deleteAccountByID(acc.getId());
+        shopRepository.deleteById(item.getId());
+        transactionsRepository.deleteById(id);
+    }
+
+    @Test
+    @Transactional
+    @Order(54)
+    public void testEquip_Item() {
+
+        Account acc = new Account();
+        acc.setUsername("equipTestUser");
+        acc.setPassword("pw");
+        acc.setEmail("equip@test.com");
+        acc.setTotalPoints(500);
+        accountRepository.save(acc);
+
+        Shop item = new Shop();
+        item.setName("EquipTestItem");
+        item.setDescription("Test decoration");
+        item.setItemType(SHOP_ITEM_TYPE.DECORATION);
+        item.setPrice(10);
+        shopRepository.save(item);
+
+        shopService.purchase(acc.getId(), item.getId());
+
+        ResponseEntity response = shopService.equip(item.getName(), acc.getId());
+        assertEquals(200, response.getStatusCodeValue());
+
+        UserInventory inv = uiRepo
+                .findByUserIdAndShopItemId(acc.getId(), item.getId())
+                .get();
+
+        assertTrue(inv.isEquipped());
 
 
+        accountService.deleteAccountByID(acc.getId());
+        shopRepository.deleteById(item.getId());
+    }
+
+    @Test
+    @Transactional
+    @Order(55)
+    public void testUnequip_Item() {
+
+        Account acc = new Account();
+        acc.setUsername("unequipTestUser");
+        acc.setPassword("pw");
+        acc.setEmail("unequip@test.com");
+        acc.setTotalPoints(500);
+        accountRepository.save(acc);
+
+        Shop item = new Shop();
+        item.setName("UnequipTestItem");
+        item.setDescription("Test decoration");
+        item.setItemType(SHOP_ITEM_TYPE.DECORATION);
+        item.setPrice(10);
+        shopRepository.save(item);
+
+        shopService.purchase(acc.getId(), item.getId());
+        shopService.equip(item.getName(), acc.getId());
+
+        ResponseEntity response = shopService.unequip(item.getName(), acc.getId());
+        assertEquals(200, response.getStatusCodeValue());
+
+        UserInventory inv = uiRepo
+                .findByUserIdAndShopItemId(acc.getId(), item.getId())
+                .get();
+
+        assertFalse(inv.isEquipped());
+
+        accountService.deleteAccountByID(acc.getId());
+        shopRepository.deleteById(item.getId());
+    }
+
+    @Test
+    @Transactional
+    @Order(56)
+    public void testUsePowerup() {
+
+        Account acc = new Account();
+        acc.setUsername("powerupUseUser");
+        acc.setPassword("pw");
+        acc.setEmail("powerup@test.com");
+        acc.setTotalPoints(500);
+        accountRepository.save(acc);
+
+        Powerup pu = new Powerup();
+        pu.setName("UsePowerupPU");
+        pu.setAffect("Speed boost");
+        pu.setType(PowerupEffects.MINUS_MINUTES);
+        powerupRepository.save(pu);
+
+        Shop item = new Shop();
+        item.setName("UsePowerupItem");
+        item.setPrice(20);
+        item.setItemType(SHOP_ITEM_TYPE.POWERUP);
+        item.setPowerup(pu);
+        shopRepository.save(item);
+
+        shopService.purchase(acc.getId(), item.getId());
+        shopService.purchase(acc.getId(), item.getId());
+
+        ResponseEntity response = shopService.userPowerup(item.getName(), acc.getId());
+        assertEquals(200, response.getStatusCodeValue());
+
+        UserInventory inv = uiRepo
+                .findByUserIdAndShopItemId(acc.getId(), item.getId())
+                .get();
+
+        assertEquals(1, inv.getQuantity());
+
+        accountService.deleteAccountByID(acc.getId());
+        shopRepository.deleteById(item.getId());
+        powerupRepository.deleteById(pu.getId());
+    }
+
+    @Test
+    @Transactional
+    @Order(57)
+    public void testGetItem() {
+
+        Shop item = new Shop();
+        item.setName("GetItemTest");
+        item.setDescription("Test DESC");
+        item.setPrice(15);
+        item.setItemType(SHOP_ITEM_TYPE.DECORATION);
+        shopRepository.save(item);
+
+        ResponseEntity<Shop> result = shopService.getItem("GetItemTest");
+
+        assertEquals(200, result.getStatusCodeValue());
+        assertEquals("GetItemTest", result.getBody().getName());
+
+        shopRepository.deleteById(item.getId());
+    }
+
+    @Test
+    @Transactional
+    @Order(58)
+    public void testDeleteItem() {
+
+        Shop item = new Shop();
+        item.setName("DeleteItemTest");
+        item.setDescription("Delete desc");
+        item.setItemType(SHOP_ITEM_TYPE.DECORATION);
+        item.setPrice(10);
+        shopRepository.save(item);
+
+        ResponseEntity<String> result = shopService.deleteItem("DeleteItemTest");
+
+        assertEquals(200, result.getStatusCodeValue());
+        assertFalse(shopRepository.findByName("DeleteItemTest").isPresent());
+    }
+
+    @Test
+    @Transactional
+    @Order(59)
+    public void testGetOfType() {
+
+        Shop s1 = new Shop();
+        s1.setName("TypeTestItem1");
+        s1.setDescription("Test item 1");
+        s1.setPrice(5);
+        s1.setItemType(SHOP_ITEM_TYPE.DECORATION);
+        shopRepository.save(s1);
+
+        Shop s2 = new Shop();
+        s2.setName("TypeTestItem2");
+        s2.setDescription("Test item 2");
+        s2.setPrice(10);
+        s2.setItemType(SHOP_ITEM_TYPE.DECORATION);
+        shopRepository.save(s2);
+
+        Shop s3 = new Shop();
+        s3.setName("TypeTestItem3");
+        s3.setDescription("Test item 3");
+        s3.setPrice(7);
+        s3.setItemType(SHOP_ITEM_TYPE.PROFILE_CUSTOMIZATION);
+        shopRepository.save(s3);
+
+        ResponseEntity<List<Shop>> result =
+                shopService.getOfType(SHOP_ITEM_TYPE.DECORATION);
+
+        assertEquals(200, result.getStatusCodeValue());
+        assertEquals(2, result.getBody().size());
+
+        shopRepository.deleteById(s1.getId());
+        shopRepository.deleteById(s2.getId());
+        shopRepository.deleteById(s3.getId());
+    }
+
+    @Test
+    @Transactional
+    @Order(60)
+    public void testGetItemByName() {
+
+        Shop item = new Shop();
+        item.setName("GetItemByNameTest");
+        item.setDescription("desc");
+        item.setPrice(9);
+        item.setItemType(SHOP_ITEM_TYPE.DECORATION);
+        shopRepository.save(item);
+
+        ResponseEntity<Shop> result = shopService.getItem("GetItemByNameTest");
+
+        assertEquals(200, result.getStatusCodeValue());
+        assertEquals("GetItemByNameTest", result.getBody().getName());
+
+        shopRepository.deleteById(item.getId());
+    }
+
+    @Test
+    @Transactional
+    @Order(61)
+    public void testGetItemById() {
+
+        Shop item = new Shop();
+        item.setName("GetItemByIdTest");
+        item.setDescription("desc");
+        item.setPrice(15);
+        item.setItemType(SHOP_ITEM_TYPE.DECORATION);
+        shopRepository.save(item);
+
+        ResponseEntity<Shop> result = shopService.getItem(item.getId());
+
+        assertEquals(200, result.getStatusCodeValue());
+        assertEquals(item.getId(), result.getBody().getId());
+
+        shopRepository.deleteById(item.getId());
+    }
+
+    @Test
+    @Transactional
+    @Order(62)
+    public void testDoesExist() {
+
+        Shop item = new Shop();
+        item.setName("DoesExistTestItem");
+        item.setDescription("desc");
+        item.setPrice(20);
+        item.setItemType(SHOP_ITEM_TYPE.DECORATION);
+        shopRepository.save(item);
+
+        boolean exists = shopService.doesExist("DoesExistTestItem");
+        assertTrue(exists);
+
+        boolean doesntExist = shopService.doesExist("NonExistingItem");
+        assertFalse(doesntExist);
+
+        shopRepository.deleteById(item.getId());
+    }
 
 }
 
