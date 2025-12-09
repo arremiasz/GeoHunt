@@ -14,10 +14,6 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id"
-)
 public class Challenges {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private @Id long id;
@@ -39,6 +35,7 @@ public class Challenges {
     private List<Submissions> submissions;
 
     @OneToMany(mappedBy = "challenge")
+    @JsonIgnore
     private List<Comment> comments;
 
     private List<Integer> challengeRatings;

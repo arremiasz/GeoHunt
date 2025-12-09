@@ -24,10 +24,6 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @JsonIgnoreProperties({"challenges", "submissions", "sentFriendRequests", "receivedFriendRequests", "notifications", "usersInventory", "powerups"})
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id"
-)
 public class Account {
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private @Id long id;
@@ -67,6 +63,7 @@ public class Account {
 
 
     @OneToMany(mappedBy = "author")
+    @JsonIgnore
     private List<Comment> comments;
 
     public Account(String username, String password){

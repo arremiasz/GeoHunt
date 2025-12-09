@@ -19,10 +19,6 @@ import java.time.LocalDateTime;
 @Setter
 @Getter
 @NoArgsConstructor
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id"
-)
 public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
