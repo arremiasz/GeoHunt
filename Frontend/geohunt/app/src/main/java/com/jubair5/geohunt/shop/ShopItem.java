@@ -16,8 +16,8 @@ public class ShopItem {
     }
 
     public ShopItem(JSONObject json) throws JSONException {
-        this.title = json.getString("title");
-        this.cost = json.getInt("cost");
+        this.title = json.getString("name");
+        this.cost = json.getInt("price");
     }
 
     public String getTitle() {
