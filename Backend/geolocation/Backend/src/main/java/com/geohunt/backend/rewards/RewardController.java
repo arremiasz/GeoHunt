@@ -24,7 +24,7 @@ public class RewardController {
     @Autowired SubmissionsService submissionsService;
     @Autowired ImageService imageService;
 
-    // Assign Reward from Submission
+    // Game Endpoints
 
     @PostMapping("account/{uid}/rewards/gradesubmission/{sid}")
     public ResponseEntity<Reward> gradeSubmission(@PathVariable long sid, @PathVariable long uid){
@@ -44,8 +44,6 @@ public class RewardController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
-
-    // User Inventory
 
     @GetMapping("/account/{id}/inventory")
     public ResponseEntity<List<Reward>> getUserInventory(@PathVariable long id){
@@ -68,8 +66,6 @@ public class RewardController {
         return ResponseEntity.ok(customizationList);
     }
 
-    // Universal
-
     @GetMapping("/rewards/{id}")
     public ResponseEntity<Reward> getReward(@PathVariable long id){
         Reward reward = rewardService.getReward(id);
@@ -78,6 +74,8 @@ public class RewardController {
         }
         return ResponseEntity.ok(reward);
     }
+
+    // Dev Endpoints
 
     @DeleteMapping("/rewards/{id}")
     public ResponseEntity<String> deleteReward(@PathVariable long id){
@@ -100,8 +98,6 @@ public class RewardController {
         rewardService.saveReward(reward);
         return ResponseEntity.ok(reward);
     }
-
-    // Customizations
 
     @PostMapping("/rewards/customizations")
     public ResponseEntity<Customization> submitCustomization(@RequestBody Customization customization){
