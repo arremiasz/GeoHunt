@@ -1,10 +1,13 @@
 package com.geohunt.backend.database;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.geohunt.backend.Shop.UserInventory;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.geohunt.backend.powerup.Powerup;
+import com.geohunt.backend.comments.Comment;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -58,6 +61,10 @@ public class Account {
     @JsonIgnoreProperties("user")
     private List<UserInventory> usersInventory = new ArrayList<>();
 
+
+    @OneToMany(mappedBy = "author")
+    @JsonIgnore
+    private List<Comment> comments;
 
     public Account(String username, String password){
         this.username = username;
