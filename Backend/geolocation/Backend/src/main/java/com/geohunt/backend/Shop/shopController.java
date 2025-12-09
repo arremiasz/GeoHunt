@@ -354,7 +354,7 @@ public class shopController {
             )
     })
     @GetMapping("/purchase")
-    public ResponseEntity<String> purchase(
+    public ResponseEntity purchase(
             @Parameter(description = "User ID of the buyer", example = "10", required = true)
             @RequestParam long uid,
 
