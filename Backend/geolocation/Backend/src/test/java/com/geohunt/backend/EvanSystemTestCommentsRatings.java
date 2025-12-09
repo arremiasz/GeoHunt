@@ -3,6 +3,9 @@ package com.geohunt.backend;
 import com.geohunt.backend.comments.CommentRepository;
 import com.geohunt.backend.database.*;
 import io.restassured.RestAssured;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.jupiter.api.*;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -92,11 +95,14 @@ public class EvanSystemTestCommentsRatings {
     @Test
     @Order(1)
     public void comments_postComment(){
+        // Variables
+        String comment = "test comment";
+
         // Send request and receive response
         Response response = RestAssured.given().
                 header("Content-Type", "text/plain").
                 header("charset","utf-8").
-                body("test comment").
+                body(comment).
                 when().
                 post("/comments?cid=1&uid=1");
 
@@ -107,36 +113,43 @@ public class EvanSystemTestCommentsRatings {
 
         // Check response body
         String returnString = response.getBody().asString();
-        System.out.println(returnString);
+        try{
+            JSONArray returnArr = new JSONArray(returnString);
+            JSONObject returnObj = returnArr.getJSONObject(returnArr.length()-1);
+            assertEquals(comment, returnObj.get("comment"));
+        }
+        catch (JSONException e){
+            e.printStackTrace();
+        }
     }
 
-//    @Test
-//    @Order(2)
-//    public void comments_getComment(){
-//
-//    }
-//
-//    @Test
-//    @Order(3)
-//    public void comments_updateComment(){
-//
-//    }
-//
-//    @Test
-//    @Order(4)
-//    public void comments_deleteComment(){
-//
-//    }
-//
-//    @Test
-//    @Order(5)
-//    public void comments_listCommentsByChallenge(){
-//
-//    }
-//
-//    @Test
-//    @Order(6)
-//    public void comments_listCommentsByUser(){
-//
-//    }
+    @Test
+    @Order(2)
+    public void comments_getComment(){
+
+    }
+
+    @Test
+    @Order(3)
+    public void comments_updateComment(){
+
+    }
+
+    @Test
+    @Order(4)
+    public void comments_deleteComment(){
+
+    }
+
+    @Test
+    @Order(5)
+    public void comments_listCommentsByChallenge(){
+
+    }
+
+    @Test
+    @Order(6)
+    public void comments_listCommentsByUser(){
+
+    }
 }
