@@ -429,5 +429,35 @@ public class shopController {
         shopService.deleteById(id);
     }
 
+    @Operation(
+            summary = "Delete an item from a user's inventory",
+            description = """
+                Removes one inventory entry for the given user and shop item ID.  
+                If the user does not own the item, a 404 is returned.  
+                Does not modify account points or perform refunds.
+                """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Item successfully removed from inventory"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Shop item not found or not owned by the user"
+            )
+    })
+    @DeleteMapping("/inventory/delete")
+    public ResponseEntity deleteFromInventory(
+            @Parameter(description = "ID of the user", example = "12", required = true)
+            @RequestParam long userId,
+
+            @Parameter(description = "ID of the shop item", example = "5", required = true)
+            @RequestParam long shopItemId
+    ) {
+        return shopService.deleteFromInventory(userId, shopItemId);
+    }
+
+
 
 }

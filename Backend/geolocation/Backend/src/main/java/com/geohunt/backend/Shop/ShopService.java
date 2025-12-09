@@ -347,6 +347,28 @@ public class ShopService {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Shop Item not found.");
     }
 
+    public ResponseEntity deleteFromInventory(long userId, long shopItemId) {
+
+        Optional<Shop> s = shopRepository.findById(shopItemId);
+        if (s.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Shop item not found.");
+        }
+
+        Optional<UserInventory> entry =
+                userInventoryRepository.findByUserIdAndShopItemId(userId, shopItemId);
+
+        if (entry.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Shop item not found in user's inventory.");
+        }
+
+        userInventoryRepository.deleteByUserIdAndShopItem(userId, s.get());
+
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
+
 
 }
 
