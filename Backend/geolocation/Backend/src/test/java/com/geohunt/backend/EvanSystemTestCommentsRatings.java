@@ -1,5 +1,6 @@
 package com.geohunt.backend;
 
+import com.geohunt.backend.comments.Comment;
 import com.geohunt.backend.comments.CommentRepository;
 import com.geohunt.backend.database.*;
 import io.restassured.RestAssured;
@@ -97,8 +98,8 @@ public class EvanSystemTestCommentsRatings {
     public void comments_postComment(){
         // Variables
         String comment = "test comment";
-        int cid = 1;
-        int uid = 1;
+        long cid = challengesIdList.get(1);
+        long uid = accountIdList.get(1);
 
         // Send request and receive response
         Response response = RestAssured.given().
@@ -119,45 +120,102 @@ public class EvanSystemTestCommentsRatings {
         try{
             JSONObject returnObj = new JSONObject(returnString);
             assertEquals(comment, returnObj.get("comment"));
-            assertEquals(uid, returnObj.getJSONObject("author").get("id"));
-            assertEquals(cid, returnObj.getJSONObject("challenge").get("id"));
+            assertEquals(uid, returnObj.getJSONObject("author").getLong("id"));
+            assertEquals(cid, returnObj.getJSONObject("challenge").getLong("id"));
+            commentIdList.add(returnObj.getLong("id"));
 
         }
         catch (JSONException e){
             e.printStackTrace();
+            fail();
         }
 
         // Check database
-
+        assertTrue(commentRepository.findById(commentIdList.get(0)).isPresent());
     }
 
     @Test
     @Order(2)
     public void comments_getComment(){
+        // Variables
+        long commentId = commentIdList.get(0);
 
+        // Send request and receive response
+        Response response = RestAssured.given().
+                header("Content-Type", "text/plain").
+                header("charset","utf-8").
+                when().
+                get("/comments/" + commentId);
+
+
+        // Check status code
+        int statusCode = response.getStatusCode();
+        assertEquals(200, statusCode);
+
+        // Check response body
+        String returnString = response.getBody().asString();
+        System.out.println(returnString);
+        try{
+            JSONObject returnObj = new JSONObject(returnString);
+            assertEquals(commentId, returnObj.getLong("id"));
+
+        }
+        catch (JSONException e){
+            e.printStackTrace();
+            fail();
+        }
     }
 
     @Test
     @Order(3)
     public void comments_updateComment(){
+        // Variables
+        String comment = "hello world";
+        long commentId = commentIdList.get(0);
 
+        // Send request and receive response
+        Response response = RestAssured.given().
+                header("Content-Type", "text/plain").
+                header("charset","utf-8").
+                body(comment).
+                when().
+                put("/comments/" + commentId);
+
+
+        // Check status code
+        int statusCode = response.getStatusCode();
+        assertEquals(200, statusCode);
+
+        // Check response body
+        String returnString = response.getBody().asString();
+        System.out.println(returnString);
+        try{
+            JSONObject returnObj = new JSONObject(returnString);
+            assertEquals(comment, returnObj.get("comment"));
+
+        }
+        catch (JSONException e){
+            e.printStackTrace();
+            fail();
+        }
     }
 
     @Test
     @Order(4)
     public void comments_deleteComment(){
+        // Variables
+        long commentId = commentIdList.get(0);
 
-    }
+        // Send request and receive response
+        Response response = RestAssured.given().
+                header("Content-Type", "text/plain").
+                header("charset","utf-8").
+                when().
+                delete("/comments/" + commentId);
 
-    @Test
-    @Order(5)
-    public void comments_listCommentsByChallenge(){
 
-    }
-
-    @Test
-    @Order(6)
-    public void comments_listCommentsByUser(){
-
+        // Check status code
+        int statusCode = response.getStatusCode();
+        assertEquals(200, statusCode);
     }
 }
