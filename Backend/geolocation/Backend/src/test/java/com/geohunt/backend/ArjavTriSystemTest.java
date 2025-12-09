@@ -5,6 +5,7 @@ package com.geohunt.backend;
 import com.geohunt.backend.Services.AccountService;
 import com.geohunt.backend.Services.GeohuntService;
 import com.geohunt.backend.Services.NotificationsService;
+import com.geohunt.backend.Shop.*;
 import com.geohunt.backend.database.*;
 import com.geohunt.backend.powerup.*;
 import com.geohunt.backend.util.Location;
@@ -47,6 +48,9 @@ public class ArjavTriSystemTest {
     private AccountService accountService;
 
     @Autowired
+    private AccountRepository accountRepository;
+
+    @Autowired
     private GeohuntService geohuntService;
 
     @Autowired
@@ -57,6 +61,22 @@ public class ArjavTriSystemTest {
 
     @Autowired
     private FriendsService friendsService;
+
+    @Autowired
+    ShopService shopService;
+
+    @Autowired
+    ShopRepository shopRepository;
+
+    @Autowired
+    UserInventoryRepository uiRepo;
+
+    @Autowired
+    TransactionService transactionService;
+
+    @Autowired
+    TransactionsRepository transactionsRepository;
+
 
     private long uid;
     private long uid2;
@@ -900,6 +920,45 @@ public class ArjavTriSystemTest {
         assertFalse(b.getAccounts().stream().anyMatch(ac -> ac.getId() == id));
     }
 
+    @Test
+    @Order(45)
+    public void testPurchase_Success() {
+        Account acc = new Account();
+        acc.setUsername("buyer1");
+        acc.setPassword("pw");
+        acc.setEmail("email1");
+        accountService.createAccount(acc);
+        accountService.giveAccountMoney(acc, (long) 500);
+
+        Shop item = new Shop();
+        item.setName("Test Item");
+        item.setPrice(100);
+        item.setItemType(SHOP_ITEM_TYPE.DECORATION);
+        shopRepository.save(item);
+
+        ResponseEntity<String> result = shopService.purchase(acc.getId(), item.getId());
+
+        assertEquals(200, result.getStatusCodeValue());
+        assertTrue(result.getBody().contains("transaction id"));
+
+        Account updated = accountRepository.findById(acc.getId()).get();
+        assertEquals(400, updated.getTotalPoints());
+
+        accountService.deleteAccountByID(acc.getId());
+    }
+
+    @Test
+    @Order(46)
+    public void testPurchase_AccountNotFound() {
+        Shop item = new Shop();
+        item.setName("AAA");
+        item.setPrice(50);
+        item.setItemType(SHOP_ITEM_TYPE.DECORATION);
+        shopRepository.save(item);
+
+        ResponseEntity<String> result = shopService.purchase(999999, item.getId());
+        assertEquals(404, result.getStatusCodeValue());
+    }
 
 
 

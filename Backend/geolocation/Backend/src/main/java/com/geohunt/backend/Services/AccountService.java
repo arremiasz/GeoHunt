@@ -65,6 +65,11 @@ public class AccountService {
         throw new IllegalArgumentException("Account does not exist.");
     }
 
+    public void giveAccountMoney(Account account, Long amount) {
+        account.setTotalPoints(account.getTotalPoints() + amount);
+        accountRepository.save(account);
+    }
+
     public boolean deleteFriends(long id) {
         return friendsService.deleteFriends(id);
     }
