@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * @author Arjava Tripathi
+ */
 @Tag(name = "Challenge Management", description = "Operations related to challenges")
 @RestController
 public class geohuntController {
@@ -147,5 +150,30 @@ public class geohuntController {
     public ResponseEntity updateMyChallenge(@Parameter(description = "users Id") @RequestParam long userId, @Parameter(description = "challenge Id") @RequestParam long chalId, @Parameter(description = "latitude") @RequestParam double lat, @Parameter(description = "longitude") @RequestParam double lng, @RequestBody String image){
 
         return geohuntService.updateChallenge(userId, chalId, image, lng, lat);
+    }
+
+    // Rate Challenges
+    @Operation(summary = "Add a rating to a Challenge using Challenge id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Rating added.", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Rating not within acceptable bounds.", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Challenge not found.", content = @Content)})
+    @PostMapping("/geohunt/rate")
+    public ResponseEntity<String> submitChallengeRating(@RequestParam long cid, @RequestParam int rating){
+        // Get challenge
+        if(challengesRepository.findById(cid).isEmpty()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Challenge Not Found");
+        }
+        Challenges challenge = challengesRepository.findById(cid).get();
+
+        // Verify rating is within bounds (1 - 5)
+        if(rating < 1 || rating > 5){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Rating Not Within Acceptable Bounds");
+        }
+
+        // add rating to challenge
+        challenge.addRating(rating);
+        challengesRepository.save(challenge);
+        return ResponseEntity.status(HttpStatus.OK).body("Rating Added");
     }
 }
