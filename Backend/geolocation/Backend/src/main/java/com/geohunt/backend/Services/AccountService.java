@@ -1,6 +1,10 @@
 package com.geohunt.backend.Services;
 
+import com.geohunt.backend.Shop.ShopRepository;
+import com.geohunt.backend.Shop.TransactionsRepository;
+import com.geohunt.backend.Shop.UserInventoryRepository;
 import com.geohunt.backend.database.*;
+import com.geohunt.backend.powerup.Powerup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +29,12 @@ public class AccountService {
 
     @Autowired
     private SubmissionsRepository submissionsRepository;
+
+    @Autowired
+    private UserInventoryRepository userInventoryRepository;
+
+    @Autowired
+    private TransactionsRepository transactionsRepository;
 
     public long getIdByUsername(String username) {
         Account a = getAccountByUsername(username);
@@ -55,6 +65,11 @@ public class AccountService {
         throw new IllegalArgumentException("Account does not exist.");
     }
 
+    public void giveAccountMoney(Account account, Long amount) {
+        account.setTotalPoints(account.getTotalPoints() + amount);
+        accountRepository.save(account);
+    }
+
     public boolean deleteFriends(long id) {
         return friendsService.deleteFriends(id);
     }
@@ -71,12 +86,40 @@ public class AccountService {
         submissionsRepository.deleteById(id);
     }
 
+    public void deletePowerups(long id){
+        Optional<Account> accOpt = accountRepository.findById(id);
+
+        Account acc = accOpt.get();
+
+        for(Powerup p : acc.getPowerups()) {
+            p.getAccounts().remove(acc);
+        }
+
+        acc.getPowerups().clear();
+        
+    }
+
+    public void deleteUserInventory(long id) {
+        Optional<Account> accOpt = accountRepository.findById(id);
+        Account acc = accOpt.get();
+        userInventoryRepository.deleteAllByUser(acc);
+    }
+
+    public void deleteTransactions(long id) {
+        Optional<Account> accOpt = accountRepository.findById(id);
+        Account acc = accOpt.get();
+        transactionsRepository.deleteAllByUser(acc);
+    }
+
     public boolean deleteAccountByID(Long id) {
         if(accountRepository.findById(id).isPresent()) {
             deleteFriends(id);
             deleteSubmissions(id);
             deleteChallenges(id);
             deleteNotifications(id);
+            deletePowerups(id);
+            deleteUserInventory(id);
+            deleteTransactions(id);
             accountRepository.deleteById(id);
             return true;
         } else {
@@ -136,4 +179,11 @@ public class AccountService {
         return ResponseEntity.ok("Account updated successfully!");
     }
 
+    public ResponseEntity<String> getPfp(long id) {
+        Optional<Account> accountOptional = accountRepository.findById(id);
+        if (accountOptional.isPresent()) {
+            return ResponseEntity.ok(accountOptional.get().getPfp());
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
 }
