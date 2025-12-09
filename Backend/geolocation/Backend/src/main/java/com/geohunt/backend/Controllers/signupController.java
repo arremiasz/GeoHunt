@@ -31,7 +31,7 @@ public class signupController {
                     content = @Content)
     })
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
-            description = "Account object containing username, email, and password",
+            description = "Account object containing username, email, and password. pfp can be optional as a byte string.",
             required = true,
             content = @Content(schema = @Schema(implementation = Account.class)))
     @PostMapping(value = "/signup")
@@ -143,5 +143,10 @@ public class signupController {
         } catch(IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @GetMapping("/account/getPfp")
+    public ResponseEntity<String> getPfp(@RequestParam long id) {
+        return accountService.getPfp(id);
     }
 }

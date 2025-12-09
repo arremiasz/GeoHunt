@@ -2,6 +2,7 @@ package com.geohunt.backend.database;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.geohunt.backend.powerup.Powerup;
 import com.geohunt.backend.comments.Comment;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -9,6 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -21,6 +23,7 @@ public class Account {
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private @Id long id;
     private String username;
+    @Column(columnDefinition = "mediumtext")
     private String pfp;
     private String password;
     private String email;
@@ -55,5 +58,14 @@ public class Account {
         this.username = username;
         this.password = password;
     }
+
+    @ManyToMany
+    @JoinTable(
+            name = "account_powerups",
+            joinColumns = @JoinColumn(name = "account_id"),
+            inverseJoinColumns = @JoinColumn(name = "powerup_id")
+    )
+    @JsonIgnoreProperties("accounts")
+    private Set<Powerup> powerups = new HashSet<>();
 
 }
