@@ -113,7 +113,7 @@ public class shopController {
     })
     @DeleteMapping("/deleteItem")
     public ResponseEntity<String> deleteItem(
-            @Parameter(description = "Name of the shop item to delete") @org.springframework.web.bind.annotation.RequestBody String name) {
+            @Parameter(description = "Name of the shop item to delete") @RequestParam String name) {
         return shopService.deleteItem(name);
     }
 
