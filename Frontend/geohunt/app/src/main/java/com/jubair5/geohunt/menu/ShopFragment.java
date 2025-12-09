@@ -81,17 +81,29 @@ public class ShopFragment extends Fragment {
 
     /**
      * Fetches shop items from the server.
+     * The response is a JSON object with keys: DECORATION, PROFILE_CUSTOMIZATION,
+     * POWERUP, OTHER.
+     * Each key maps to a JSON array of shop items.
      */
     private void fetchShopItems() {
         String url = ApiConstants.BASE_URL + ApiConstants.GET_SHOP_ITEMS_ENDPOINT;
 
-        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
+        StringRequest request = new StringRequest(Request.Method.GET, url,
                 response -> {
                     try {
                         shopItems.clear();
-                        for (int i = 0; i < response.length(); i++) {
-                            JSONObject itemJson = response.getJSONObject(i);
-                            shopItems.add(new ShopItem(itemJson));
+                        JSONObject categoriesJson = new JSONObject(response);
+
+                        // Parse items from each category
+                        String[] categories = { "DECORATION", "PROFILE_CUSTOMIZATION", "POWERUP", "OTHER" };
+                        for (String category : categories) {
+                            if (categoriesJson.has(category)) {
+                                org.json.JSONArray itemsArray = categoriesJson.getJSONArray(category);
+                                for (int i = 0; i < itemsArray.length(); i++) {
+                                    JSONObject itemJson = itemsArray.getJSONObject(i);
+                                    shopItems.add(new ShopItem(itemJson));
+                                }
+                            }
                         }
                         shopAdapter.notifyDataSetChanged();
                     } catch (JSONException e) {
