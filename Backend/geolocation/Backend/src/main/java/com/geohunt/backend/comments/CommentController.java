@@ -35,8 +35,8 @@ public class CommentController {
             @ApiResponse(responseCode = "200", description = "Comment post",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Comment.class))),
             @ApiResponse(responseCode = "400", description = "Failed to post comment", content = @Content)})
-    @PostMapping("challenges/{cid}/comments")
-    public ResponseEntity<Comment> postComment(@PathVariable long cid, @RequestParam long uid, @RequestBody String comment){
+    @PostMapping("/comments")
+    public ResponseEntity<Comment> postComment(@RequestParam long cid, @RequestParam long uid, @RequestBody String comment){
         try{
             if(challengesRepository.findById(cid).isEmpty()){
                 return ResponseEntity.badRequest().build();

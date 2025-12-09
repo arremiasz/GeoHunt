@@ -1,7 +1,9 @@
 package com.geohunt.backend.database;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.geohunt.backend.powerup.Powerup;
 import com.geohunt.backend.comments.Comment;
 import jakarta.persistence.*;
@@ -19,6 +21,10 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @JsonIgnoreProperties({"challenges", "submissions", "sentFriendRequests", "receivedFriendRequests", "notifications"})
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id"
+)
 public class Account {
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private @Id long id;
@@ -51,7 +57,6 @@ public class Account {
     private Set<Friends> receivedFriendRequests;
 
     @OneToMany(mappedBy = "author")
-    @JsonManagedReference("account-comment")
     private List<Comment> comments;
 
     public Account(String username, String password){

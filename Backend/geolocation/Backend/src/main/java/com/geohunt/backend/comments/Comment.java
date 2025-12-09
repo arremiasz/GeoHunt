@@ -1,5 +1,8 @@
 package com.geohunt.backend.comments;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.geohunt.backend.database.Account;
 import com.geohunt.backend.database.Challenges;
 import jakarta.persistence.*;
@@ -16,6 +19,10 @@ import java.time.LocalDateTime;
 @Setter
 @Getter
 @NoArgsConstructor
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id"
+)
 public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

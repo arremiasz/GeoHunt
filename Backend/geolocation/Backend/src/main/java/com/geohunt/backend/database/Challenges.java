@@ -1,8 +1,6 @@
 package com.geohunt.backend.database;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.*;
 import com.geohunt.backend.comments.Comment;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -16,6 +14,10 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id"
+)
 public class Challenges {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private @Id long id;
@@ -37,7 +39,6 @@ public class Challenges {
     private List<Submissions> submissions;
 
     @OneToMany(mappedBy = "challenge")
-    @JsonManagedReference("challenges-comment")
     private List<Comment> comments;
 
     private List<Integer> challengeRatings;
