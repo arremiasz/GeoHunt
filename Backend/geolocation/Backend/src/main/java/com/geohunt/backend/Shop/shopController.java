@@ -320,8 +320,7 @@ public class shopController {
                 
                 Rules:
                 • User must have enough points  
-                • User cannot repurchase non-powerup items  
-                • Powerups stack (increase quantity)  
+                • User cannot repurchase non-powerup items 
                 • A transaction entry is automatically created  
                 • Powerups are immediately added to the user’s account  
                 
