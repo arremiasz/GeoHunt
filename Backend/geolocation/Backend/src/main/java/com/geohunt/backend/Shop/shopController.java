@@ -113,7 +113,7 @@ public class shopController {
     })
     @DeleteMapping("/deleteItem")
     public ResponseEntity<String> deleteItem(
-            @Parameter(description = "Name of the shop item to delete") @RequestParam String name) {
+            @Parameter(description = "Name of the shop item to delete") @org.springframework.web.bind.annotation.RequestBody String name) {
         return shopService.deleteItem(name);
     }
 
@@ -148,7 +148,7 @@ public class shopController {
             @ApiResponse(responseCode = "409", description = "Item name already exists")
     })
     @PostMapping("/addItem")
-    public ResponseEntity<Shop> addItem(@RequestBody Shop shop) {
+    public ResponseEntity<Shop> addItem(@org.springframework.web.bind.annotation.RequestBody Shop shop) {
         return shopService.addItem(shop);
     }
 
@@ -184,7 +184,7 @@ public class shopController {
             @ApiResponse(responseCode = "404", description = "Powerup not found")
     })
     @PostMapping("/addPowerup")
-    public ResponseEntity<Shop> addPowerup(@RequestBody PowerupShopDTO powerupDTO) {
+    public ResponseEntity<Shop> addPowerup(@org.springframework.web.bind.annotation.RequestBody PowerupShopDTO powerupDTO) {
         return shopService.addPowerupItem(powerupDTO);
     }
 
