@@ -2,6 +2,7 @@ package com.geohunt.backend.Shop;
 
 
 import com.geohunt.backend.powerup.Powerup;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,4 +15,6 @@ public interface ShopRepository extends JpaRepository<Shop, Long> {
     List<Shop> findAllByItemType(SHOP_ITEM_TYPE itemType);
     Optional<Shop> findById(Long id);
     boolean existsByPowerup(Powerup powerup);
+    @Transactional
+    void deleteById(Long id);
 }

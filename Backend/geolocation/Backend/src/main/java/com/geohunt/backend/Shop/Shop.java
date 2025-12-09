@@ -15,6 +15,10 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
+@JsonIgnoreProperties({
+        "userInventoryEntries",
+        "transactions"
+})
 public class Shop {
 
     @Id

@@ -1,5 +1,6 @@
 package com.geohunt.backend.Shop;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.geohunt.backend.database.Account;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -12,6 +13,7 @@ import java.util.Date;
 @Getter
 @Setter
 @NoArgsConstructor
+@JsonIgnoreProperties({"userInventoryEntries", "transactions"})
 public class UserInventory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private @Id long id;

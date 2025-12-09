@@ -34,6 +34,8 @@ public class ShopService {
     private TransactionService transactionService;
     @Autowired
     private PowerupService powerupService;
+    @Autowired
+    private TransactionsRepository transactionsRepository;
 
     public ResponseEntity<String> deleteItem(String name) {
         Optional<Shop> s = shopRepository.findByName(name);
@@ -332,6 +334,17 @@ public class ShopService {
         dto.setMessage("Powerup used successfully.");
 
         return ResponseEntity.ok(dto);
+    }
+
+    public ResponseEntity deleteById(long id){
+        Optional<Shop> s = shopRepository.findById(id);
+        if (s.isPresent()) {
+            userInventoryRepository.deleteAllByShopItem(s.get());
+            transactionsRepository.deleteAllByShopItem(s.get());
+            shopRepository.deleteById(id);
+            return ResponseEntity.status(HttpStatus.OK).build();
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Shop Item not found.");
     }
 
 

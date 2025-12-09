@@ -1,5 +1,6 @@
 package com.geohunt.backend.database;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.geohunt.backend.Shop.UserInventory;
@@ -19,13 +20,14 @@ import java.util.Set;
 @Getter
 @Setter
 @NoArgsConstructor
-@JsonIgnoreProperties({"challenges", "submissions", "sentFriendRequests", "receivedFriendRequests", "notifications"})
+@JsonIgnoreProperties({"challenges", "submissions", "sentFriendRequests", "receivedFriendRequests", "notifications", "usersInventory", "powerups"})
 public class Account {
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private @Id long id;
     private String username;
     @Column(columnDefinition = "mediumtext")
     private String pfp;
+    @JsonIgnore
     private String password;
     private String email;
     private long totalPoints;

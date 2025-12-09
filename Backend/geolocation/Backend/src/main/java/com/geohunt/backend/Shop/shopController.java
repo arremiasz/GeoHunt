@@ -424,5 +424,10 @@ public class shopController {
         return shopService.purchase(uid, shopId);
     }
 
+    @DeleteMapping("/by-id")
+    public void deleteByID(@RequestParam long id) {
+        shopService.deleteById(id);
+    }
+
 
 }
