@@ -7,6 +7,7 @@ import io.restassured.RestAssured;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.After;
 import org.junit.jupiter.api.*;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,10 +56,14 @@ public class EvanSystemTestCommentsRatings {
         RestAssured.port = port;
         RestAssured.baseURI = "http://localhost";
 
-        // Test db setup
+        // db setup
         commentIdList = new ArrayList<>();
         accountIdList = new ArrayList<>();
         challengesIdList = new ArrayList<>();
+
+        accountRepository.deleteAll();
+        challengesRepository.deleteAll();
+        commentRepository.deleteAll();
 
         // Dummy Accounts
         Account account1 = new Account();
@@ -217,5 +222,12 @@ public class EvanSystemTestCommentsRatings {
         // Check status code
         int statusCode = response.getStatusCode();
         assertEquals(200, statusCode);
+    }
+
+    @AfterAll
+    public void resetRepositories(){
+        commentRepository.deleteAll();
+        challengesRepository.deleteAll();
+        accountRepository.deleteAll();
     }
 }
