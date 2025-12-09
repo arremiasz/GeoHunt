@@ -97,6 +97,8 @@ public class EvanSystemTestCommentsRatings {
     public void comments_postComment(){
         // Variables
         String comment = "test comment";
+        int cid = 1;
+        int uid = 1;
 
         // Send request and receive response
         Response response = RestAssured.given().
@@ -104,7 +106,7 @@ public class EvanSystemTestCommentsRatings {
                 header("charset","utf-8").
                 body(comment).
                 when().
-                post("/comments?cid=1&uid=1");
+                post("/comments?cid=" + cid + "&uid=" + uid);
 
 
         // Check status code
@@ -113,14 +115,20 @@ public class EvanSystemTestCommentsRatings {
 
         // Check response body
         String returnString = response.getBody().asString();
+        System.out.println(returnString);
         try{
-            JSONArray returnArr = new JSONArray(returnString);
-            JSONObject returnObj = returnArr.getJSONObject(returnArr.length()-1);
+            JSONObject returnObj = new JSONObject(returnString);
             assertEquals(comment, returnObj.get("comment"));
+            assertEquals(uid, returnObj.getJSONObject("author").get("id"));
+            assertEquals(cid, returnObj.getJSONObject("challenge").get("id"));
+
         }
         catch (JSONException e){
             e.printStackTrace();
         }
+
+        // Check database
+
     }
 
     @Test
