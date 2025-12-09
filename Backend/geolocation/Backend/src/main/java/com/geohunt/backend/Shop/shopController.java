@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Tag(
         name = "Shop",
@@ -311,6 +312,66 @@ public class shopController {
     public void deleteTransaction(
             @Parameter(description = "Transaction ID (DEV)") @RequestParam long tid) {
         transactionService.deleteTransaction(tid);
+    }
+
+    @Operation(
+            summary = "Get all shop items grouped by type",
+            description = """
+            Returns a categorized list of all shop items, grouped by:
+            
+            • DECORATION  
+            • PROFILE_CUSTOMIZATION  
+            • POWERUP  
+            • OTHER  
+            
+            Only types that have at least one item will appear in the response.
+            Returns 404 if no shop items exist at all.
+            """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Successfully retrieved all shop items grouped by type",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = Shop.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                {
+                                  "DECORATION": [
+                                    {
+                                      "id": 1,
+                                      "name": "Blue Trail Banner",
+                                      "description": "A decorative banner",
+                                      "image": "base64string",
+                                      "itemType": "DECORATION",
+                                      "price": 150
+                                    }
+                                  ],
+                                  "POWERUP": [
+                                    {
+                                      "id": 3,
+                                      "name": "General Hint Powerup",
+                                      "description": "Reveals the city of the challenge",
+                                      "image": "base64string",
+                                      "itemType": "POWERUP",
+                                      "price": 500
+                                    }
+                                  ]
+                                }
+                                """
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "No shop items exist in the database",
+                    content = @Content
+            )
+    })
+    @GetMapping("/all")
+    public ResponseEntity<Map<SHOP_ITEM_TYPE, List<Shop>>> getAllItems() {
+        return shopService.getAllItems();
     }
 
     @Operation(
