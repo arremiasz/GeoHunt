@@ -26,8 +26,8 @@ public class RewardController {
 
     // Game Endpoints
 
-    @PostMapping("account/{uid}/rewards/gradesubmission/{sid}")
-    public ResponseEntity<Reward> gradeSubmission(@PathVariable long sid, @PathVariable long uid){
+    @GetMapping("/gradesubmission")
+    public ResponseEntity<Reward> gradeSubmission(@RequestParam long sid, @RequestParam long uid){
         try{
             Account account = accountService.getAccountById(uid);
             Submissions submissions = submissionsService.getSubmissionById(sid);
