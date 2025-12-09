@@ -62,7 +62,7 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
     private static final String KEY_USER_PFP = "userPfp";
 
     private LinearLayout displayContainer, editContainer;
-    private TextView usernameLabel, placesLabel, powerUpLabel;
+    private TextView usernameLabel;
     private TextInputLayout editUsernameLayout, editEmailLayout, editNewPasswordLayout, editCurrentPasswordLayout;
     private EditText editUsername, editEmail, editNewPassword, editCurrentPassword;
     private Button editButton, deleteButton, saveChangesButton, cancelButton, logoutButton;
@@ -108,8 +108,6 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         saveChangesButton = root.findViewById(R.id.save_changes_button);
         cancelButton = root.findViewById(R.id.cancel_button);
         logoutButton = root.findViewById(R.id.logout_button);
-        placesLabel = root.findViewById(R.id.places_label);
-        powerUpLabel = root.findViewById(R.id.powerUps_label);
         placesRecyclerView = root.findViewById(R.id.places_recycler_view);
         powerUpsRecyclerView = root.findViewById(R.id.powerUp_recycler_view);
 

@@ -18,14 +18,14 @@ import nl.dionsegijn.konfetti.models.Size;
 
 /**
  * Page for displaying the results from a game.
- * @author Alex Remiasz
+ * @author Alex Remiasz, Nathan Imig
  */
 public class ResultsActivity extends AppCompatActivity {
 
-    protected TextView distanceText;
-    protected TextView distanceUnitLabel;
-    protected TextView timeText;
-    protected TextView timeUnitLabel;
+    protected TextView distanceText, distanceUnitLabel;
+    protected TextView timeText, timeUnitLabel;
+    protected TextView pointsText, pointsUnitsLabel;
+    protected TextView powerUpUnlock;
     protected Button playAgainButton;
     protected Button goHomeButton;
     protected KonfettiView konfettiView;
@@ -55,6 +55,12 @@ public class ResultsActivity extends AppCompatActivity {
         timeText = findViewById(R.id.time_text);
         timeUnitLabel = findViewById(R.id.time_unit_label);
 
+        pointsText = findViewById(R.id.currency_text);
+        pointsUnitsLabel = findViewById(R.id.currency_unit_text);
+
+
+        powerUpUnlock = findViewById(R.id.unlock_text);
+
         playAgainButton = findViewById(R.id.play_again_button);
         goHomeButton = findViewById(R.id.go_home_button);
         konfettiView = findViewById(R.id.konfetti_view);
@@ -67,7 +73,7 @@ public class ResultsActivity extends AppCompatActivity {
     protected void displayResults() {
         double results = getIntent().getDoubleExtra("results", -1);
         int time = getIntent().getIntExtra("time", -1);
-        int currency = getCurrency(results, time);
+
 
         if (results != -1) {
             if (results <= 0.1) {
@@ -79,23 +85,27 @@ public class ResultsActivity extends AppCompatActivity {
                 distanceUnitLabel.setText("miles");
             }
 
-            distanceUnitLabel.append(" from target");
+            distanceUnitLabel.append(" away");
         } else {
             distanceText.setText("?");
             distanceUnitLabel.setText("Error");
         }
 
+        // Time
         if (time != -1) {
             int minuets = time/60;
             int seconds = time % 60;
 
             timeText.setText(minuets + ":" + seconds);
-
-
+            timeUnitLabel.setText("seconds");
         } else {
             timeText.setText("?");
             timeUnitLabel.setText("Error");
         }
+
+        // Points
+        pointsText.setText(getPoints(results,time)+ "");
+        pointsUnitsLabel.setText("points");
 
     }
 
@@ -105,8 +115,8 @@ public class ResultsActivity extends AppCompatActivity {
      * @param time
      * @return amount of currency
      */
-    private int getCurrency(double results, int time) {
-        return 500 * (1/((int) results * (time/60) ));
+    private int getPoints(double results, int time) {
+        return 500;
     }
 
     private void getRewards(){
