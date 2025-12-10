@@ -14,7 +14,6 @@ public final class ApiConstants {
     // Alex Mock Server
 //    public static final String BASE_URL = "https://6bfe1ae1-ae39-462f-910e-7d53b5da9867.mock.pstmn.io";
 //    public static final String BASE_URL = "http://10.0.2.2:3000";
-
     // Nathan Mock Server
 //    public static final String BASE_URL = "https://8ce22578-237f-43d8-bd05-9a8c9cc7d1db.mock.pstmn.io";
 
@@ -42,6 +41,11 @@ public final class ApiConstants {
     public static final String GET_POINTS_ENDPOINT = "/points";
     public static final String PURCHASE_ITEM_ENDPOINT = "/shop/purchase";
     public static final String GET_SHOP_ITEMS_ENDPOINT = "/shop/all";
+    public static final String GET_SHOP_TRANSACTIONS_ENDPOINT = "/shop/transactions/by-user";
+
+    // Statistics Endpoints
+    public static final String GET_SUBMISSIONS_ENDPOINT = "/account/{uid}/submissions";
+    public static final String GET_USER_COMMENTS_ENDPOINT = "/account/{uid}/comments";
 
     // Friends Endpoints
     public static final String GET_FRIENDS_ENDPOINT= "/friends";
