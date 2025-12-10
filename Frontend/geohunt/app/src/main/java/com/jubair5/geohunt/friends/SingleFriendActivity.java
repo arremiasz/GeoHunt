@@ -1,7 +1,3 @@
-/**
- * Activity used to display another account so that you can view stats or friend them
- * @author Nathan Imig
- */
 package com.jubair5.geohunt.friends;
 
 import android.content.Context;
@@ -11,6 +7,7 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -19,14 +16,25 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.jubair5.geohunt.R;
 import com.jubair5.geohunt.network.ApiConstants;
 import com.jubair5.geohunt.network.VolleySingleton;
+import com.jubair5.geohunt.places.Place;
+import com.jubair5.geohunt.places.PlacesAdapter;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 
+/**
+ * Activity used to display another account so that you can view stats or friend them
+ * @author Nathan Imig
+ */
 public class SingleFriendActivity extends AppCompatActivity {
 
     private static final String TAG = "SingleFriendActivity";
@@ -44,6 +52,8 @@ public class SingleFriendActivity extends AppCompatActivity {
     private String friendUsername;
     private SharedPreferences prefs;
     private TextView nameText;
+    private TextView statPointsValue, statMatchesValue, statFriendsValue, statItemsValue, statPlacesValue,
+            statCommentsValue;
     private ImageView profilePic;
     private Button friendRequestButton;
     private Button rejectRemoveButton;
@@ -81,7 +91,17 @@ public class SingleFriendActivity extends AppCompatActivity {
         friendRequestButton.setOnClickListener(V-> mainButtonClicked());
         rejectRemoveButton.setOnClickListener(V-> secondaryButtonClicked());
 
+        View root = findViewById(android.R.id.content);
 
+        // Initialize statistics TextViews
+        statPointsValue = root.findViewById(R.id.stat_points_value);
+        statMatchesValue = root.findViewById(R.id.stat_matches_value);
+        statFriendsValue = root.findViewById(R.id.stat_friends_value);
+        statItemsValue = root.findViewById(R.id.stat_items_value);
+        statPlacesValue = root.findViewById(R.id.stat_places_value);
+        statCommentsValue = root.findViewById(R.id.stat_comments_value);
+
+        fetchStatistics();
     }
 
 
@@ -287,5 +307,154 @@ public class SingleFriendActivity extends AppCompatActivity {
                 }
         );
         VolleySingleton.getInstance(this).addToRequestQueue(jsonObjReq);
+    }
+
+    /**
+     * Helper methods below written by
+     * @author Alex Remiasz
+     */
+
+    /**
+     * Fetches all statistics for the current user.
+     * Calls individual fetch methods for each statistic.
+     */
+    private void fetchStatistics() {
+        if (friendID == -1) {
+            Log.e(TAG, "User ID not found in shared preferences for statistics.");
+            return;
+        }
+
+        fetchPoints(friendID);
+        fetchMatches(friendID);
+        fetchFriends(friendID);
+        fetchItemsBought(friendID);
+        fetchPlaces(friendID);
+        fetchComments(friendID);
+    }
+
+    /**
+     * Fetches the user's current points from the server.
+     *
+     * @param userId The ID of the user.
+     */
+    private void fetchPoints(int userId) {
+        String url = ApiConstants.BASE_URL + ApiConstants.GET_POINTS_ENDPOINT + "?id=" + userId;
+
+        StringRequest request = new StringRequest(Request.Method.GET, url,
+                response -> {
+                    try {
+                        int points = Integer.parseInt(response.trim());
+                        statPointsValue.setText(String.valueOf(points));
+                    } catch (NumberFormatException e) {
+                        Log.e(TAG, "Error parsing points response: " + response, e);
+                        statPointsValue.setText("0");
+                    }
+                },
+                error -> {
+                    Log.e(TAG, "Error fetching points", error);
+                    statPointsValue.setText("0");
+                });
+
+        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(request);
+    }
+
+    /**
+     * Fetches the number of matches played by the user.
+     *
+     * @param userId The ID of the user.
+     */
+    private void fetchMatches(int userId) {
+        String url = ApiConstants.BASE_URL
+                + ApiConstants.GET_SUBMISSIONS_ENDPOINT.replace("{uid}", String.valueOf(userId));
+
+        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
+                response -> {
+                    statMatchesValue.setText(String.valueOf(response.length()));
+                },
+                error -> {
+                    Log.e(TAG, "Error fetching matches", error);
+                    statMatchesValue.setText("0");
+                });
+
+        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(request);
+    }
+
+    /**
+     * Fetches the number of friends the user has.
+     *
+     * @param userId The ID of the user.
+     */
+    private void fetchFriends(int userId) {
+        String url = ApiConstants.BASE_URL + ApiConstants.GET_FRIENDS_ENDPOINT + "?id=" + userId;
+
+        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
+                response -> {
+                    statFriendsValue.setText(String.valueOf(response.length()));
+                },
+                error -> {
+                    Log.e(TAG, "Error fetching friends", error);
+                    statFriendsValue.setText("0");
+                });
+
+        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(request);
+    }
+
+    /**
+     * Fetches the number of items bought by the user.
+     *
+     * @param userId The ID of the user.
+     */
+    private void fetchItemsBought(int userId) {
+        String url = ApiConstants.BASE_URL + ApiConstants.GET_SHOP_TRANSACTIONS_ENDPOINT + "?uid=" + userId;
+
+        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
+                response -> {
+                    statItemsValue.setText(String.valueOf(response.length()));
+                },
+                error -> {
+                    Log.e(TAG, "Error fetching items bought", error);
+                    statItemsValue.setText("0");
+                });
+
+        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(request);
+    }
+
+    /**
+     * Fetches the total number of places available.
+     */
+    private void fetchPlaces(int userId) {
+        String url = ApiConstants.BASE_URL + ApiConstants.GET_SUBMITTED_PLACES_ENDPOINT + "?id=" + userId;
+
+        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
+                response -> {
+                    statPlacesValue.setText(String.valueOf(response.length()));
+                },
+                error -> {
+                    Log.e(TAG, "Error fetching places", error);
+                    statPlacesValue.setText("0");
+                });
+
+        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(request);
+    }
+
+    /**
+     * Fetches the number of comments made by the user.
+     *
+     * @param userId The ID of the user.
+     */
+    private void fetchComments(int userId) {
+        String url = ApiConstants.BASE_URL
+                + ApiConstants.GET_USER_COMMENTS_ENDPOINT.replace("{uid}", String.valueOf(userId));
+
+        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
+                response -> {
+                    statCommentsValue.setText(String.valueOf(response.length()));
+                },
+                error -> {
+                    Log.e(TAG, "Error fetching comments", error);
+                    statCommentsValue.setText("0");
+                });
+
+        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(request);
     }
 }

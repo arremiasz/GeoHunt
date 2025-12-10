@@ -1,7 +1,3 @@
-/**
- * Activity for displaying details of a place.
- * @author Alex Remiasz
- */
 package com.jubair5.geohunt.places;
 
 import android.app.Activity;
@@ -29,6 +25,10 @@ import com.jubair5.geohunt.R;
 import com.jubair5.geohunt.network.ApiConstants;
 import com.jubair5.geohunt.network.VolleySingleton;
 
+/**
+ * Activity for displaying details of a place.
+ * @author Alex Remiasz
+ */
 public class PlaceDetailActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private static final String TAG = "PlaceDetailActivity";

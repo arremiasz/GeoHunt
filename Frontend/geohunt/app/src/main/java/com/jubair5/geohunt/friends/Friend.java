@@ -1,11 +1,11 @@
-/**
- * Friend Class
- * @author Nathan Imig
- */
 package com.jubair5.geohunt.friends;
 
 import org.json.JSONObject;
 
+/**
+ * Friend Class
+ * @author Nathan Imig
+ */
 public class Friend {
     private int id;
     private String username;

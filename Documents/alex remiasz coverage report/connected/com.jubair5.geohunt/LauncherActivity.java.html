@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LauncherActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.jubair5.geohunt</a> &gt; <span class="el_source">LauncherActivity.java</span></div><h1>LauncherActivity.java</h1><pre class="source lang-java linenums">package com.jubair5.geohunt;
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.util.Log;
+import android.widget.Toast;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.jubair5.geohunt.auth.AuthenticationActivity;
+
+/**
+ * Activity Handler for login/signup and the main app
+ * @author Alex Remiasz
+ */
+<span class="fc" id="L20">public class LauncherActivity extends AppCompatActivity {</span>
+
+    private static final String TAG = &quot;LauncherActivity&quot;;
+    private static final String SHARED_PREFS_NAME = &quot;GeoHuntPrefs&quot;;
+    private static final String KEY_USER_LOGGED_IN = &quot;isUserLoggedIn&quot;;
+    private static final String KEY_LOGIN_TIMESTAMP = &quot;loginTimestamp&quot;;
+    private static final long THIRTY_DAYS_IN_MILLIS = 30L * 24 * 60 * 60 * 1000;
+
+    private static final int AUTH_REQUEST_CODE = 1001; // Request code for starting AuthenticationActivity
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="fc" id="L32">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L33">        Log.d(TAG, &quot;onCreate called&quot;);</span>
+
+//        clearSessionOnLaunch(); // TODO: Remove this line in production
+
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        if (checkActiveSession()) {</span>
+<span class="fc" id="L38">            Log.d(TAG, &quot;Active session found and refreshed. Launching MainActivity.&quot;);</span>
+<span class="fc" id="L39">            launchMainActivity();</span>
+        } else {
+<span class="fc" id="L41">            Log.d(TAG, &quot;No active session or session expired. Launching AuthenticationActivity for result.&quot;);</span>
+<span class="fc" id="L42">            launchAuthenticationActivityForResult();</span>
+        }
+<span class="fc" id="L44">    }</span>
+
+    /**
+     * Checks if there's an active user session.
+     * A session is active if the user is marked as logged in and the login timestamp is within the 30-day validity period.
+     * If the session is active, the login timestamp is refreshed to the current time.
+     *
+     * @return {@code true} if an active session exists and is refreshed, {@code false} otherwise.
+     */
+    private boolean checkActiveSession() {
+<span class="fc" id="L54">        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);</span>
+<span class="fc" id="L55">        boolean isLoggedIn = sharedPreferences.getBoolean(KEY_USER_LOGGED_IN, false);</span>
+
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        if (!isLoggedIn) {</span>
+<span class="fc" id="L58">            Log.d(TAG, &quot;User not logged in.&quot;);</span>
+<span class="fc" id="L59">            return false;</span>
+        }
+
+<span class="fc" id="L62">        long loginTime = sharedPreferences.getLong(KEY_LOGIN_TIMESTAMP, 0);</span>
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">        if (loginTime == 0) { // Should not happen if isLoggedIn is true</span>
+<span class="nc" id="L64">            Log.e(TAG, &quot;User logged in but no login timestamp found. Clearing session.&quot;);</span>
+<span class="nc" id="L65">            clearLoginSession(sharedPreferences);</span>
+<span class="nc" id="L66">            return false;</span>
+        }
+
+<span class="fc" id="L69">        long currentTime = System.currentTimeMillis();</span>
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">        if ((currentTime - loginTime) &gt; THIRTY_DAYS_IN_MILLIS) {</span>
+<span class="nc" id="L71">            Log.d(TAG, &quot;Session expired. Last login was more than 30 days ago.&quot;);</span>
+<span class="nc" id="L72">            clearLoginSession(sharedPreferences);</span>
+<span class="nc" id="L73">            return false;</span>
+        }
+
+<span class="fc" id="L76">        SharedPreferences.Editor editor = sharedPreferences.edit();</span>
+<span class="fc" id="L77">        editor.putLong(KEY_LOGIN_TIMESTAMP, currentTime);</span>
+<span class="fc" id="L78">        editor.apply();</span>
+<span class="fc" id="L79">        Log.d(TAG, &quot;Active session confirmed and timestamp refreshed. Last login: &quot; + new java.util.Date(currentTime));</span>
+<span class="fc" id="L80">        return true;</span>
+    }
+
+    /**
+     * Clears the user's login status and timestamp from SharedPreferences.
+     *
+     * @param sharedPreferences The SharedPreferences instance from which to remove session data.
+     */
+    private void clearLoginSession(SharedPreferences sharedPreferences) {
+<span class="nc" id="L89">        SharedPreferences.Editor editor = sharedPreferences.edit();</span>
+<span class="nc" id="L90">        editor.remove(KEY_USER_LOGGED_IN);</span>
+<span class="nc" id="L91">        editor.remove(KEY_LOGIN_TIMESTAMP);</span>
+<span class="nc" id="L92">        editor.apply();</span>
+<span class="nc" id="L93">        Log.d(TAG, &quot;Login session data cleared from SharedPreferences.&quot;);</span>
+<span class="nc" id="L94">    }</span>
+
+    /**
+     * Launches the {@link AuthenticationActivity} to allow the user to log in or sign up.
+     * The activity is started for a result.
+     */
+    private void launchAuthenticationActivityForResult() {
+<span class="fc" id="L101">        Intent intent = new Intent(LauncherActivity.this, AuthenticationActivity.class);</span>
+<span class="fc" id="L102">        startActivityForResult(intent, AUTH_REQUEST_CODE);</span>
+<span class="fc" id="L103">    }</span>
+
+    /**
+     * Launches the main content of the app.
+     * It clears the activity stack and finishes the current LauncherActivity to prevent
+     * the user from navigating back to it after successful authentication.
+     */
+    private void launchMainActivity() {
+<span class="fc" id="L111">        Intent intent = new Intent(LauncherActivity.this, MainActivity.class);</span>
+<span class="fc" id="L112">        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);</span>
+<span class="fc" id="L113">        startActivity(intent);</span>
+<span class="fc" id="L114">        finish();</span>
+<span class="fc" id="L115">    }</span>
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+<span class="fc" id="L119">        super.onActivityResult(requestCode, resultCode, data);</span>
+<span class="fc" id="L120">        Log.d(TAG, &quot;onActivityResult - requestCode: &quot; + requestCode + &quot;, resultCode: &quot; + resultCode);</span>
+
+<span class="pc bpc" id="L122" title="1 of 2 branches missed.">        if (requestCode == AUTH_REQUEST_CODE) {</span>
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">            if (resultCode == Activity.RESULT_OK) {</span>
+<span class="fc" id="L124">                Log.d(TAG, &quot;AuthenticationActivity finished with RESULT_OK.&quot;);</span>
+<span class="pc bpc" id="L125" title="1 of 2 branches missed.">                if (checkActiveSession()) {</span>
+<span class="fc" id="L126">                    Log.d(TAG, &quot;Session confirmed active after auth. Launching MainActivity.&quot;);</span>
+<span class="fc" id="L127">                    launchMainActivity();</span>
+                } else {
+<span class="nc" id="L129">                    Log.e(TAG, &quot;Auth reported RESULT_OK, but no active session found. Finishing app.&quot;);</span>
+<span class="nc" id="L130">                    Toast.makeText(this, &quot;Login failed or session issue. Please try again.&quot;, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L131">                    finish();</span>
+                }
+            } else {
+<span class="nc" id="L134">                Log.d(TAG, &quot;AuthenticationActivity finished without RESULT_OK (resultCode: &quot; + resultCode + &quot;). Finishing app.&quot;);</span>
+<span class="nc" id="L135">                Toast.makeText(this, &quot;Authentication process was cancelled or failed.&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L136">                finish();</span>
+            }
+        }
+<span class="fc" id="L139">    }</span>
+
+    /**
+     * Clears the login session for testing purposes.
+     * This method should be removed or disabled in production.
+     */
+    private void clearSessionOnLaunch() { // TODO: Remove this method in production
+<span class="nc" id="L146">        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);</span>
+<span class="nc" id="L147">        clearLoginSession(sharedPreferences);</span>
+<span class="nc" id="L148">        Log.d(TAG, &quot;Session cleared on launch for testing purposes.&quot;);</span>
+<span class="nc" id="L149">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Generated by the Android Gradle plugin 8.13.1</div></body></html>

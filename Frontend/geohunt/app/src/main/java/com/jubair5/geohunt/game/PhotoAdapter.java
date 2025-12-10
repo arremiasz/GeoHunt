@@ -1,7 +1,3 @@
-/**
- * Adapter class that handles the grid of gallery photos.
- * @author Alex Remiasz
- */
 package com.jubair5.geohunt.game;
 
 import android.content.Context;
@@ -16,6 +12,10 @@ import com.jubair5.geohunt.R;
 
 import java.util.List;
 
+/**
+ * Adapter class that handles the grid of gallery photos.
+ * @author Alex Remiasz
+ */
 public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolder> {
 
     private final Context context;

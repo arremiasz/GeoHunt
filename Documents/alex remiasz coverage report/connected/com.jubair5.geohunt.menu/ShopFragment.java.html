@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ShopFragment.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.jubair5.geohunt.menu</a> &gt; <span class="el_source">ShopFragment.java</span></div><h1>ShopFragment.java</h1><pre class="source lang-java linenums">package com.jubair5.geohunt.menu;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.StringRequest;
+import com.jubair5.geohunt.R;
+import com.jubair5.geohunt.network.ApiConstants;
+import com.jubair5.geohunt.network.VolleySingleton;
+import com.jubair5.geohunt.shop.ShopAdapter;
+import com.jubair5.geohunt.shop.ShopItem;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Fragment for the shop view which allows users to purchase
+ * items for future games or profile customizations
+ * 
+ * @author Alex Remiasz
+ */
+<span class="fc" id="L41">public class ShopFragment extends Fragment {</span>
+
+    private static final String TAG = &quot;ShopFragment&quot;;
+    private static final String SHARED_PREFS_NAME = &quot;GeoHuntPrefs&quot;;
+    private static final String KEY_USER_ID = &quot;userId&quot;;
+
+    private TextView currentPointsView;
+    private RecyclerView shopRecyclerView;
+    private SwipeRefreshLayout swipeRefreshLayout;
+    private ShopAdapter shopAdapter;
+    private List&lt;ShopItem&gt; shopItems;
+    private int currentPoints;
+    private SharedPreferences prefs;
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+            @Nullable Bundle savedInstanceState) {
+<span class="fc" id="L59">        View root = inflater.inflate(R.layout.fragment_shop, container, false);</span>
+
+<span class="fc" id="L61">        prefs = requireActivity().getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);</span>
+
+<span class="fc" id="L63">        currentPointsView = root.findViewById(R.id.current_points);</span>
+<span class="fc" id="L64">        shopRecyclerView = root.findViewById(R.id.shop_recycler_view);</span>
+<span class="fc" id="L65">        shopRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));</span>
+
+<span class="fc" id="L67">        swipeRefreshLayout = root.findViewById(R.id.swipe_refresh_layout);</span>
+<span class="fc" id="L68">        swipeRefreshLayout.setOnRefreshListener(this::refreshShop);</span>
+
+<span class="fc" id="L70">        setupShopItems();</span>
+<span class="fc" id="L71">        refreshShop();</span>
+
+<span class="fc" id="L73">        return root;</span>
+    }
+
+    /**
+     * Refreshes shop items and points when user pulls to refresh.
+     */
+    private void refreshShop() {
+<span class="fc" id="L80">        fetchShopItems();</span>
+<span class="fc" id="L81">        fetchPoints();</span>
+<span class="fc" id="L82">    }</span>
+
+    /**
+     * Sets up the shop items list and adapter.
+     */
+    private void setupShopItems() {
+<span class="fc" id="L88">        shopItems = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L89">        shopAdapter = new ShopAdapter(shopItems, this::onPurchase);</span>
+<span class="fc" id="L90">        shopRecyclerView.setAdapter(shopAdapter);</span>
+<span class="fc" id="L91">    }</span>
+
+    /**
+     * Fetches shop items from the server.
+     * The response is a JSON object with keys: DECORATION, PROFILE_CUSTOMIZATION,
+     * POWERUP, OTHER.
+     * Each key maps to a JSON array of shop items.
+     */
+    private void fetchShopItems() {
+<span class="fc" id="L100">        String url = ApiConstants.BASE_URL + ApiConstants.GET_SHOP_ITEMS_ENDPOINT;</span>
+
+<span class="fc" id="L102">        StringRequest request = new StringRequest(Request.Method.GET, url,</span>
+                response -&gt; {
+                    try {
+<span class="fc" id="L105">                        shopItems.clear();</span>
+<span class="fc" id="L106">                        JSONObject categoriesJson = new JSONObject(response);</span>
+
+                        // Parse items from each category
+<span class="fc" id="L109">                        String[] categories = { &quot;DECORATION&quot;, &quot;PROFILE_CUSTOMIZATION&quot;, &quot;POWERUP&quot;, &quot;OTHER&quot; };</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">                        for (String category : categories) {</span>
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">                            if (categoriesJson.has(category)) {</span>
+<span class="fc" id="L112">                                org.json.JSONArray itemsArray = categoriesJson.getJSONArray(category);</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">                                for (int i = 0; i &lt; itemsArray.length(); i++) {</span>
+<span class="fc" id="L114">                                    JSONObject itemJson = itemsArray.getJSONObject(i);</span>
+<span class="fc" id="L115">                                    shopItems.add(new ShopItem(itemJson));</span>
+                                }
+                            }
+                        }
+<span class="fc" id="L119">                        shopAdapter.notifyDataSetChanged();</span>
+<span class="nc" id="L120">                    } catch (JSONException e) {</span>
+<span class="nc" id="L121">                        Log.e(TAG, &quot;Error parsing shop items&quot;, e);</span>
+<span class="nc" id="L122">                        Toast.makeText(getContext(), &quot;Error loading shop items.&quot;, Toast.LENGTH_SHORT).show();</span>
+                    } finally {
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">                        if (swipeRefreshLayout != null) {</span>
+<span class="fc" id="L125">                            swipeRefreshLayout.setRefreshing(false);</span>
+                        }
+                    }
+<span class="fc" id="L128">                },</span>
+                error -&gt; {
+<span class="nc" id="L130">                    Log.e(TAG, &quot;Error fetching shop items&quot;, error);</span>
+<span class="nc" id="L131">                    Toast.makeText(getContext(), &quot;Failed to load shop. Please try again.&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">                    if (swipeRefreshLayout != null) {</span>
+<span class="nc" id="L133">                        swipeRefreshLayout.setRefreshing(false);</span>
+                    }
+<span class="nc" id="L135">                });</span>
+
+<span class="fc" id="L137">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);</span>
+<span class="fc" id="L138">    }</span>
+
+    /**
+     * Fetches the user's current points from the server.
+     */
+    private void fetchPoints() {
+<span class="fc" id="L144">        int userId = prefs.getInt(KEY_USER_ID, -1);</span>
+<span class="fc bfc" id="L145" title="All 2 branches covered.">        if (userId == -1) {</span>
+<span class="fc" id="L146">            Log.e(TAG, &quot;User ID not found in shared preferences.&quot;);</span>
+<span class="fc" id="L147">            return;</span>
+        }
+
+<span class="fc" id="L150">        String url = ApiConstants.BASE_URL + ApiConstants.GET_POINTS_ENDPOINT + &quot;?id=&quot; + userId;</span>
+
+<span class="fc" id="L152">        StringRequest request = new StringRequest(Request.Method.GET, url,</span>
+                response -&gt; {
+                    try {
+<span class="fc" id="L155">                        currentPoints = Integer.parseInt(response.trim());</span>
+<span class="nc" id="L156">                    } catch (NumberFormatException e) {</span>
+<span class="nc" id="L157">                        Log.e(TAG, &quot;Error parsing points response&quot;, e);</span>
+<span class="nc" id="L158">                        currentPoints = 0;</span>
+<span class="fc" id="L159">                    }</span>
+<span class="fc" id="L160">                    updatePointsDisplay();</span>
+<span class="fc" id="L161">                },</span>
+<span class="nc" id="L162">                error -&gt; Log.e(TAG, &quot;Error fetching points&quot;, error));</span>
+
+<span class="fc" id="L164">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);</span>
+<span class="fc" id="L165">    }</span>
+
+    private void updatePointsDisplay() {
+<span class="pc bpc" id="L168" title="1 of 2 branches missed.">        if (currentPointsView != null) {</span>
+<span class="fc" id="L169">            currentPointsView.setText(&quot;Current Points: &quot; + currentPoints);</span>
+        }
+<span class="fc" id="L171">    }</span>
+
+    /**
+     * Handles the purchase of an item.
+     * 
+     * @param item The item being purchased.
+     */
+    private void onPurchase(ShopItem item) {
+<span class="fc" id="L179">        new android.app.AlertDialog.Builder(getContext())</span>
+<span class="fc" id="L180">                .setTitle(&quot;Confirm Purchase&quot;)</span>
+<span class="fc" id="L181">                .setMessage(&quot;Are you sure you want to buy &quot; + item.getTitle() + &quot; for &quot; + item.getCost() + &quot; points?&quot;)</span>
+<span class="fc" id="L182">                .setPositiveButton(&quot;Buy&quot;, (dialog, which) -&gt; processPurchase(item))</span>
+<span class="fc" id="L183">                .setNegativeButton(&quot;Cancel&quot;, null)</span>
+<span class="fc" id="L184">                .show();</span>
+<span class="fc" id="L185">    }</span>
+
+    private void processPurchase(ShopItem item) {
+<span class="pc bpc" id="L188" title="1 of 2 branches missed.">        if (currentPoints &gt;= item.getCost()) {</span>
+<span class="fc" id="L189">            int newPoints = currentPoints - item.getCost();</span>
+<span class="fc" id="L190">            updatePointsOnServer(newPoints, item);</span>
+<span class="fc" id="L191">        } else {</span>
+<span class="nc" id="L192">            Toast.makeText(getContext(), &quot;Not enough points!&quot;, Toast.LENGTH_SHORT).show();</span>
+        }
+<span class="fc" id="L194">    }</span>
+
+    /**
+     * Updates the user's points on the server.
+     * 
+     * @param newPoints The new points balance.
+     * @param item      The item purchased (for logging/toast).
+     */
+    private void updatePointsOnServer(int newPoints, ShopItem item) {
+<span class="fc" id="L203">        int userId = prefs.getInt(KEY_USER_ID, -1);</span>
+<span class="pc bpc" id="L204" title="1 of 2 branches missed.">        if (userId == -1)</span>
+<span class="nc" id="L205">            return;</span>
+
+<span class="fc" id="L207">        String url = ApiConstants.BASE_URL + ApiConstants.PURCHASE_ITEM_ENDPOINT + &quot;?uid=&quot; + userId + &quot;&amp;shopId=&quot;</span>
+<span class="fc" id="L208">                + item.getId();</span>
+
+<span class="fc" id="L210">        StringRequest request = new StringRequest(Request.Method.GET, url,</span>
+                response -&gt; {
+<span class="nc" id="L212">                    Log.d(TAG, &quot;Points updated successfully&quot;);</span>
+<span class="nc" id="L213">                    fetchPoints();</span>
+<span class="nc" id="L214">                    Toast.makeText(getContext(), &quot;Purchased &quot; + item.getTitle() + &quot;!&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L215">                },</span>
+                error -&gt; {
+<span class="fc" id="L217">                    Log.e(TAG, &quot;Error updating points&quot;, error);</span>
+<span class="fc" id="L218">                    Toast.makeText(getContext(), &quot;Purchase failed. Please try again.&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="fc" id="L219">                }) {</span>
+        };
+
+<span class="fc" id="L222">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);</span>
+<span class="fc" id="L223">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Generated by the Android Gradle plugin 8.13.1</div></body></html>

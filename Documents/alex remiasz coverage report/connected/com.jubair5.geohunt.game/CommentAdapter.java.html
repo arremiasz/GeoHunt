@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CommentAdapter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.jubair5.geohunt.game</a> &gt; <span class="el_source">CommentAdapter.java</span></div><h1>CommentAdapter.java</h1><pre class="source lang-java linenums">package com.jubair5.geohunt.game;
+
+import android.content.Context;
+import android.util.Base64;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
+import com.jubair5.geohunt.R;
+
+import java.util.List;
+
+/**
+ * Adapter for displaying comments in a RecyclerView.
+ *
+ * @author Alex Remiasz
+ */
+public class CommentAdapter extends RecyclerView.Adapter&lt;CommentAdapter.ViewHolder&gt; {
+
+    private final Context context;
+    private final List&lt;Comment&gt; comments;
+
+<span class="fc" id="L29">    public CommentAdapter(Context context, List&lt;Comment&gt; comments) {</span>
+<span class="fc" id="L30">        this.context = context;</span>
+<span class="fc" id="L31">        this.comments = comments;</span>
+<span class="fc" id="L32">    }</span>
+
+    @NonNull
+    @Override
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+<span class="fc" id="L37">        View view = LayoutInflater.from(context).inflate(R.layout.item_comment, parent, false);</span>
+<span class="fc" id="L38">        return new ViewHolder(view);</span>
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+<span class="fc" id="L43">        Comment comment = comments.get(position);</span>
+<span class="fc" id="L44">        holder.username.setText(comment.getUsername());</span>
+<span class="fc" id="L45">        holder.commentText.setText(comment.getComment());</span>
+<span class="fc" id="L46">        holder.timestamp.setText(comment.getFormattedTimestamp());</span>
+
+<span class="fc" id="L48">        String photoUrl = comment.getProfilePhotoUrl();</span>
+<span class="pc bpc" id="L49" title="2 of 4 branches missed.">        if (photoUrl != null &amp;&amp; !photoUrl.isEmpty()) {</span>
+            try {
+<span class="fc" id="L51">                byte[] imageData = Base64.decode(photoUrl, Base64.DEFAULT);</span>
+<span class="fc" id="L52">                Glide.with(context)</span>
+<span class="fc" id="L53">                        .load(imageData)</span>
+<span class="fc" id="L54">                        .placeholder(R.drawable.ic_launcher_background)</span>
+<span class="fc" id="L55">                        .error(R.drawable.ic_launcher_background)</span>
+<span class="fc" id="L56">                        .into(holder.profileImage);</span>
+<span class="nc" id="L57">            } catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L58">                holder.profileImage.setImageResource(R.drawable.ic_launcher_background);</span>
+<span class="pc" id="L59">            }</span>
+        } else {
+<span class="nc" id="L61">            holder.profileImage.setImageResource(R.drawable.ic_launcher_background);</span>
+        }
+<span class="fc" id="L63">    }</span>
+
+    @Override
+    public int getItemCount() {
+<span class="fc" id="L67">        return comments.size();</span>
+    }
+
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        ImageView profileImage;
+        TextView username;
+        TextView timestamp;
+        TextView commentText;
+
+        public ViewHolder(@NonNull View itemView) {
+<span class="fc" id="L77">            super(itemView);</span>
+<span class="fc" id="L78">            profileImage = itemView.findViewById(R.id.comment_profile_image);</span>
+<span class="fc" id="L79">            username = itemView.findViewById(R.id.comment_username);</span>
+<span class="fc" id="L80">            timestamp = itemView.findViewById(R.id.comment_timestamp);</span>
+<span class="fc" id="L81">            commentText = itemView.findViewById(R.id.comment_text);</span>
+<span class="fc" id="L82">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Generated by the Android Gradle plugin 8.13.1</div></body></html>

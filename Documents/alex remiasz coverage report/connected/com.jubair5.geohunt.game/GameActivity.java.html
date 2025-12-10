@@ -1,0 +1,774 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GameActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.jubair5.geohunt.game</a> &gt; <span class="el_source">GameActivity.java</span></div><h1>GameActivity.java</h1><pre class="source lang-java linenums">package com.jubair5.geohunt.game;
+
+import android.Manifest;
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.location.Location;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Base64;
+import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
+import androidx.transition.TransitionManager;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.bumptech.glide.Glide;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.MapStyleOptions;
+import com.google.android.material.slider.Slider;
+import com.jubair5.geohunt.R;
+import com.jubair5.geohunt.network.ApiConstants;
+import com.jubair5.geohunt.network.VolleySingleton;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Locale;
+
+/**
+ * Activity responsible for handling the main game function
+ * 
+ * @author Alex Remiasz
+ */
+<span class="fc" id="L79">public class GameActivity extends AppCompatActivity implements OnMapReadyCallback {</span>
+
+    private static final String TAG = &quot;GameActivity&quot;;
+    protected MapView mapView;
+    protected GoogleMap googleMap;
+    protected FusedLocationProviderClient fusedLocationProviderClient;
+    protected LocationCallback locationCallback;
+    protected Circle radiusCircle;
+    protected LinearLayout settingsContainer;
+    protected FrameLayout countdownOverlay;
+    protected TextView countdownText;
+    protected CardView stopwatchContainer;
+    protected TextView stopwatchText;
+    protected CardView hintContainer;
+    protected ImageView hintImage;
+    protected ImageView fullscreenPreview;
+    protected Button guessButton;
+<span class="fc" id="L96">    protected double radius = 1.0; // Default radius in miles</span>
+    protected double currentLat;
+    protected double currentLng;
+<span class="fc" id="L99">    protected boolean gameStarted = false;</span>
+<span class="fc" id="L100">    protected boolean userHasPanned = false;</span>
+    protected Uri guessImageUri;
+    protected int challengeId;
+<span class="fc" id="L103">    protected int strokeColor = Color.BLUE;</span>
+<span class="fc" id="L104">    protected int fillColor = 0x220000FF;</span>
+
+<span class="fc" id="L106">    protected Handler stopwatchHandler = new Handler(Looper.getMainLooper());</span>
+<span class="fc" id="L107">    protected long startTime = 0L;</span>
+
+    // For dragging the hint box
+    protected float dX, dY;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="fc" id="L114">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L115">        setContentView(R.layout.game_activity);</span>
+<span class="fc" id="L116">        setup(savedInstanceState);</span>
+<span class="fc" id="L117">    }</span>
+
+    protected void onCreate(Bundle savedInstanceState, int activity) {
+<span class="nc" id="L120">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L121">        setContentView(activity);</span>
+<span class="nc" id="L122">        setup(savedInstanceState);</span>
+<span class="nc" id="L123">    }</span>
+
+    protected void setup(Bundle savedInstanceState) {
+<span class="fc" id="L126">        mapView = findViewById(R.id.game_map_view);</span>
+<span class="fc" id="L127">        Slider radiusSlider = findViewById(R.id.radius_slider);</span>
+<span class="fc" id="L128">        Button readyButton = findViewById(R.id.ready_button);</span>
+<span class="fc" id="L129">        settingsContainer = findViewById(R.id.settings_container);</span>
+<span class="fc" id="L130">        countdownOverlay = findViewById(R.id.countdown_overlay);</span>
+<span class="fc" id="L131">        countdownText = findViewById(R.id.countdown_text);</span>
+<span class="fc" id="L132">        stopwatchContainer = findViewById(R.id.stopwatch_container);</span>
+<span class="fc" id="L133">        stopwatchText = findViewById(R.id.stopwatch_text);</span>
+<span class="fc" id="L134">        hintContainer = findViewById(R.id.hint_container);</span>
+<span class="fc" id="L135">        hintImage = findViewById(R.id.hint_image);</span>
+<span class="fc" id="L136">        fullscreenPreview = findViewById(R.id.fullscreen_preview);</span>
+<span class="fc" id="L137">        guessButton = findViewById(R.id.guess_button);</span>
+<span class="fc" id="L138">        guessButton.setVisibility(View.GONE);</span>
+
+<span class="fc" id="L140">        mapView.onCreate(savedInstanceState);</span>
+<span class="fc" id="L141">        mapView.getMapAsync(this);</span>
+
+<span class="fc" id="L143">        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);</span>
+
+<span class="fc" id="L145">        radiusSlider.addOnChangeListener((slider, value, fromUser) -&gt; {</span>
+<span class="nc" id="L146">            radius = value;</span>
+<span class="nc" id="L147">            updateCircleRadius();</span>
+<span class="nc" id="L148">        });</span>
+
+<span class="fc" id="L150">        readyButton.setOnClickListener(v -&gt; readyUp());</span>
+<span class="fc" id="L151">        guessButton.setOnClickListener(v -&gt; startGuess());</span>
+<span class="fc" id="L152">        setupHintBoxListeners();</span>
+<span class="fc" id="L153">    }</span>
+
+    /**
+     * This method is called when the user clicks the ready button. It stops
+     * location updates
+     * and sends the game parameters to the server.
+     */
+    protected void readyUp() {
+<span class="fc" id="L161">        Log.d(TAG, &quot;Ready button clicked. Beginning ready sequence.&quot;);</span>
+
+        // Get the most current location
+<span class="pc bpc" id="L164" title="1 of 2 branches missed.">        if (ContextCompat.checkSelfPermission(this,</span>
+                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+<span class="nc" id="L166">            Toast.makeText(this, &quot;Location permission is required to start the game.&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L167">            return;</span>
+        }
+
+<span class="fc" id="L170">        fusedLocationProviderClient.getLastLocation().addOnSuccessListener(this, location -&gt; {</span>
+<span class="pc bpc" id="L171" title="1 of 2 branches missed.">            if (location != null) {</span>
+<span class="fc" id="L172">                currentLat = location.getLatitude();</span>
+<span class="fc" id="L173">                currentLng = location.getLongitude();</span>
+<span class="fc" id="L174">                Log.d(TAG, &quot;Final location for game start: Lat: &quot; + currentLat + &quot;, Lng: &quot; + currentLng);</span>
+
+<span class="pc bpc" id="L176" title="1 of 2 branches missed.">                if (googleMap != null) {</span>
+<span class="fc" id="L177">                    googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLat, currentLng), 18f));</span>
+                }
+
+<span class="fc" id="L180">                sendGameStartRequest();</span>
+            } else {
+<span class="nc" id="L182">                Log.e(TAG, &quot;Could not get final location to start game.&quot;);</span>
+<span class="nc" id="L183">                Toast.makeText(this, &quot;Could not get current location. Please try again.&quot;, Toast.LENGTH_SHORT).show();</span>
+            }
+<span class="fc" id="L185">        });</span>
+<span class="fc" id="L186">    }</span>
+
+    /**
+     * Builds and sends the GET request to the server to get a generated location
+     * for the game.
+     */
+    protected void sendGameStartRequest() {
+<span class="fc" id="L193">        String url = Uri.parse(ApiConstants.BASE_URL + ApiConstants.GET_GENERATED_LOCATIONS_ENDPOINT)</span>
+<span class="fc" id="L194">                .buildUpon()</span>
+<span class="fc" id="L195">                .appendQueryParameter(&quot;lat&quot;, String.valueOf(currentLat))</span>
+<span class="fc" id="L196">                .appendQueryParameter(&quot;lng&quot;, String.valueOf(currentLng))</span>
+<span class="fc" id="L197">                .appendQueryParameter(&quot;radius&quot;, String.valueOf(radius))</span>
+<span class="fc" id="L198">                .build().toString();</span>
+
+<span class="fc" id="L200">        Log.d(TAG, &quot;Sending game start request to: &quot; + url);</span>
+
+<span class="fc" id="L202">        JsonObjectRequest gameStartRequest = new JsonObjectRequest(Request.Method.GET, url, null,</span>
+                response -&gt; {
+<span class="fc" id="L204">                    Log.d(TAG, &quot;Successfully received game location: &quot; + response.toString());</span>
+                    try {
+<span class="fc" id="L206">                        int id = response.getInt(&quot;id&quot;);</span>
+<span class="fc" id="L207">                        String imageUrl = response.getString(&quot;streetviewurl&quot;);</span>
+<span class="fc" id="L208">                        startGame(id, imageUrl);</span>
+<span class="nc" id="L209">                    } catch (JSONException e) {</span>
+<span class="nc" id="L210">                        Log.e(TAG, &quot;Error parsing game start response&quot;, e);</span>
+<span class="nc" id="L211">                        Toast.makeText(this, &quot;Invalid response from server.&quot;, Toast.LENGTH_LONG).show();</span>
+<span class="fc" id="L212">                    }</span>
+
+<span class="fc" id="L214">                },</span>
+                error -&gt; {
+<span class="nc" id="L216">                    Log.e(TAG, &quot;Failed to get game locations.&quot;, error);</span>
+<span class="nc" id="L217">                    Toast.makeText(this, &quot;Error starting game. Please try again.&quot;, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L218">                });</span>
+
+<span class="fc" id="L220">        VolleySingleton.getInstance(this).addToRequestQueue(gameStartRequest);</span>
+<span class="fc" id="L221">    }</span>
+
+    /**
+     * Starts the main game loop with the data received from the server. Makes the
+     * map full screen.
+     * 
+     * @param id       The ID of the target location.
+     * @param imageUrl The URL of the Street View image for the target.
+     */
+    protected void startGame(int id, String imageUrl) {
+<span class="fc" id="L231">        settingsContainer.setVisibility(View.GONE);</span>
+<span class="fc" id="L232">        gameStarted = true;</span>
+
+<span class="pc bpc" id="L234" title="1 of 2 branches missed.">        if (radiusCircle != null) {</span>
+<span class="fc" id="L235">            radiusCircle.remove();</span>
+        }
+
+<span class="fc" id="L238">        TransitionManager.beginDelayedTransition((ViewGroup) mapView.getParent());</span>
+<span class="fc" id="L239">        ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) mapView.getLayoutParams();</span>
+<span class="fc" id="L240">        params.matchConstraintPercentHeight = 1.0f;</span>
+<span class="fc" id="L241">        mapView.setLayoutParams(params);</span>
+
+<span class="fc" id="L243">        startCountdown(id, imageUrl);</span>
+<span class="fc" id="L244">    }</span>
+
+    /**
+     * Displays a 3-second countdown overlay and then proceeds to the main game
+     * logic.
+     * 
+     * @param id       The ID of the target location.
+     * @param imageUrl The URL of the Street View image for the target.
+     */
+    protected void startCountdown(int id, String imageUrl) {
+<span class="fc" id="L254">        countdownOverlay.setVisibility(View.VISIBLE);</span>
+<span class="fc" id="L255">        countdownText.setText(String.valueOf(3));</span>
+<span class="fc" id="L256">        new CountDownTimer(4000, 1000) {</span>
+            public void onTick(long millisUntilFinished) {
+<span class="fc" id="L258">                long seconds = millisUntilFinished / 1000;</span>
+<span class="fc bfc" id="L259" title="All 2 branches covered.">                if (seconds &gt; 0) {</span>
+<span class="fc" id="L260">                    countdownText.setText(String.valueOf(seconds));</span>
+                } else {
+<span class="fc" id="L262">                    countdownText.setText(R.string.go);</span>
+                }
+<span class="fc" id="L264">            }</span>
+
+            public void onFinish() {
+<span class="fc" id="L267">                countdownOverlay.setVisibility(View.GONE);</span>
+<span class="fc" id="L268">                startStopwatch();</span>
+<span class="fc" id="L269">                showHint(imageUrl);</span>
+<span class="fc" id="L270">                guessButton.setVisibility(View.VISIBLE);</span>
+<span class="fc" id="L271">                Log.d(TAG, &quot;Countdown finished. Starting game with challenge ID: &quot; + id);</span>
+<span class="fc" id="L272">                challengeId = id;</span>
+<span class="fc" id="L273">            }</span>
+<span class="fc" id="L274">        }.start();</span>
+<span class="fc" id="L275">    }</span>
+
+    /**
+     * Starts the stopwatch and updates the text view.
+     */
+    protected void startStopwatch() {
+<span class="fc" id="L281">        stopwatchContainer.setVisibility(View.VISIBLE);</span>
+<span class="fc" id="L282">        startTime = System.currentTimeMillis();</span>
+<span class="fc" id="L283">        stopwatchHandler.post(new Runnable() {</span>
+            @Override
+            public void run() {
+<span class="fc" id="L286">                long millis = System.currentTimeMillis() - startTime;</span>
+<span class="fc" id="L287">                int seconds = (int) (millis / 1000);</span>
+<span class="fc" id="L288">                int minutes = seconds / 60;</span>
+<span class="fc" id="L289">                seconds = seconds % 60;</span>
+
+<span class="fc" id="L291">                stopwatchText.setText(String.format(Locale.getDefault(), &quot;%02d:%02d&quot;, minutes, seconds));</span>
+
+<span class="fc" id="L293">                stopwatchHandler.postDelayed(this, 500);</span>
+<span class="fc" id="L294">            }</span>
+        });
+<span class="fc" id="L296">    }</span>
+
+    /**
+     * Stops the stopwatch and returns the elapsed time.
+     * 
+     * @return The elapsed time in seconds.
+     */
+    protected int stopStopwatch() {
+<span class="nc" id="L304">        stopwatchHandler.removeCallbacksAndMessages(null);</span>
+<span class="nc" id="L305">        long millis = System.currentTimeMillis() - startTime;</span>
+<span class="nc" id="L306">        return (int) (millis / 1000);</span>
+    }
+
+    /**
+     * This method is called when the user clicks the guess button.
+     * It initiates the process of taking a picture for the guess.
+     */
+    protected void startGuess() {
+<span class="fc" id="L314">        Log.d(TAG, &quot;Guess button clicked.&quot;);</span>
+<span class="pc bpc" id="L315" title="1 of 2 branches missed.">        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {</span>
+<span class="fc" id="L316">            requestCameraPermissionForGuessLauncher.launch(Manifest.permission.CAMERA);</span>
+        } else {
+<span class="nc" id="L318">            launchCameraForGuess();</span>
+        }
+<span class="fc" id="L320">    }</span>
+
+    /**
+     * Creates a temporary file URI and launches the camera intent for the guess.
+     */
+    protected void launchCameraForGuess() {
+<span class="fc" id="L326">        guessImageUri = createImageUri(&quot;guess_photo.jpg&quot;);</span>
+<span class="pc bpc" id="L327" title="1 of 2 branches missed.">        if (guessImageUri != null) {</span>
+<span class="fc" id="L328">            takePictureForGuessLauncher.launch(guessImageUri);</span>
+        } else {
+<span class="nc" id="L330">            Log.e(TAG, &quot;Failed to create image URI for guess.&quot;);</span>
+<span class="nc" id="L331">            Toast.makeText(this, &quot;Error preparing camera for guess.&quot;, Toast.LENGTH_SHORT).show();</span>
+        }
+<span class="fc" id="L333">    }</span>
+
+    protected void submitGuess(String imageString) {
+<span class="fc" id="L336">        SharedPreferences prefs = getSharedPreferences(&quot;GeoHuntPrefs&quot;, Context.MODE_PRIVATE);</span>
+<span class="fc" id="L337">        int userId = prefs.getInt(&quot;userId&quot;, -1);</span>
+
+<span class="pc bpc" id="L339" title="1 of 2 branches missed.">        if (userId == -1) {</span>
+<span class="nc" id="L340">            Toast.makeText(this, &quot;Error: User not logged in.&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L341">            Log.e(TAG, &quot;User ID not found in shared preferences for submission.&quot;);</span>
+<span class="nc" id="L342">            return;</span>
+        }
+
+<span class="fc" id="L345">        JSONObject requestBody = new JSONObject();</span>
+        try {
+<span class="fc" id="L347">            requestBody.put(&quot;latitude&quot;, currentLat);</span>
+<span class="fc" id="L348">            requestBody.put(&quot;longitude&quot;, currentLng);</span>
+<span class="fc" id="L349">            requestBody.put(&quot;photourl&quot;, imageString);</span>
+<span class="nc" id="L350">        } catch (JSONException e) {</span>
+<span class="nc" id="L351">            Log.e(TAG, &quot;Failed to create JSON object for submission.&quot;, e);</span>
+<span class="fc" id="L352">        }</span>
+
+<span class="fc" id="L354">        String url = ApiConstants.BASE_URL + ApiConstants.POST_SUBMISSION_ENDPOINT + &quot;?uid=&quot; + userId + &quot;&amp;cid=&quot;</span>
+                + challengeId;
+
+<span class="fc" id="L357">        StringRequest submissionRequest = new StringRequest(Request.Method.POST, url,</span>
+                response -&gt; {
+<span class="fc" id="L359">                    Log.d(TAG, &quot;Submission successful: &quot; + response);</span>
+<span class="fc" id="L360">                    Intent intent = new Intent(GameActivity.this, ResultsActivity.class);</span>
+<span class="fc" id="L361">                    intent.putExtra(&quot;results&quot;, Double.parseDouble(response));</span>
+<span class="fc" id="L362">                    intent.putExtra(&quot;challengeId&quot;, challengeId);</span>
+<span class="fc" id="L363">                    intent.putExtra(&quot;guessLat&quot;, currentLat);</span>
+<span class="fc" id="L364">                    intent.putExtra(&quot;guessLng&quot;, currentLng);</span>
+<span class="fc" id="L365">                    startActivity(intent);</span>
+<span class="fc" id="L366">                    finish();</span>
+<span class="fc" id="L367">                },</span>
+                error -&gt; {
+<span class="nc" id="L369">                    Log.e(TAG, &quot;Submission failed.&quot;, error);</span>
+<span class="nc" id="L370">                    Toast.makeText(this, &quot;Error submitting guess. Please try again.&quot;, Toast.LENGTH_LONG).show();</span>
+<span class="pc" id="L371">                }) {</span>
+            @Override
+            public byte[] getBody() {
+<span class="fc" id="L374">                return requestBody.toString().getBytes(StandardCharsets.UTF_8);</span>
+            }
+
+            @Override
+            public String getBodyContentType() {
+<span class="fc" id="L379">                return &quot;application/json; charset=utf-8&quot;;</span>
+            }
+        };
+
+<span class="fc" id="L383">        VolleySingleton.getInstance(this).addToRequestQueue(submissionRequest);</span>
+
+<span class="fc" id="L385">    }</span>
+
+    /**
+     * Creates a content Uri for a temporary file in the app's cache directory.
+     * 
+     * @param fileName The name of the file to create.
+     * @return The Uri for the temporary image file.
+     */
+    protected Uri createImageUri(String fileName) {
+<span class="fc" id="L394">        File imageFile = new File(getCacheDir(), fileName);</span>
+<span class="fc" id="L395">        return FileProvider.getUriForFile(this, getPackageName() + &quot;.provider&quot;, imageFile);</span>
+    }
+
+    /**
+     * Converts a Bitmap image to a Base64 encoded string.
+     * 
+     * @param bitmap The bitmap to be converted.
+     * @return The Base64 encoded string representation of the bitmap.
+     */
+    protected String bitmapToString(Bitmap bitmap) {
+<span class="fc" id="L405">        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();</span>
+<span class="fc" id="L406">        bitmap.compress(Bitmap.CompressFormat.JPEG, 70, byteArrayOutputStream);</span>
+<span class="fc" id="L407">        byte[] byteArray = byteArrayOutputStream.toByteArray();</span>
+<span class="fc" id="L408">        return Base64.encodeToString(byteArray, Base64.DEFAULT);</span>
+    }
+
+    /**
+     * This method handles the result of the location permission request.
+     */
+<span class="fc" id="L414">    protected final ActivityResultLauncher&lt;String&gt; requestLocationPermissionLauncher = registerForActivityResult(</span>
+            new ActivityResultContracts.RequestPermission(),
+            isGranted -&gt; {
+<span class="nc bnc" id="L417" title="All 2 branches missed.">                if (isGranted) {</span>
+<span class="nc" id="L418">                    Log.d(TAG, &quot;Location permission granted.&quot;);</span>
+<span class="nc" id="L419">                    enableMyLocation();</span>
+                } else {
+<span class="nc" id="L421">                    Log.w(TAG, &quot;Location permission denied.&quot;);</span>
+<span class="nc" id="L422">                    Toast.makeText(this, &quot;Location permission is required for the game.&quot;, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L423">                    finish();</span>
+                }
+<span class="nc" id="L425">            });</span>
+
+    /**
+     * This method handles getting the camera permission for guessing.
+     */
+<span class="fc" id="L430">    protected final ActivityResultLauncher&lt;String&gt; requestCameraPermissionForGuessLauncher = registerForActivityResult(</span>
+            new ActivityResultContracts.RequestPermission(),
+            isGranted -&gt; {
+<span class="pc bpc" id="L433" title="1 of 2 branches missed.">                if (isGranted) {</span>
+<span class="fc" id="L434">                    Log.d(TAG, &quot;Camera permission for guess granted.&quot;);</span>
+<span class="fc" id="L435">                    launchCameraForGuess();</span>
+                } else {
+<span class="nc" id="L437">                    Log.w(TAG, &quot;Camera permission for guess denied.&quot;);</span>
+<span class="nc" id="L438">                    Toast.makeText(this, &quot;Camera permission is required to make a guess.&quot;, Toast.LENGTH_SHORT).show();</span>
+                }
+<span class="fc" id="L440">            });</span>
+
+    /**
+     * This method is called when the user has taken a picture for their guess.
+     */
+<span class="fc" id="L445">    protected final ActivityResultLauncher&lt;Uri&gt; takePictureForGuessLauncher = registerForActivityResult(</span>
+            new ActivityResultContracts.TakePicture(),
+            success -&gt; {
+<span class="pc bpc" id="L448" title="1 of 2 branches missed.">                if (success) {</span>
+<span class="fc" id="L449">                    Log.d(TAG, &quot;Guess image capture successful.&quot;);</span>
+                    try {
+<span class="fc" id="L451">                        InputStream inputStream = getContentResolver().openInputStream(guessImageUri);</span>
+<span class="fc" id="L452">                        Bitmap bitmap = BitmapFactory.decodeStream(inputStream);</span>
+<span class="fc" id="L453">                        String imageString = bitmapToString(bitmap);</span>
+
+<span class="fc" id="L455">                        Log.d(TAG, &quot;Guess image as Base64 string is ready.&quot;);</span>
+
+<span class="fc" id="L457">                        submitGuess(imageString);</span>
+
+<span class="nc" id="L459">                    } catch (IOException e) {</span>
+<span class="nc" id="L460">                        Log.e(TAG, &quot;Failed to read guess image file.&quot;, e);</span>
+<span class="nc" id="L461">                        Toast.makeText(this, &quot;Error processing guess image.&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="pc" id="L462">                    }</span>
+                } else {
+<span class="nc" id="L464">                    Log.w(TAG, &quot;Guess image capture cancelled or failed.&quot;);</span>
+<span class="nc" id="L465">                    Toast.makeText(this, &quot;Guess cancelled.&quot;, Toast.LENGTH_SHORT).show();</span>
+                }
+<span class="fc" id="L467">            });</span>
+
+    /**
+     * Makes the hint container visible and loads the image.
+     * 
+     * @param imageUrl The URL of the hint image.
+     */
+    protected void showHint(String imageUrl) {
+<span class="fc" id="L475">        fullscreenPreview.setVisibility(View.VISIBLE);</span>
+<span class="fc" id="L476">        hintContainer.post(() -&gt; snapToCorner(hintContainer));</span>
+<span class="pc bpc" id="L477" title="1 of 2 branches missed.">        if (imageUrl != null) {</span>
+<span class="pc bpc" id="L478" title="1 of 2 branches missed.">            if (imageUrl.startsWith(&quot;http&quot;)) {</span>
+<span class="fc" id="L479">                Glide.with(this).load(imageUrl).into(hintImage);</span>
+<span class="fc" id="L480">                Glide.with(this).load(imageUrl).into(fullscreenPreview);</span>
+            } else {
+                try {
+<span class="nc" id="L483">                    byte[] imageData = Base64.decode(imageUrl, Base64.DEFAULT);</span>
+<span class="nc" id="L484">                    Glide.with(this).load(imageData).into(hintImage);</span>
+<span class="nc" id="L485">                    Glide.with(this).load(imageData).into(fullscreenPreview);</span>
+<span class="nc" id="L486">                } catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L487">                    Log.e(TAG, &quot;Bad Base64 string for hint image.&quot;, e);</span>
+<span class="nc" id="L488">                    Toast.makeText(this, &quot;Failed to load hint image.&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L489">                }</span>
+            }
+        }
+<span class="fc" id="L492">    }</span>
+
+    /**
+     * Sets up the listeners for the hint box to allow dragging and clicking.
+     */
+    @SuppressLint(&quot;ClickableViewAccessibility&quot;)
+    protected void setupHintBoxListeners() {
+<span class="fc" id="L499">        fullscreenPreview.setOnClickListener(v -&gt; {</span>
+<span class="fc" id="L500">            fullscreenPreview.setVisibility(View.GONE);</span>
+<span class="fc" id="L501">            hintContainer.setVisibility(View.VISIBLE);</span>
+<span class="fc" id="L502">        });</span>
+
+<span class="fc" id="L504">        hintContainer.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L505">            fullscreenPreview.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L506">            hintContainer.setVisibility(View.GONE);</span>
+<span class="nc" id="L507">        });</span>
+
+<span class="fc" id="L509">        hintContainer.setOnTouchListener(new View.OnTouchListener() {</span>
+            private long startClickTime;
+            private static final int MAX_CLICK_DURATION = 200;
+            private float pressedX, pressedY;
+
+            @Override
+            public boolean onTouch(View view, MotionEvent event) {
+<span class="pc bpc" id="L516" title="1 of 4 branches missed.">                switch (event.getAction()) {</span>
+                    case MotionEvent.ACTION_DOWN:
+<span class="fc" id="L518">                        startClickTime = System.currentTimeMillis();</span>
+<span class="fc" id="L519">                        pressedX = event.getRawX();</span>
+<span class="fc" id="L520">                        pressedY = event.getRawY();</span>
+<span class="fc" id="L521">                        dX = view.getX() - pressedX;</span>
+<span class="fc" id="L522">                        dY = view.getY() - pressedY;</span>
+<span class="fc" id="L523">                        break;</span>
+                    case MotionEvent.ACTION_MOVE:
+<span class="fc" id="L525">                        view.animate()</span>
+<span class="fc" id="L526">                                .x(event.getRawX() + dX)</span>
+<span class="fc" id="L527">                                .y(event.getRawY() + dY)</span>
+<span class="fc" id="L528">                                .setDuration(0)</span>
+<span class="fc" id="L529">                                .start();</span>
+<span class="fc" id="L530">                        break;</span>
+                    case MotionEvent.ACTION_UP:
+<span class="fc" id="L532">                        long clickDuration = System.currentTimeMillis() - startClickTime;</span>
+<span class="fc" id="L533">                        float distance = (float) Math.hypot(event.getRawX() - pressedX, event.getRawY() - pressedY);</span>
+
+<span class="pc bpc" id="L535" title="2 of 4 branches missed.">                        if (clickDuration &lt; MAX_CLICK_DURATION &amp;&amp; distance &lt; 10) {</span>
+                            // Click
+<span class="nc" id="L537">                            view.performClick();</span>
+                        } else {
+                            // Drag
+<span class="fc" id="L540">                            snapToCorner(view);</span>
+                        }
+<span class="fc" id="L542">                        break;</span>
+                    default:
+<span class="nc" id="L544">                        return false;</span>
+                }
+<span class="fc" id="L546">                return true;</span>
+            }
+        });
+<span class="fc" id="L549">    }</span>
+
+    /**
+     * Snaps the hint box to the nearest corner of the screen.
+     * 
+     * @param view The hint box view.
+     */
+    protected void snapToCorner(View view) {
+<span class="fc" id="L557">        ViewGroup parent = (ViewGroup) view.getParent();</span>
+<span class="fc" id="L558">        int parentWidth = parent.getWidth();</span>
+<span class="fc" id="L559">        int parentHeight = parent.getHeight();</span>
+<span class="fc" id="L560">        int margin = (int) (16 * getResources().getDisplayMetrics().density);</span>
+
+<span class="fc" id="L562">        float viewX = view.getX();</span>
+<span class="fc" id="L563">        float viewY = view.getY();</span>
+
+        float endX, endY;
+
+        // Snap to left or right corner
+<span class="fc bfc" id="L568" title="All 2 branches covered.">        if (viewX + view.getWidth() / 2f &lt; parentWidth / 2f) {</span>
+<span class="fc" id="L569">            endX = margin;</span>
+        } else {
+<span class="fc" id="L571">            endX = parentWidth - view.getWidth() - margin;</span>
+        }
+
+        // Snap to top or bottom corner
+<span class="pc bpc" id="L575" title="1 of 2 branches missed.">        if (viewY + view.getHeight() / 2f &lt; parentHeight / 2f) {</span>
+<span class="fc" id="L576">            endY = margin + 150;</span>
+        } else {
+<span class="nc" id="L578">            endY = parentHeight - view.getHeight() - margin - 200;</span>
+        }
+
+<span class="fc" id="L581">        view.animate()</span>
+<span class="fc" id="L582">                .x(endX)</span>
+<span class="fc" id="L583">                .y(endY)</span>
+<span class="fc" id="L584">                .setDuration(200)</span>
+<span class="fc" id="L585">                .start();</span>
+<span class="fc" id="L586">    }</span>
+
+    @Override
+    public void onMapReady(@NonNull GoogleMap googleMap) {
+<span class="fc" id="L590">        this.googleMap = googleMap;</span>
+<span class="fc" id="L591">        enableMyLocation();</span>
+<span class="fc" id="L592">        setMapStyle();</span>
+
+<span class="fc" id="L594">        googleMap.setOnCameraMoveStartedListener(reason -&gt; {</span>
+<span class="pc bpc" id="L595" title="1 of 2 branches missed.">            if (reason == GoogleMap.OnCameraMoveStartedListener.REASON_GESTURE) {</span>
+<span class="nc" id="L596">                Log.d(TAG, &quot;User panned the map.&quot;);</span>
+<span class="nc" id="L597">                userHasPanned = true;</span>
+            }
+<span class="fc" id="L599">        });</span>
+
+<span class="fc" id="L601">        googleMap.setOnMyLocationButtonClickListener(() -&gt; {</span>
+<span class="nc" id="L602">            Log.d(TAG, &quot;My Location button clicked.&quot;);</span>
+<span class="nc" id="L603">            userHasPanned = false;</span>
+<span class="nc" id="L604">            LatLng currentLatLng = new LatLng(currentLat, currentLng);</span>
+<span class="nc" id="L605">            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 18f));</span>
+<span class="nc" id="L606">            return true;</span>
+        });
+<span class="fc" id="L608">    }</span>
+
+    /**
+     * Checks for location permission, and if granted, enables the 'My Location'
+     * layer and
+     * moves the camera to the user's current position.
+     */
+    protected void enableMyLocation() {
+<span class="pc bpc" id="L616" title="1 of 2 branches missed.">        if (ContextCompat.checkSelfPermission(this,</span>
+                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+<span class="pc bpc" id="L618" title="1 of 2 branches missed.">            if (googleMap != null) {</span>
+<span class="fc" id="L619">                googleMap.setMyLocationEnabled(true);</span>
+<span class="fc" id="L620">                fusedLocationProviderClient.getLastLocation().addOnSuccessListener(this, location -&gt; {</span>
+<span class="pc bpc" id="L621" title="1 of 2 branches missed.">                    if (location != null) {</span>
+<span class="fc" id="L622">                        LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());</span>
+<span class="fc" id="L623">                        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f));</span>
+<span class="fc" id="L624">                        startLocationUpdates();</span>
+<span class="fc" id="L625">                    } else {</span>
+<span class="nc" id="L626">                        Log.w(TAG, &quot;Could not get current location on map ready.&quot;);</span>
+<span class="nc" id="L627">                        Toast.makeText(this, &quot;Could not get current location.&quot;, Toast.LENGTH_SHORT).show();</span>
+                    }
+<span class="fc" id="L629">                });</span>
+            }
+        } else {
+<span class="nc" id="L632">            requestLocationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);</span>
+        }
+<span class="fc" id="L634">    }</span>
+
+    /**
+     * Starts requesting location updates to keep the user's position centered.
+     */
+    @SuppressLint(&quot;MissingPermission&quot;)
+    protected void startLocationUpdates() {
+<span class="fc" id="L641">        LocationRequest locationRequest = new LocationRequest.Builder(1000)</span>
+<span class="fc" id="L642">                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)</span>
+<span class="fc" id="L643">                .build();</span>
+
+<span class="fc" id="L645">        locationCallback = new LocationCallback() {</span>
+            @Override
+            public void onLocationResult(@NonNull LocationResult locationResult) {
+<span class="pc bpc" id="L648" title="1 of 2 branches missed.">                if (locationResult.getLastLocation() != null) {</span>
+<span class="fc" id="L649">                    Location location = locationResult.getLastLocation();</span>
+<span class="fc" id="L650">                    currentLat = location.getLatitude();</span>
+<span class="fc" id="L651">                    currentLng = location.getLongitude();</span>
+
+<span class="pc bpc" id="L653" title="1 of 4 branches missed.">                    if (gameStarted &amp;&amp; !userHasPanned) {</span>
+<span class="fc" id="L654">                        LatLng currentLatLng = new LatLng(currentLat, currentLng);</span>
+<span class="fc" id="L655">                        googleMap.animateCamera(CameraUpdateFactory.newLatLng(currentLatLng));</span>
+<span class="pc bpc" id="L656" title="1 of 2 branches missed.">                    } else if (!gameStarted) {</span>
+<span class="fc" id="L657">                        updateCircleRadius();</span>
+                    }
+                }
+<span class="fc" id="L660">            }</span>
+        };
+
+<span class="fc" id="L663">        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper());</span>
+<span class="fc" id="L664">    }</span>
+
+    /**
+     * Sets the map style based on the current system theme (dark or light).
+     */
+    protected void setMapStyle() {
+<span class="fc" id="L670">        int nightModeFlags = getResources().getConfiguration().uiMode &amp; Configuration.UI_MODE_NIGHT_MASK;</span>
+<span class="pc bpc" id="L671" title="1 of 2 branches missed.">        if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {</span>
+<span class="nc" id="L672">            Log.d(TAG, &quot;Setting dark mode map style.&quot;);</span>
+<span class="nc" id="L673">            googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.map_style_dark));</span>
+<span class="nc" id="L674">            strokeColor = Color.rgb(0, 100, 255);</span>
+<span class="nc" id="L675">            fillColor = Color.argb(34, 0, 150, 255);</span>
+        }
+<span class="fc" id="L677">    }</span>
+
+    /**
+     * Updates the radius circle on the map to reflect the current search radius.
+     */
+    protected void updateCircleRadius() {
+<span class="pc bpc" id="L683" title="1 of 2 branches missed.">        if (googleMap != null) {</span>
+<span class="fc bfc" id="L684" title="All 2 branches covered.">            if (radiusCircle != null) {</span>
+<span class="fc" id="L685">                radiusCircle.remove();</span>
+            }
+<span class="fc" id="L687">            LatLng currentLatLng = new LatLng(currentLat, currentLng);</span>
+<span class="fc" id="L688">            radiusCircle = googleMap.addCircle(new CircleOptions()</span>
+<span class="fc" id="L689">                    .center(currentLatLng)</span>
+<span class="fc" id="L690">                    .radius(radius * 1609.34) // Convert miles to meters</span>
+<span class="fc" id="L691">                    .strokeColor(strokeColor)</span>
+<span class="fc" id="L692">                    .strokeWidth(2f)</span>
+<span class="fc" id="L693">                    .fillColor(fillColor));</span>
+
+            // Adjust camera to fit the circle
+<span class="fc" id="L696">            LatLngBounds bounds = new LatLngBounds.Builder()</span>
+<span class="fc" id="L697">                    .include(getOffsetLatLng(currentLatLng, radius * 1609.34, 0))</span>
+<span class="fc" id="L698">                    .include(getOffsetLatLng(currentLatLng, radius * 1609.34, 90))</span>
+<span class="fc" id="L699">                    .include(getOffsetLatLng(currentLatLng, radius * 1609.34, 180))</span>
+<span class="fc" id="L700">                    .include(getOffsetLatLng(currentLatLng, radius * 1609.34, 270))</span>
+<span class="fc" id="L701">                    .build();</span>
+<span class="fc" id="L702">            googleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100));</span>
+        }
+<span class="fc" id="L704">    }</span>
+
+    /**
+     * Calculates a new LatLng based on a starting point, a distance in meters, and
+     * a bearing.
+     * 
+     * @param latLng   The starting LatLng.
+     * @param distance The distance in meters.
+     * @param bearing  The bearing in degrees.
+     * @return The new LatLng.
+     */
+    protected LatLng getOffsetLatLng(LatLng latLng, double distance, double bearing) {
+<span class="fc" id="L716">        double lat1 = Math.toRadians(latLng.latitude);</span>
+<span class="fc" id="L717">        double lon1 = Math.toRadians(latLng.longitude);</span>
+<span class="fc" id="L718">        double brng = Math.toRadians(bearing);</span>
+<span class="fc" id="L719">        double dR = distance / 6378137; // Earth's radius in meters</span>
+
+<span class="fc" id="L721">        double lat2 = Math.asin(Math.sin(lat1) * Math.cos(dR) + Math.cos(lat1) * Math.sin(dR) * Math.cos(brng));</span>
+<span class="fc" id="L722">        double lon2 = lon1 + Math.atan2(Math.sin(brng) * Math.sin(dR) * Math.cos(lat1),</span>
+<span class="fc" id="L723">                Math.cos(dR) - Math.sin(lat1) * Math.sin(lat2));</span>
+
+<span class="fc" id="L725">        return new LatLng(Math.toDegrees(lat2), Math.toDegrees(lon2));</span>
+    }
+
+    @Override
+    protected void onResume() {
+<span class="fc" id="L730">        super.onResume();</span>
+<span class="fc" id="L731">        mapView.onResume();</span>
+<span class="fc" id="L732">    }</span>
+
+    @Override
+    protected void onStart() {
+<span class="fc" id="L736">        super.onStart();</span>
+<span class="fc" id="L737">        mapView.onStart();</span>
+<span class="fc" id="L738">    }</span>
+
+    @Override
+    protected void onStop() {
+<span class="fc" id="L742">        super.onStop();</span>
+<span class="fc" id="L743">        mapView.onStop();</span>
+<span class="fc" id="L744">    }</span>
+
+    @Override
+    protected void onPause() {
+<span class="fc" id="L748">        mapView.onPause();</span>
+<span class="fc" id="L749">        super.onPause();</span>
+<span class="pc bpc" id="L750" title="2 of 4 branches missed.">        if (fusedLocationProviderClient != null &amp;&amp; locationCallback != null) {</span>
+<span class="fc" id="L751">            fusedLocationProviderClient.removeLocationUpdates(locationCallback);</span>
+        }
+<span class="fc" id="L753">        stopwatchHandler.removeCallbacksAndMessages(null);</span>
+<span class="fc" id="L754">    }</span>
+
+    @Override
+    protected void onDestroy() {
+<span class="fc" id="L758">        mapView.onDestroy();</span>
+<span class="fc" id="L759">        super.onDestroy();</span>
+<span class="fc" id="L760">    }</span>
+
+    @Override
+    public void onLowMemory() {
+<span class="nc" id="L764">        super.onLowMemory();</span>
+<span class="nc" id="L765">        mapView.onLowMemory();</span>
+<span class="nc" id="L766">    }</span>
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+<span class="fc" id="L770">        super.onSaveInstanceState(outState);</span>
+<span class="fc" id="L771">        mapView.onSaveInstanceState(outState);</span>
+<span class="fc" id="L772">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Generated by the Android Gradle plugin 8.13.1</div></body></html>
