@@ -3,6 +3,7 @@ package com.geohunt.backend.powerup;
 import com.geohunt.backend.util.Location;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -325,6 +326,47 @@ public class PowerupController {
     ) {
         return service.removePowerupForAccount(uid, powerupId);
     }
+
+
+    @Operation(
+            summary = "Calculate distance from a challenge",
+            description = "Computes the distance in miles between the user's current location and the specified challenge."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Distance calculated successfully",
+                    content = @Content(schema = @Schema(example = "2.37"))),
+            @ApiResponse(responseCode = "404", description = "Challenge not found",
+                    content = @Content(schema = @Schema(example = "\"Challenge not found\""))),
+            @ApiResponse(responseCode = "400", description = "Invalid location input or malformed data")
+    })
+    @Parameters({
+            @Parameter(
+                    name = "challengeId",
+                    description = "ID of the challenge whose target location is used",
+                    required = true,
+                    example = "15"
+            )
+    })
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "User's current geographical location.",
+            required = true,
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = Location.class),
+                    examples = @ExampleObject(
+                            name = "Location Example",
+                            value = "{ \"latitude\": 42.034534, \"longitude\": -93.620369 }"
+                    )
+            )
+    )
+    @PostMapping("/challenge/distance")
+    public ResponseEntity getDistanceFromChallenge(
+            @RequestParam long challengeId,
+            @RequestBody Location location
+    ) {
+        return service.getDistanceFromChallenge(challengeId, location);
+    }
+
 
 
 }
