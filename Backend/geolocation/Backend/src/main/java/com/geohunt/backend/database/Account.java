@@ -67,10 +67,6 @@ public class Account {
     @JsonIgnore
     private List<Comment> comments;
 
-    @OneToMany()
-    @JsonIgnore
-    private List<Reward> inventory;
-
     public Account(String username, String password){
         this.username = username;
         this.password = password;

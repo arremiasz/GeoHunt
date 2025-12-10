@@ -1,19 +1,25 @@
 package com.geohunt.backend.rewards;
 
 import com.geohunt.backend.Services.AccountService;
+import com.geohunt.backend.Shop.Shop;
+import com.geohunt.backend.Shop.UserInventory;
+import com.geohunt.backend.Shop.UserInventoryRepository;
 import com.geohunt.backend.database.Account;
 import com.geohunt.backend.database.Submissions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class RewardService {
 
     @Autowired RewardRepository rewardRepository;
     @Autowired AccountService accountService;
+    @Autowired UserInventoryRepository userInventoryRepository;
 
 
     // Interface with database
@@ -41,29 +47,29 @@ public class RewardService {
         return rewardRepository.findAll();
     }
 
-    public List<Customization> getCustomizations(List<Reward> unfilteredList){
-        List<Customization> filteredList = new ArrayList<>();
-        for(Reward reward : unfilteredList){
-            if(reward instanceof Customization){
-                filteredList.add((Customization) reward);
-            }
-        }
-        return filteredList;
-        // Todo: Generalize method for different subclasses of Reward
-    }
-
     // User inventories
 
-    public List<Reward> getUserInventory(Account account){
-        return account.getInventory();
-    }
+//    public List<Reward> getUserInventory(Account account){
+//        return account.getInventory();
+//    }
 
     public void addRewardToUserInventory(Account account, Reward reward){
-        account.getInventory().add(reward);
-    }
+        Optional<UserInventory> userInventory = userInventoryRepository.findByUserIdAndShopItemId(account.getId(), reward.getShopItem().getId());
 
-    public void removeRewardFromUserInventory(Account account, Reward reward){
-        account.getInventory().remove(reward);
+        if(userInventory.isEmpty()){
+            UserInventory ui = new UserInventory();
+            ui.setUser(account);
+            ui.setShopItem(reward.getShopItem());
+            ui.setQuantity(1);
+            ui.setEquipped(false);
+            ui.setAcquiredAt(new Date());
+            userInventoryRepository.save(ui);
+        } else {
+            UserInventory inv = userInventory.get();
+            inv.setQuantity(inv.getQuantity() + 1);
+            userInventoryRepository.save(inv);
+        }
+        // Changed to add the shop item to the user inventory
     }
 
 

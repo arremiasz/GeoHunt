@@ -3,6 +3,7 @@ package com.geohunt.backend.Shop;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.geohunt.backend.powerup.Powerup;
+import com.geohunt.backend.rewards.Reward;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,6 +29,10 @@ public class Shop {
     @OneToMany(mappedBy = "shopItem")
     @JsonIgnoreProperties("shopItem")
     private List<UserInventory> userInventoryEntries = new ArrayList<>();
+
+    @OneToOne()
+    @JsonIgnoreProperties("shopItem")
+    private Reward reward;
 
     private String name;
     private String description;

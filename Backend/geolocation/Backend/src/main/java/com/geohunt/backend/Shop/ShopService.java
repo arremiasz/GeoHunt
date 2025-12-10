@@ -12,6 +12,7 @@ import com.geohunt.backend.database.AccountRepository;
 import com.geohunt.backend.powerup.Powerup;
 import com.geohunt.backend.powerup.PowerupRepository;
 import com.geohunt.backend.powerup.PowerupService;
+import com.geohunt.backend.rewards.RewardRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -36,6 +37,8 @@ public class ShopService {
     private PowerupService powerupService;
     @Autowired
     private TransactionsRepository transactionsRepository;
+    @Autowired
+    private RewardRepository rewardRepository;
 
     public ResponseEntity<String> deleteItem(String name) {
         Optional<Shop> s = shopRepository.findByName(name);
@@ -341,6 +344,7 @@ public class ShopService {
         if (s.isPresent()) {
             userInventoryRepository.deleteAllByShopItem(s.get());
             transactionsRepository.deleteAllByShopItem(s.get());
+            rewardRepository.deleteByShopItem(s.get());
             shopRepository.deleteById(id);
             return ResponseEntity.status(HttpStatus.OK).build();
         }
