@@ -68,6 +68,7 @@ public class Account {
     private List<Comment> comments;
 
     @OneToMany()
+    @JsonIgnore
     private List<Reward> inventory;
 
     public Account(String username, String password){

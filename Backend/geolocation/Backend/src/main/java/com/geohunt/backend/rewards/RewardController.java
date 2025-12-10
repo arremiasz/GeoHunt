@@ -55,6 +55,24 @@ public class RewardController {
         }
     }
 
+    @Operation(summary = "Get points from submission")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Receive Reward", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Couldn't find user or submission", content = @Content)
+    })
+    @GetMapping("/getsubmissionpoints")
+    public ResponseEntity<Integer> getSubmissionPoints(@RequestParam long sid){
+        try {
+            Submissions submissions = submissionsService.getSubmissionById(sid);
+
+            int submissionValue = submissions.getSubmissionPoints();
+
+            return ResponseEntity.ok(submissionValue);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+
     @Operation(summary = "Get user inventory")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Receive list of items in user inventory", content = @Content),
