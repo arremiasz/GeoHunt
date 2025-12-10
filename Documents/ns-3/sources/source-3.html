@@ -1,0 +1,317 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > geohuntController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.geohunt.backend.Controllers</a>
+</div>
+
+<h1>Coverage Summary for Class: geohuntController (com.geohunt.backend.Controllers)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">geohuntController</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    25%
+  </span>
+  <span class="absValue">
+    (3/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    70%
+  </span>
+  <span class="absValue">
+    (7/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    44.4%
+  </span>
+  <span class="absValue">
+    (16/36)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.geohunt.backend.Controllers;
+&nbsp;
+&nbsp;import com.geohunt.backend.Services.GeohuntService;
+&nbsp;import com.geohunt.backend.database.Challenges;
+&nbsp;import com.geohunt.backend.database.ChallengesRepository;
+&nbsp;import io.swagger.v3.oas.annotations.Operation;
+&nbsp;import io.swagger.v3.oas.annotations.Parameter;
+&nbsp;import io.swagger.v3.oas.annotations.media.ArraySchema;
+&nbsp;import io.swagger.v3.oas.annotations.media.Content;
+&nbsp;import io.swagger.v3.oas.annotations.media.Schema;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponse;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponses;
+&nbsp;import io.swagger.v3.oas.annotations.tags.Tag;
+&nbsp;import org.springframework.beans.factory.annotation.Autowired;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;/**
+&nbsp; * @author Arjava Tripathi
+&nbsp; */
+&nbsp;@Tag(name = &quot;Challenge Management&quot;, description = &quot;Operations related to challenges&quot;)
+&nbsp;@RestController
+<b class="fc">&nbsp;public class geohuntController {</b>
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    GeohuntService geohuntService;
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    ChallengesRepository challengesRepository;
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Get a random challenge in the given latitude, longitude, and range&quot;)
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Challenge retrieved from database&quot;,
+&nbsp;                    content = { @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = Challenges.class)) }),
+&nbsp;            @ApiResponse(responseCode = &quot;500&quot;, description = &quot;Challenge unable to be retrieved&quot;,content = @Content)})
+&nbsp;    @GetMapping(&quot;/geohunt/getLocation&quot;)
+&nbsp;    public ResponseEntity&lt;Challenges&gt; getLocation(@Parameter(description = &quot;latitude&quot;) @RequestParam double lat, @Parameter(description = &quot;longitude&quot;) @RequestParam double lng, @Parameter(description = &quot;radius&quot;) @RequestParam double radius) {
+&nbsp;        try {
+<b class="nc">&nbsp;            Challenges c = geohuntService.getChallenge(lat, lng, radius);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok().body(c);</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Get a random challenge by challenge id&quot;)
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Challenge retrieved from database&quot;,
+&nbsp;                    content = { @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = Challenges.class)) }),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Challenge ID not found&quot;,content = @Content)})
+&nbsp;    @GetMapping(&quot;/geohunt/getChallengeByID&quot;)
+&nbsp;    public ResponseEntity&lt;Challenges&gt; getChallengeByID(@Parameter(description = &quot;challenges id&quot;) @RequestParam long id) {
+&nbsp;        try {
+<b class="nc">&nbsp;            Optional&lt;Challenges&gt; c = challengesRepository.findById(id);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok().body(c.get());</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();</b>
+&nbsp;        }
+&nbsp;
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Delete a challenge by challenge id&quot;)
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Content Deleted&quot;,
+&nbsp;                    content = @Content),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Content not found&quot;, content = @Content)})
+&nbsp;    @DeleteMapping(&quot;/geohunt/deleteByID&quot;)
+&nbsp;    public ResponseEntity deleteChallengeByID(@Parameter(description = &quot;challenge id&quot;) @RequestParam long id) {
+&nbsp;        try {
+<b class="nc">&nbsp;            challengesRepository.deleteById(id);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok().build();</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Generate a new challenge in the radius, latitude, and longitude given using custom generation logic&quot;)
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Content Created&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = Challenges.class))),
+&nbsp;            @ApiResponse(responseCode = &quot;500&quot;, description = &quot;Content not created&quot;, content = @Content)})
+&nbsp;    @PostMapping(&quot;/geohunt/createChallenge&quot;)
+&nbsp;    public ResponseEntity createChallenge(@Parameter(description = &quot;latitude&quot;) @RequestParam double lat, @Parameter(description = &quot;latitude&quot;) @RequestParam double lng, @Parameter(description = &quot;radius&quot;) @RequestParam double radius) {
+&nbsp;        try {
+<b class="nc">&nbsp;            List&lt;Challenges&gt; c = geohuntService.generateChallenges(lat, lng, radius, 1);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok().body(c.get(c.size() - 1));</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Generate a random challenge in the radius, latitude, and longitude given using random generation&quot;)
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Content Created&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = Challenges.class)))})
+&nbsp;    @PostMapping(&quot;/geohunt/randomChallenge&quot;)
+&nbsp;    public ResponseEntity randChallenge(@Parameter(description = &quot;latitude&quot;) @RequestParam double lat, @Parameter(description = &quot;longitude&quot;) @RequestParam double lng, @Parameter(description = &quot;radius&quot;) @RequestParam double radius) {
+<b class="nc">&nbsp;        List&lt;Challenges&gt; l = geohuntService.fallbackGenerate(lat, lng, radius, 1);</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok().body(l.get(0));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Upload custom challenge by user&quot;)
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Content Uploaded&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = Challenges.class))),
+&nbsp;            @ApiResponse(responseCode = &quot;500&quot;, description = &quot;User not found.&quot;, content = @Content)})
+&nbsp;    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = &quot;base64 string of image&quot;, required = true)
+&nbsp;    @PostMapping(&quot;/geohunt/customChallenge&quot;)
+&nbsp;    public ResponseEntity customChallenge(@Parameter(description = &quot;latitude&quot;) @RequestParam double lat, @Parameter(description = &quot;longitude&quot;) @RequestParam double lng, @Parameter(description = &quot;users Id&quot;) @RequestParam long uid, @RequestBody String url){
+<b class="nc">&nbsp;        return geohuntService.customChallenge(lat, lng, uid, url);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Get users own submitted challenges&quot;)
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Content retrieved&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            array = @ArraySchema(schema = @Schema(implementation = Challenges.class)))),
+&nbsp;            @ApiResponse(responseCode = &quot;500&quot;, description = &quot;User not found.&quot;, content = @Content)})
+&nbsp;    @GetMapping(&quot;/geohunt&quot;)
+&nbsp;    public ResponseEntity getMyChallenges(@Parameter(description = &quot;users Id&quot;) @RequestParam long id) {
+<b class="nc">&nbsp;        return geohuntService.getUsersChallenges(id);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Delete users challenge by challenge id. Challenge id has to belong to creator.&quot;)
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Content Deleted&quot;,
+&nbsp;                    content = @Content),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;User not found.&quot;, content = @Content)})
+&nbsp;    @DeleteMapping(&quot;/geohunt/mySubmissions&quot;)
+<b class="nc">&nbsp;    public ResponseEntity&lt;String&gt; deleteMySubmissions(@Parameter(description = &quot;users Id&quot;) @RequestParam long userId, @Parameter(description = &quot;challenges Id&quot;) @RequestParam long chalId){return geohuntService.deleteUsersChallenges(userId, chalId);}</b>
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Update users own submitted id&quot;)
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Content Updated&quot;,
+&nbsp;                    content = @Content),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;User not found, Challenge not found, or User does not own challenge&quot;, content = @Content)})
+&nbsp;    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = &quot;base64 string of image&quot;, required = false)
+&nbsp;    @PutMapping(&quot;/geohunt/mySubmission/updateChallenge&quot;)
+&nbsp;    public ResponseEntity updateMyChallenge(@Parameter(description = &quot;users Id&quot;) @RequestParam long userId, @Parameter(description = &quot;challenge Id&quot;) @RequestParam long chalId, @Parameter(description = &quot;latitude&quot;) @RequestParam double lat, @Parameter(description = &quot;longitude&quot;) @RequestParam double lng, @RequestBody String image){
+&nbsp;
+<b class="nc">&nbsp;        return geohuntService.updateChallenge(userId, chalId, image, lng, lat);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // Rate Challenges
+&nbsp;    @Operation(summary = &quot;Add a rating to a Challenge using Challenge id&quot;)
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Rating added.&quot;, content = @Content),
+&nbsp;            @ApiResponse(responseCode = &quot;400&quot;, description = &quot;Rating not within acceptable bounds.&quot;, content = @Content),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Challenge not found.&quot;, content = @Content)})
+&nbsp;    @PostMapping(&quot;/geohunt/rate&quot;)
+&nbsp;    public ResponseEntity&lt;String&gt; submitChallengeRating(@RequestParam long cid, @RequestParam int rating){
+&nbsp;        // Get challenge
+<b class="pc">&nbsp;        if(challengesRepository.findById(cid).isEmpty()){</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(&quot;Challenge Not Found&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        Challenges challenge = challengesRepository.findById(cid).get();</b>
+&nbsp;
+&nbsp;        // Verify rating is within bounds (1 - 5)
+<b class="pc">&nbsp;        if(rating &lt; 1 || rating &gt; 5){</b>
+<b class="fc">&nbsp;            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(&quot;Rating Not Within Acceptable Bounds&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // add rating to challenge
+<b class="fc">&nbsp;        challenge.addRating(rating);</b>
+<b class="fc">&nbsp;        challengesRepository.save(challenge);</b>
+<b class="fc">&nbsp;        return ResponseEntity.status(HttpStatus.OK).body(&quot;Rating Added&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Get challenge rating&quot;)
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Rating processed&quot;, content = @Content),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Challenge not found.&quot;, content = @Content)})
+&nbsp;    @GetMapping(&quot;/geohunt/challenge/{cid}/rating&quot;)
+&nbsp;    public ResponseEntity&lt;Double&gt; getChallengeRating(@PathVariable long cid){
+&nbsp;        // Get challenge
+<b class="pc">&nbsp;        if(challengesRepository.findById(cid).isEmpty()){</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();</b>
+&nbsp;        }
+<b class="fc">&nbsp;        Challenges challenge = challengesRepository.findById(cid).get();</b>
+&nbsp;
+<b class="fc">&nbsp;        List&lt;Integer&gt; ratings = challenge.getChallengeRatings();</b>
+<b class="fc">&nbsp;        int sum = 0;</b>
+<b class="fc">&nbsp;        for(Integer rating : ratings){</b>
+<b class="fc">&nbsp;            sum += rating;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        double avgRating = ((double)sum)/ratings.size();</b>
+&nbsp;
+<b class="fc">&nbsp;        return ResponseEntity.status(HttpStatus.OK).body(avgRating);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 21:04</div>
+</div>
+</body>
+</html>

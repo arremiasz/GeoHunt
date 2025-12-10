@@ -1,0 +1,324 @@
+package com.jubair5.geohunt.menu;
+
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.SearchView;
+import android.widget.Toast;
+
+import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.jubair5.geohunt.R;
+import com.jubair5.geohunt.friends.Friend;
+import com.jubair5.geohunt.friends.FriendAdapter;
+import com.jubair5.geohunt.friends.SingleFriendActivity;
+import com.jubair5.geohunt.network.ApiConstants;
+import com.jubair5.geohunt.network.VolleySingleton;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Fragment used to find and see current friends and requests
+ * @author Nathan Imig
+ */
+public class FriendFragment extends Fragment implements FriendAdapter.OnFriendClickListener {
+
+
+    private static final String TAG = "FriendsFragment";
+    private static final String SHARED_PREFS_NAME = "GeoHuntPrefs";
+    private static final String KEY_USER_NAME = "userName";
+    private static final String KEY_USER_ID = "userId";
+
+    private SearchView searchBar;
+
+
+    // Set up for the actual list
+    private List<Integer> friendsId;
+    private List<Integer> friendsReceivedId;
+    private List<Integer> friendsSentId;
+    private RecyclerView friendsRecycleViewer;
+    private FriendAdapter startingFriendAdapter;
+    private FriendAdapter searchFriendAdapter;
+    private List<Friend> friendList;
+    private List<Friend> searchList;
+    private SharedPreferences prefs;
+    private View root;
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        root = inflater.inflate(R.layout.friends_fragment, container, false);
+        prefs = requireActivity().getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
+
+
+        // Set up Ui elements
+        searchBar = root.findViewById(R.id.friend_search_bar);
+        friendsRecycleViewer = root.findViewById(R.id.friends_recycler_view);
+
+        friendList = new ArrayList<>();
+        searchList = new ArrayList<>();
+        friendsId = new ArrayList<Integer>();
+        friendsReceivedId = new ArrayList<Integer>();
+        friendsSentId = new ArrayList<Integer>();
+
+
+
+        searchFriendAdapter = new  FriendAdapter(getContext(), searchList, this);
+        startingFriendAdapter = new FriendAdapter(getContext(), friendList, this);
+        friendsRecycleViewer.setAdapter(startingFriendAdapter);
+        friendsRecycleViewer.setLayoutManager(new LinearLayoutManager((getContext())));
+        getStartingFriends();
+
+        // All use of search bar
+        searchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if(!(friendsRecycleViewer.getAdapter().equals(startingFriendAdapter))){
+                    friendsRecycleViewer.setAdapter(startingFriendAdapter);
+                }
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                if(!(query.equals(prefs.getString(KEY_USER_NAME, "")))){
+                    friendsRecycleViewer.setAdapter(searchFriendAdapter);
+                    searchForAccount(query);
+                }
+                return true;
+            }
+        }
+        );
+
+
+        return root;
+    }
+
+    /**
+     * Used to update the friends list
+     */
+    @Override
+    public void onResume(){
+        super.onResume();
+        getStartingFriends();
+        searchBar.setQuery("", false);
+        searchBar.clearFocus();
+
+    }
+
+    /**
+     * gets the account based off of its name and displays it
+     * @param name
+     */
+    private void searchForAccount(String name){
+        String searchURL = ApiConstants.BASE_URL + ApiConstants.GET_ACCOUNT_BY_USERNAME_ENDPOINT + "?name=" + name;
+
+        JsonObjectRequest jsonObjReq = new JsonObjectRequest(
+                Request.Method.GET,
+                searchURL,
+                null,
+                response -> {
+                    Log.d(TAG, "Account Search Response: "+ response.toString());
+
+                    // Display Friends
+                    searchList.clear();
+                    Friend account =  new Friend(response);
+                    int accountId = account.getId();
+                    setAccountState(accountId, account);
+                    searchList.add(account);
+                    searchFriendAdapter.notifyDataSetChanged();
+                },
+                volleyError -> {
+                    Log.e(TAG, "Error getting friends" + volleyError.toString());
+                    if (volleyError.networkResponse != null) {
+                        Log.e(TAG, "Friends error status code: " + volleyError.networkResponse.statusCode);
+                        String responseBody = "";
+                        if(volleyError.networkResponse.data != null) {
+                            responseBody = new String(volleyError.networkResponse.data, StandardCharsets.UTF_8);
+                        }
+                        Log.e(TAG, "Friends error response body: " + responseBody);
+
+                        if (volleyError.networkResponse.statusCode == 404) {
+                            friendList.clear();
+                            startingFriendAdapter.notifyDataSetChanged();
+                            Toast.makeText(getContext(), "No account found", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getContext(), "Finding Account failed. Server error: " + volleyError.networkResponse.statusCode, Toast.LENGTH_LONG).show();
+                        }
+                    } else {
+                        Toast.makeText(getContext(), "Getting account failed. Check network connection.", Toast.LENGTH_LONG).show();
+                    }
+                }
+        );
+        VolleySingleton.getInstance(getContext()).addToRequestQueue(jsonObjReq);
+    }
+
+    /**
+     * When searching an account, sets the state of their relationship
+     * @param accountId
+     * @param account
+     */
+    private void setAccountState(int accountId, Friend account) {
+        if(friendsId.contains(accountId)){
+            account.setState(3);
+
+        } else if (friendsReceivedId.contains(accountId)) {
+            account.setState(1);
+
+        } else if (friendsSentId.contains(accountId)) {
+            account.setState(2);
+
+        } else {
+            account.setState(0);
+
+        }
+    }
+
+
+    /**
+     * Get accounts current friends and their requests
+     */
+    private void getStartingFriends(){
+        Log.e(TAG, "Made it into the function");
+        int userId = prefs.getInt(KEY_USER_ID, -1);
+        if (userId == -1) {
+            Log.e(TAG, "User ID not found in shared preferences.");
+            return;
+        }
+
+
+        // Friends
+        String friendsURL = ApiConstants.BASE_URL + ApiConstants.GET_FRIENDS_ENDPOINT + "?id=" + userId;
+
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(
+                Request.Method.GET,
+                friendsURL,
+                null,
+                response -> {
+                    try{
+                        Log.d(TAG, "Friends Response: "+ response.toString());
+
+                        friendList.clear();
+                        for (int i = 0; i < response.length(); i++) {
+                            JSONObject friendJson = response.getJSONObject(i);
+                            friendJson.put("state", SingleFriendActivity.ARE_FRIENDS_STATE);
+                            friendsId.add(friendJson.getInt("id"));
+                            friendList.add(new Friend(friendJson));
+                        }
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Error parsing Friends Json", e);
+                    }
+
+                },
+                VolleyError -> {
+                    Log.e(TAG, "Error getting Friends", VolleyError);
+                }
+        );
+        VolleySingleton.getInstance(getContext()).addToRequestQueue(jsonArrayRequest);
+
+        // People who sent you a request
+        friendsURL = ApiConstants.BASE_URL + ApiConstants.GET_Received_FRIENDS_ENDPOINT + "?id=" + userId;
+        jsonArrayRequest = new JsonArrayRequest(
+                Request.Method.GET,
+                friendsURL,
+                null,
+                response -> {
+                    try{
+                        Log.d(TAG, "People who sent you Response: "+ response.toString());
+                        for (int i = 0; i < response.length(); i++) {
+                            JSONObject friendJson = response.getJSONObject(i);
+                            friendJson.put("state", SingleFriendActivity.RECEIVED_REQUEST_STATE);
+                            friendsReceivedId.add(friendJson.getInt("id"));
+                            friendList.add(new Friend(friendJson));
+                        }
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Error parsing Friends Json", e);
+                    }
+
+                },
+                volleyError -> {
+                    Log.e(TAG, "Error getting Friends", volleyError);
+                    String responseBody = "";
+                    if(volleyError.networkResponse.data != null) {
+                        responseBody = new String(volleyError.networkResponse.data, StandardCharsets.UTF_8);
+                    }
+                    Log.e(TAG, "Accepting friends error response body: " + responseBody);
+                }
+        );
+        VolleySingleton.getInstance(getContext()).addToRequestQueue(jsonArrayRequest);
+
+        // People you sent a friend request to
+        friendsURL = ApiConstants.BASE_URL + ApiConstants.GET_SENT_FRIENDS_ENDPOINT + "?id=" + userId;
+        jsonArrayRequest = new JsonArrayRequest(
+                Request.Method.GET,
+                friendsURL,
+                null,
+                response -> {
+                    try{
+                        Log.d(TAG, "People you sent Response: "+ response.toString());
+
+                        for (int i = 0; i < response.length(); i++) {
+                            JSONObject friendJson = response.getJSONObject(i);
+                            friendJson.put("state", SingleFriendActivity.SENT_REQUEST_STATE);
+                            friendsSentId.add(friendJson.getInt("id"));
+
+                            friendList.add(new Friend(friendJson));
+                        }
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Error parsing Friends Json", e);
+                    }
+
+                },
+                volleyError -> {
+                    Log.e(TAG, "Error getting Friends", volleyError);
+                    String responseBody = "";
+                    if(volleyError.networkResponse.data != null) {
+                        responseBody = new String(volleyError.networkResponse.data, StandardCharsets.UTF_8);
+                    }
+                    Log.e(TAG, "Accepting friends error response body: " + responseBody);
+
+                }
+        );
+        VolleySingleton.getInstance(getContext()).addToRequestQueue(jsonArrayRequest);
+
+        startingFriendAdapter.notifyDataSetChanged();
+    }
+
+
+    /**
+     * Goes to an activity displaying the friend
+     * @param friend
+     */
+    @Override
+    public void onFriendClick(Friend friend) {
+        Intent intent = new Intent(getActivity(), SingleFriendActivity.class);
+        int uid = prefs.getInt(KEY_USER_ID, -1);
+        if (uid == -1) {
+            Log.e(TAG, "User ID not found in shared preferences.");
+            return;
+        }
+        intent.putExtra("FID", friend.getId());
+        intent.putExtra("USERNAME", friend.getUsername());
+        intent.putExtra("STATE", friend.getState());
+        startActivity(intent);
+    }
+}

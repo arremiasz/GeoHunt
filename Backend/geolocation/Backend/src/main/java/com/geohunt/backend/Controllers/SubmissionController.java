@@ -14,20 +14,15 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * @author evan juslon
+ */
 @Tag(name = "Submission Handler", description = "Operations related to submissions to challenges")
 @RestController
 public class SubmissionController {
 
     @Autowired
     SubmissionsService submissionsService;
-
-    @Autowired
-    ChallengesRepository challengesRepository;
-
-    @Autowired
-    AccountService accountService;
-
-
 
     @Operation(summary = "Submit submission")
     @ApiResponses(value = {
