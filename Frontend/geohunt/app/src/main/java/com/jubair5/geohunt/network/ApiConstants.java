@@ -6,8 +6,9 @@ package com.jubair5.geohunt.network;
  */
 public final class ApiConstants {
 
-    private ApiConstants() {
-    }
+
+
+    private ApiConstants() {}
 
     // Base URL for all API calls
        public static final String BASE_URL = "http://coms-3090-030.class.las.iastate.edu:8080";
@@ -52,5 +53,11 @@ public final class ApiConstants {
     public static final String Reject_Friend_Request_ENDPOINT= "/friends/reject";
     public static final String Remove_FRIEND = "/friends/remove";
 
+    // PowerUp EndPoints
+    public static final String GET_POWERUPS_ENDPOINT = "powerup/user";
+    public static final String GET_REWARDS = "";
+    public static final String RESET_THEMES = "";
+    public static final String GET_THEMES_ENDPOINT = "";
+    public static final String PURCHASE_THEMES = "";
 
 }

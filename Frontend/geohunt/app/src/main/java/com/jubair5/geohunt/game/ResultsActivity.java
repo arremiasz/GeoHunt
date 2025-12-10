@@ -1,19 +1,23 @@
 package com.jubair5.geohunt.game;
 
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.View;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RatingBar;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -33,6 +37,11 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.jubair5.geohunt.R;
 import com.jubair5.geohunt.network.ApiConstants;
 import com.jubair5.geohunt.network.VolleySingleton;
+import com.jubair5.geohunt.reward.powerups.LargeTimeReductionPU;
+import com.jubair5.geohunt.reward.powerups.PowerUp;
+import com.jubair5.geohunt.reward.powerups.SpecificHintPu;
+import com.jubair5.geohunt.reward.powerups.TimeReductionPU;
+import com.jubair5.geohunt.reward.powerups.hintPu;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -48,8 +57,9 @@ import nl.dionsegijn.konfetti.models.Size;
 
 /**
  * Page for displaying the results from a game.
- * 
+ *
  * @author Alex Remiasz
+ * @author Alex Remiasz, Nathan Imig
  */
 public class ResultsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
@@ -57,8 +67,11 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
     private static final String SHARED_PREFS_NAME = "GeoHuntPrefs";
     private static final String KEY_USER_ID = "userId";
 
-    protected TextView distanceText;
-    protected TextView distanceUnitLabel;
+    protected TextView distanceText, distanceUnitLabel;
+    protected TextView timeText, timeUnitLabel;
+    protected TextView pointsText, pointsUnitsLabel;
+    protected TextView powerUpUnlock;
+    protected ImageView newPowerUp;
     protected Button playAgainButton;
     protected Button goHomeButton;
     protected KonfettiView konfettiView;
@@ -103,6 +116,17 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
     protected void setupViews(Bundle savedInstanceState) {
         distanceText = findViewById(R.id.distance_text);
         distanceUnitLabel = findViewById(R.id.distance_unit_label);
+
+        timeText = findViewById(R.id.time_text);
+        timeUnitLabel = findViewById(R.id.time_unit_label);
+
+        pointsText = findViewById(R.id.currency_text);
+        pointsUnitsLabel = findViewById(R.id.currency_unit_text);
+
+
+        powerUpUnlock = findViewById(R.id.unlock_text);
+        newPowerUp = findViewById(R.id.new_PowerUp);
+
         playAgainButton = findViewById(R.id.play_again_button);
         goHomeButton = findViewById(R.id.go_home_button);
         konfettiView = findViewById(R.id.konfetti_view);
@@ -126,7 +150,7 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
         allPhotosList = new ArrayList<>();
         displayedPhotosList = new ArrayList<>();
         photoAdapter = new PhotoAdapter(this, displayedPhotosList);
-        galleryRecyclerView.setLayoutManager(new androidx.recyclerview.widget.GridLayoutManager(this, 2));
+        galleryRecyclerView.setLayoutManager(new GridLayoutManager(this, 2));
         galleryRecyclerView.setAdapter(photoAdapter);
 
         loadMorePhotosButton.setOnClickListener(v -> loadMorePhotos());
@@ -137,11 +161,16 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
         commentsRecyclerView.setAdapter(commentAdapter);
     }
 
+
     /**
      * Parses the results from the intent and updates the UI.
      */
     protected void displayResults() {
         double results = getIntent().getDoubleExtra("results", -1);
+        int time = getIntent().getIntExtra("time", -1);
+        getRewards(results,time);
+
+
         if (results != -1) {
             if (results <= 0.1) {
                 double distanceInFeet = results * 5280;
@@ -152,7 +181,7 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
                 distanceUnitLabel.setText("miles");
             }
 
-            distanceUnitLabel.append(" from target");
+            distanceUnitLabel.append(" away");
         } else {
             distanceText.setText("?");
             distanceUnitLabel.setText("Error");
@@ -161,6 +190,80 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
         challengeId = getIntent().getIntExtra("challengeId", -1);
         guessLat = getIntent().getDoubleExtra("guessLat", 0.0);
         guessLng = getIntent().getDoubleExtra("guessLng", 0.0);
+
+        // Time
+        if (time != -1) {
+            int minuets = time/60;
+            int seconds = time % 60;
+
+            timeText.setText(minuets + ":" + seconds);
+            timeUnitLabel.setText("seconds");
+        } else {
+            timeText.setText("?");
+            timeUnitLabel.setText("Error");
+        }
+
+
+
+    }
+
+
+
+    /**
+     * Returns an amount of currency based off of results and time
+     * @param results
+     * @param time
+     * @return amount of currency
+     */
+    private void getRewards(double results, int time){
+        SharedPreferences prefs = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
+        int userId = prefs.getInt(KEY_USER_ID, -1);
+        if (userId == -1) {
+            Log.e(TAG, "User ID not found in shared preferences.");
+            return;
+        }
+
+        // Update
+        String url = ApiConstants.BASE_URL + ApiConstants.GET_REWARDS + "?uid=" + userId;
+
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+                    Log.d(TAG, "Account Power Ups Response: " + response.toString());
+                    try {
+                        pointsText.setText(response.getJSONObject(0).optString("points"));
+                        pointsUnitsLabel.setText("points");
+                        int type = response.getJSONObject(1).optInt("id");
+                        PowerUp powerUp;
+
+                        if(type == 1){
+                            powerUp = new hintPu();
+                        }
+                        else if(type == 2){
+                            powerUp = new SpecificHintPu();
+                        }
+                        else if(type == 3){
+                            powerUp = new TimeReductionPU();
+                        }
+                        else if(type == 4){
+                            powerUp = new LargeTimeReductionPU();
+                        } else {
+                            powerUp = null;
+                        }
+                        newPowerUp.setOnClickListener(v -> showDescription(powerUp));
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Error parsing power ups JSON", e);
+                    }},
+                error -> {
+                        Log.e(TAG, "Error getting rewards", error);
+                    });
+
+            VolleySingleton.getInstance(this).addToRequestQueue(jsonArrayRequest);
+
+
+
     }
 
     /**
@@ -169,6 +272,30 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
     protected void setupButtons() {
         playAgainButton.setOnClickListener(v -> onPlayAgainClicked());
         goHomeButton.setOnClickListener(v -> onGoHomeClicked());
+    }
+
+    private void showDescription(PowerUp powerUp) {
+        Dialog powerUpDescription = new Dialog(this, R.style.DialogStyle);
+        powerUpDescription.setContentView(R.layout.layout_power_up_description);
+
+        TextView title = powerUpDescription.findViewById(R.id.powerUp_title);
+        title.setText(powerUp.getTitle());
+
+        TextView description = powerUpDescription.findViewById(R.id.powerUp_description);
+        description.setText(powerUp.getDescription());
+
+        ImageView imageView = powerUpDescription.findViewById(R.id.powerUp_icon);
+        imageView.setImageResource(powerUp.getImage());
+
+        ImageView btnClose = powerUpDescription.findViewById(R.id.btn_close);
+        btnClose.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                powerUpDescription.dismiss();
+            }
+        });
+
+        powerUpDescription.show();
     }
 
     /**
@@ -351,7 +478,7 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
 
     /**
      * Submits the user's rating for the challenge.
-     * 
+     *
      * @param rating The rating value (1-5).
      */
     protected void submitRating(float rating) {

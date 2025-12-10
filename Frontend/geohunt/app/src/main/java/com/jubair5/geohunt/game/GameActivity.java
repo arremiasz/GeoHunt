@@ -73,7 +73,6 @@ import java.util.Locale;
 
 /**
  * Activity responsible for handling the main game function
- * 
  * @author Alex Remiasz
  */
 public class GameActivity extends AppCompatActivity implements OnMapReadyCallback {
@@ -108,6 +107,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     // For dragging the hint box
     protected float dX, dY;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -231,7 +231,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     /**
      * Starts the main game loop with the data received from the server. Makes the
      * map full screen.
-     * 
+     *
      * @param id       The ID of the target location.
      * @param imageUrl The URL of the Street View image for the target.
      */
@@ -254,7 +254,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     /**
      * Displays a 3-second countdown overlay and then proceeds to the main game
      * logic.
-     * 
+     *
      * @param id       The ID of the target location.
      * @param imageUrl The URL of the Street View image for the target.
      */
@@ -306,7 +306,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     /**
      * Stops the stopwatch and returns the elapsed time.
-     * 
+     *
      * @return The elapsed time in seconds.
      */
     protected int stopStopwatch() {
@@ -366,8 +366,10 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         StringRequest submissionRequest = new StringRequest(Request.Method.POST, url,
                 response -> {
                     Log.d(TAG, "Submission successful: " + response);
+                    int time = stopStopwatch();
                     Intent intent = new Intent(GameActivity.this, ResultsActivity.class);
                     intent.putExtra("results", Double.parseDouble(response));
+                    intent.putExtra("time", time);
                     intent.putExtra("challengeId", challengeId);
                     intent.putExtra("guessLat", currentLat);
                     intent.putExtra("guessLng", currentLng);
@@ -395,7 +397,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     /**
      * Creates a content Uri for a temporary file in the app's cache directory.
-     * 
+     *
      * @param fileName The name of the file to create.
      * @return The Uri for the temporary image file.
      */
@@ -406,7 +408,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     /**
      * Converts a Bitmap image to a Base64 encoded string.
-     * 
+     *
      * @param bitmap The bitmap to be converted.
      * @return The Base64 encoded string representation of the bitmap.
      */
@@ -477,7 +479,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     /**
      * Makes the hint container visible and loads the image.
-     * 
+     *
      * @param imageUrl The URL of the hint image.
      */
     protected void showHint(String imageUrl) {
@@ -559,7 +561,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     /**
      * Snaps the hint box to the nearest corner of the screen.
-     * 
+     *
      * @param view The hint box view.
      */
     protected void snapToCorner(View view) {
@@ -715,7 +717,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     /**
      * Calculates a new LatLng based on a starting point, a distance in meters, and
      * a bearing.
-     * 
+     *
      * @param latLng   The starting LatLng.
      * @param distance The distance in meters.
      * @param bearing  The bearing in degrees.

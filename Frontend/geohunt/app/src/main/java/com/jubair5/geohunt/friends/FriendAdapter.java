@@ -14,7 +14,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -126,6 +125,7 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
             pfp = itemView.findViewById(R.id.friend_pfp);
             friendNameTextView = itemView.findViewById(R.id.username_label);
             friendState = itemView.findViewById(R.id.relationship_State);
+            pfp = itemView.findViewById(R.id.friend_pfp);
         }
     }
 }

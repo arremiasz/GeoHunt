@@ -52,6 +52,74 @@
                 android:textSize="24sp"
                 tools:text="miles from target" />
 
+        <TextView
+            android:id="@+id/time_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:textSize="60sp"
+            android:textStyle="bold"
+            android:layout_gravity="center_horizontal"
+
+            tools:text="6:20" />
+
+        <TextView
+            android:id="@+id/time_unit_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="24sp"
+            android:layout_gravity="center_horizontal"
+            tools:text="Time Taken" />
+
+        <TextView
+            android:id="@+id/currency_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:textSize="80sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/holo_purple"
+            android:layout_gravity="center_horizontal"
+
+
+            tools:text="500" />
+
+        <TextView
+            android:id="@+id/currency_unit_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/holo_purple"
+            android:layout_gravity="center_horizontal"
+            tools:text="points" />
+
+        <TextView
+            android:id="@+id/unlock_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:layout_marginTop="25dp"
+            android:textColor="@android:color/holo_purple"
+            android:textSize="24sp"
+            android:text="New Power Up Acquired"
+            android:textStyle="bold"
+            android:layout_gravity="center_horizontal"
+
+
+            tools:text="New Power Up Acquired" />
+
+        <ImageView
+            android:id="@+id/new_PowerUp"
+            android:layout_width="85dp"
+            android:layout_height="85dp"
+
+            android:src="@drawable/time_reduction_pu"
+            android:layout_gravity="center_horizontal"/>
+
+
+
             <!-- Buttons -->
             <Button
                 android:id="@+id/play_again_button"

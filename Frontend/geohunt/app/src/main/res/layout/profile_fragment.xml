@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true">
@@ -45,6 +46,8 @@
                 android:backgroundTint="#AFAFAF"
                 android:layout_marginTop="30dp"/>
 
+
+            <!-- Places -->
             <TextView
                 android:id="@+id/places_label"
                 android:layout_width="wrap_content"
@@ -61,7 +64,27 @@
                 android:layout_height="wrap_content"
                 app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
                 app:spanCount="3"
-                android:layout_marginTop="16dp"/>
+                android:layout_marginTop="10dp"/>
+
+            <!-- Power Ups -->
+            <TextView
+                android:id="@+id/powerUps_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:layout_marginTop="30dp"
+                android:text="@string/my_power_ups"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/powerUp_recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="horizontal"
+                app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                app:spanCount="5"
+                android:layout_marginTop="10dp"/>
 
         </LinearLayout>
 
