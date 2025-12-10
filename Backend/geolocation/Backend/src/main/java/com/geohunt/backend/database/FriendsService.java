@@ -24,7 +24,6 @@ public class FriendsService {
         ArrayList<Optional<Account>> returnable = new ArrayList<>();
 
         if (account.isPresent() && target.isPresent()) {
-
             returnable.add(account);
             returnable.add(target);
             return returnable;
