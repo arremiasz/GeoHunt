@@ -31,6 +31,9 @@ import android.util.Base64;
 import android.widget.ImageView;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.canhub.cropper.CropImageContract;
+import com.canhub.cropper.CropImageContractOptions;
+import com.canhub.cropper.CropImageOptions;
 
 import java.io.ByteArrayOutputStream;
 
@@ -63,6 +66,7 @@ import java.util.List;
 /**
  * Profile Page Fragment
  * Displays user information, places, statistics and account settings.
+ * 
  * @author Alex Remiasz
  */
 public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceClickListener, PowerUpAdapter.OnPowerUpClickListener {
@@ -76,6 +80,8 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
 
     private LinearLayout displayContainer, editContainer;
     private TextView usernameLabel;
+    private TextView statPointsValue, statMatchesValue, statFriendsValue, statItemsValue, statPlacesValue,
+            statCommentsValue;
     private TextInputLayout editUsernameLayout, editEmailLayout, editNewPasswordLayout, editCurrentPasswordLayout;
     private EditText editUsername, editEmail, editNewPassword, editCurrentPassword;
     private Button editButton, deleteButton, saveChangesButton, cancelButton, logoutButton, changePfpButton;
@@ -102,7 +108,19 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
                 }
             });
 
-
+    private final ActivityResultLauncher<CropImageContractOptions> cropImage = registerForActivityResult(
+            new CropImageContract(),
+            result -> {
+                if (result.isSuccessful()) {
+                    Bitmap bitmap = BitmapFactory.decodeFile(result.getUriFilePath(requireContext(), true));
+                    editProfileImage.setImageBitmap(bitmap);
+                    newPfpBitmap = bitmap;
+                    isPfpChanged = true;
+                } else {
+                    Log.e(TAG, "Image crop failed", result.getError());
+                    Toast.makeText(getContext(), "Failed to crop image", Toast.LENGTH_SHORT).show();
+                }
+            });
 
     @Nullable
     @Override
@@ -139,9 +157,20 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         String username = prefs.getString(KEY_USER_NAME, "User");
         usernameLabel.setText("@" + username);
 
-        setupPlaceRecyclerView();
+
         loadProfilePicture();
+
+        // Initialize statistics TextViews
+        statPointsValue = root.findViewById(R.id.stat_points_value);
+        statMatchesValue = root.findViewById(R.id.stat_matches_value);
+        statFriendsValue = root.findViewById(R.id.stat_friends_value);
+        statItemsValue = root.findViewById(R.id.stat_items_value);
+        statPlacesValue = root.findViewById(R.id.stat_places_value);
+        statCommentsValue = root.findViewById(R.id.stat_comments_value);
+
+        setupRecyclerView();
         fetchSubmissions();
+        fetchStatistics();
 
 
         setupPowerUpRecyclerView();
@@ -152,6 +181,7 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         saveChangesButton.setOnClickListener(v -> updatePreface());
         cancelButton.setOnClickListener(v -> showDisplayOptions());
         logoutButton.setOnClickListener(v -> logout());
+        changePfpButton.setOnClickListener(v -> startImageCrop());
 
         editCurrentPassword.setOnKeyListener((v, keyCode, event) -> {
             editCurrentPasswordLayout.setError(null);
@@ -161,7 +191,28 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         return root;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        fetchSubmissions();
+        fetchStatistics();
+    }
 
+    /**
+     * Launches the image cropper activity.
+     * Configures the cropper to allow picking from gallery, sets a 1:1 aspect
+     * ratio,
+     * and fixes the aspect ratio for a square crop.
+     */
+    private void startImageCrop() {
+        CropImageOptions options = new CropImageOptions();
+        options.imageSourceIncludeGallery = true;
+        options.imageSourceIncludeCamera = false;
+        options.aspectRatioX = 1;
+        options.aspectRatioY = 1;
+        options.fixAspectRatio = true;
+        cropImage.launch(new CropImageContractOptions(null, options));
+    }
 
     /**
      * Loads the user's profile picture from SharedPreferences and displays it.
@@ -181,7 +232,7 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
     /**
      * Sets up the RecyclerView for displaying places.
      */
-    private void setupPlaceRecyclerView() {
+    private void setupRecyclerView() {
         placesList = new ArrayList<>();
         placesAdapter = new PlacesAdapter(getContext(), placesList, this);
         placesRecyclerView.setAdapter(placesAdapter);
@@ -360,7 +411,7 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
     /**
      * Validates the current password by attempting to log in.
      * If successful, proceeds with the update.
-     *
+     * 
      * @param newUsername     The new username to set (can be empty to keep
      *                        unchanged).
      * @param newEmail        The new email to set (can be empty to keep unchanged).
@@ -408,7 +459,7 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
 
     /**
      * Sends the update request to the server with the new account details.
-     *
+     * 
      * @param newUsername The new username to set (can be empty to keep unchanged).
      * @param newEmail    The new email to set (can be empty to keep unchanged).
      * @param newPassword The new password to set (can be empty to keep unchanged).
@@ -457,7 +508,7 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
 
     /**
      * Creates a StringRequest for updating the user account.
-     *
+     * 
      * @param newUsername The new username to set (can be empty to keep unchanged).
      * @param newEmail    The new email to set (can be empty to keep unchanged).
      * @param requestBody The JSON body containing update details.
@@ -557,7 +608,7 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
     /**
      * Sends a DELETE request to the server to delete the user account.
      * On success, clears SharedPreferences and navigates to LauncherActivity.
-     *
+     * 
      * @param userId The ID of the user to delete.
      */
     private void deleteAccount(int userId) {
@@ -600,6 +651,151 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
             startActivity(intent);
             getActivity().finish();
         }
+    }
+
+    /**
+     * Fetches all statistics for the current user.
+     * Calls individual fetch methods for each statistic.
+     */
+    private void fetchStatistics() {
+        int userId = prefs.getInt(KEY_USER_ID, -1);
+        if (userId == -1) {
+            Log.e(TAG, "User ID not found in shared preferences for statistics.");
+            return;
+        }
+
+        fetchPoints(userId);
+        fetchMatches(userId);
+        fetchFriends(userId);
+        fetchItemsBought(userId);
+        fetchPlaces(userId);
+        fetchComments(userId);
+    }
+
+    /**
+     * Fetches the user's current points from the server.
+     *
+     * @param userId The ID of the user.
+     */
+    private void fetchPoints(int userId) {
+        String url = ApiConstants.BASE_URL + ApiConstants.GET_POINTS_ENDPOINT + "?id=" + userId;
+
+        StringRequest request = new StringRequest(Request.Method.GET, url,
+                response -> {
+                    try {
+                        int points = Integer.parseInt(response.trim());
+                        statPointsValue.setText(String.valueOf(points));
+                    } catch (NumberFormatException e) {
+                        Log.e(TAG, "Error parsing points response: " + response, e);
+                        statPointsValue.setText("0");
+                    }
+                },
+                error -> {
+                    Log.e(TAG, "Error fetching points", error);
+                    statPointsValue.setText("0");
+                });
+
+        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);
+    }
+
+    /**
+     * Fetches the number of matches played by the user.
+     *
+     * @param userId The ID of the user.
+     */
+    private void fetchMatches(int userId) {
+        String url = ApiConstants.BASE_URL
+                + ApiConstants.GET_SUBMISSIONS_ENDPOINT.replace("{uid}", String.valueOf(userId));
+
+        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
+                response -> {
+                    statMatchesValue.setText(String.valueOf(response.length()));
+                },
+                error -> {
+                    Log.e(TAG, "Error fetching matches", error);
+                    statMatchesValue.setText("0");
+                });
+
+        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);
+    }
+
+    /**
+     * Fetches the number of friends the user has.
+     *
+     * @param userId The ID of the user.
+     */
+    private void fetchFriends(int userId) {
+        String url = ApiConstants.BASE_URL + ApiConstants.GET_FRIENDS_ENDPOINT + "?id=" + userId;
+
+        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
+                response -> {
+                    statFriendsValue.setText(String.valueOf(response.length()));
+                },
+                error -> {
+                    Log.e(TAG, "Error fetching friends", error);
+                    statFriendsValue.setText("0");
+                });
+
+        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);
+    }
+
+    /**
+     * Fetches the number of items bought by the user.
+     *
+     * @param userId The ID of the user.
+     */
+    private void fetchItemsBought(int userId) {
+        String url = ApiConstants.BASE_URL + ApiConstants.GET_SHOP_TRANSACTIONS_ENDPOINT + "?uid=" + userId;
+
+        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
+                response -> {
+                    statItemsValue.setText(String.valueOf(response.length()));
+                },
+                error -> {
+                    Log.e(TAG, "Error fetching items bought", error);
+                    statItemsValue.setText("0");
+                });
+
+        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);
+    }
+
+    /**
+     * Fetches the total number of places available.
+     */
+    private void fetchPlaces(int userId) {
+        String url = ApiConstants.BASE_URL + ApiConstants.GET_SUBMITTED_PLACES_ENDPOINT + "?id=" + userId;
+
+        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
+                response -> {
+                    statPlacesValue.setText(String.valueOf(response.length()));
+                },
+                error -> {
+                    Log.e(TAG, "Error fetching places", error);
+                    statPlacesValue.setText("0");
+                });
+
+        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);
+    }
+
+    /**
+     * Fetches the number of comments made by the user.
+     *
+     * @param userId The ID of the user.
+     */
+    private void fetchComments(int userId) {
+        String url = ApiConstants.BASE_URL
+                + ApiConstants.GET_USER_COMMENTS_ENDPOINT.replace("{uid}", String.valueOf(userId));
+
+        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
+                response -> {
+                    statCommentsValue.setText(String.valueOf(response.length()));
+                },
+                error -> {
+                    Log.e(TAG, "Error fetching comments", error);
+                    statCommentsValue.setText("0");
+                });
+
+        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);
     }
 
     @Override
