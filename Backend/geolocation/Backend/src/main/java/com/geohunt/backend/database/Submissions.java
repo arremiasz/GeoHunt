@@ -26,6 +26,8 @@ import java.time.LocalDateTime;
 public class Submissions {
 
     public static final double DEFAULT_DOUBLE_VALUE = 0.0;
+    public static final double MAX_POINTS = 1000;
+    public static final double EXP_DECAY_RATE = 1;
 
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
@@ -48,6 +50,8 @@ public class Submissions {
     private String photourl;
     private LocalDateTime submissionTime;
     private int reports;
+
+    private boolean hasGeneratedReward;
 
     @JsonIgnore
     private long longtitude; // TODO: placeholder until fixed in main and mysql server
@@ -101,6 +105,12 @@ public class Submissions {
     public LocalDateTime setSubmissionTimeToNow(){
         submissionTime = LocalDateTime.now();
         return submissionTime;
+    }
+
+    public int getSubmissionPoints(){
+        double distance = distanceFromChallenge();
+        int points = (int)Math.round(MAX_POINTS * Math.exp(-1 * distance * EXP_DECAY_RATE));
+        return points;
     }
 }
 

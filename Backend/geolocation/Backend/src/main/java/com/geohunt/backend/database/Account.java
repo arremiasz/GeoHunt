@@ -8,6 +8,7 @@ import com.geohunt.backend.Shop.UserInventory;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.geohunt.backend.powerup.Powerup;
 import com.geohunt.backend.comments.Comment;
+import com.geohunt.backend.rewards.Reward;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
