@@ -47,6 +47,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -223,48 +224,64 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
             return;
         }
 
-        // Update
-        String url = ApiConstants.BASE_URL + ApiConstants.GET_REWARDS + "?uid=" + userId;
 
-        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(
-                Request.Method.GET,
+        String url = ApiConstants.NATHAN_MOCK + ApiConstants.GET_REWARDS + "?uid=" + userId;
+
+        JSONObject requestBody = new JSONObject();
+        try {
+            requestBody.put("distance", results);
+            requestBody.put("time", time);
+        } catch (JSONException e) {
+            Log.e(TAG, "Failed to create JSON object for rewards.", e);
+        }
+
+        JsonObjectRequest submissionRequest = new JsonObjectRequest(
                 url,
-                null,
                 response -> {
-                    Log.d(TAG, "Account Power Ups Response: " + response.toString());
-                    try {
-                        pointsText.setText(response.getJSONObject(0).optString("points"));
-                        pointsUnitsLabel.setText("points");
-                        int type = response.getJSONObject(1).optInt("id");
-                        PowerUp powerUp;
+                    Log.d(TAG, "Getting Rewards successful: " + response);
+                    String points = response.optString("points");
+                    int type = response.optInt("type", 0);
+                    pointsText.setText(points.trim());
+                    pointsUnitsLabel.setText("points");
+                    PowerUp powerUp;
 
-                        if(type == 1){
-                            powerUp = new hintPu();
-                        }
-                        else if(type == 2){
-                            powerUp = new SpecificHintPu();
-                        }
-                        else if(type == 3){
-                            powerUp = new TimeReductionPU();
-                        }
-                        else if(type == 4){
-                            powerUp = new LargeTimeReductionPU();
-                        } else {
-                            powerUp = null;
-                        }
-                        newPowerUp.setOnClickListener(v -> showDescription(powerUp));
-                    } catch (JSONException e) {
-                        Log.e(TAG, "Error parsing power ups JSON", e);
-                    }},
+                    if(type == 1){
+                        powerUp = new hintPu();
+
+                    }
+                    else if(type == 2){
+                        powerUp = new SpecificHintPu();
+                    }
+                    else if(type == 3){
+                        powerUp = new TimeReductionPU();
+                    }
+                    else if(type == 4){
+                        powerUp = new LargeTimeReductionPU();
+                    } else {
+                        powerUp = null;
+                    }
+                    powerUpUnlock.setText((powerUp.getTitle() + " Acquired").trim());
+                    newPowerUp.setImageResource(powerUp.getImage());
+
+                    newPowerUp.setOnClickListener(v -> showDescription(powerUp));},
                 error -> {
-                        Log.e(TAG, "Error getting rewards", error);
-                    });
+                    Log.e(TAG, "Submission failed.", error);
+                        Toast.makeText(this, "Error getting Rewards guess. ", Toast.LENGTH_LONG).show();
+                    }) {
+                @Override
+                public byte[] getBody() {
+                    return requestBody.toString().getBytes(StandardCharsets.UTF_8);
+                }
 
-            VolleySingleton.getInstance(this).addToRequestQueue(jsonArrayRequest);
+                @Override
+                public String getBodyContentType() {
+                    return "application/json; charset=utf-8";
+                }
+            };
 
+            VolleySingleton.getInstance(this).addToRequestQueue(submissionRequest);
 
-
-    }
+        }
 
     /**
      * Sets up the click listeners for the buttons.
