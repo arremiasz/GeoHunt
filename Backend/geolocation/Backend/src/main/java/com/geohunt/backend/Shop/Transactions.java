@@ -1,6 +1,7 @@
 package com.geohunt.backend.Shop;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.geohunt.backend.database.Account;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -27,6 +28,11 @@ public class Transactions {
     @ManyToOne
     @JoinColumn(name="user_id")
     @JsonBackReference("transactions-user")
+    @JsonIgnoreProperties({
+            "password",
+            "usersInventory",
+            "transactions"
+    })
     private Account user;
 
     private Date date;

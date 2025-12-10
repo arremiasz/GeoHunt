@@ -18,9 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class ShopService {
@@ -36,6 +34,8 @@ public class ShopService {
     private TransactionService transactionService;
     @Autowired
     private PowerupService powerupService;
+    @Autowired
+    private TransactionsRepository transactionsRepository;
 
     public ResponseEntity<String> deleteItem(String name) {
         Optional<Shop> s = shopRepository.findByName(name);
@@ -45,6 +45,34 @@ public class ShopService {
         shopRepository.delete(s.get());
         userInventoryRepository.deleteAllByShopItem(s.get());
         return ResponseEntity.status(HttpStatus.OK).body("Shop Item deleted.");
+    }
+
+    public ResponseEntity<Map<SHOP_ITEM_TYPE, List<Shop>>> getAllItems() {
+        Map<SHOP_ITEM_TYPE, List<Shop>> map = new HashMap<>();
+        ResponseEntity a = getOfType(SHOP_ITEM_TYPE.DECORATION);
+        if(a.getStatusCode() == HttpStatus.OK) {
+            List<Shop> DECORATION = (List) a.getBody();
+            map.put(SHOP_ITEM_TYPE.DECORATION, DECORATION);
+        }
+        ResponseEntity b = getOfType(SHOP_ITEM_TYPE.PROFILE_CUSTOMIZATION);
+        if(b.getStatusCode() == HttpStatus.OK) {
+            List<Shop> PROFILE_CUSTOMIZATION = (List) b.getBody();
+            map.put(SHOP_ITEM_TYPE.PROFILE_CUSTOMIZATION, PROFILE_CUSTOMIZATION);
+        }
+        ResponseEntity c = getOfType(SHOP_ITEM_TYPE.POWERUP);
+        if(c.getStatusCode() == HttpStatus.OK) {
+            List<Shop> POWERUP = (List) c.getBody();
+            map.put(SHOP_ITEM_TYPE.POWERUP, POWERUP);
+        }
+        ResponseEntity d = getOfType(SHOP_ITEM_TYPE.OTHER);
+        if(d.getStatusCode() == HttpStatus.OK) {
+            List<Shop> OTHER = (List) d.getBody();
+            map.put(SHOP_ITEM_TYPE.OTHER, OTHER);
+        }
+        if(map.isEmpty()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(map);
     }
 
     public ResponseEntity<Shop> getItem(String name) {
@@ -307,6 +335,39 @@ public class ShopService {
 
         return ResponseEntity.ok(dto);
     }
+
+    public ResponseEntity deleteById(long id){
+        Optional<Shop> s = shopRepository.findById(id);
+        if (s.isPresent()) {
+            userInventoryRepository.deleteAllByShopItem(s.get());
+            transactionsRepository.deleteAllByShopItem(s.get());
+            shopRepository.deleteById(id);
+            return ResponseEntity.status(HttpStatus.OK).build();
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Shop Item not found.");
+    }
+
+    public ResponseEntity deleteFromInventory(long userId, long shopItemId) {
+
+        Optional<Shop> s = shopRepository.findById(shopItemId);
+        if (s.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Shop item not found.");
+        }
+
+        Optional<UserInventory> entry =
+                userInventoryRepository.findByUserIdAndShopItemId(userId, shopItemId);
+
+        if (entry.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Shop item not found in user's inventory.");
+        }
+
+        userInventoryRepository.deleteByUserIdAndShopItem(userId, s.get());
+
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
 
 
 }

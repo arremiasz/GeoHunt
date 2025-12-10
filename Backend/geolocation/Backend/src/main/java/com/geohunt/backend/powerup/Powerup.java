@@ -15,6 +15,7 @@ import java.util.Set;
 @Getter
 @Setter
 @NoArgsConstructor
+@JsonIgnoreProperties({"accounts"})
 public class Powerup {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private @Id long id;

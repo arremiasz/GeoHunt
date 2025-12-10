@@ -25,5 +25,10 @@ public interface UserInventoryRepository extends JpaRepository<UserInventory, Lo
     void deleteAllByUser(Account user);
 
     @Transactional
+    void deleteByUserIdAndShopItem(Long userId, Shop shop);
+
+    @Transactional
     void deleteById(Long id);
+
+    Optional<UserInventory> findByUserIdAndShopItemId(long userId, long shopItemId);
 }

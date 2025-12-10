@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * @author evan juslon
+ */
 @Repository
 public interface SubmissionsRepository extends JpaRepository<Submissions, Long> {
     List<Submissions> findBySubmitter_Id(Long accountId);

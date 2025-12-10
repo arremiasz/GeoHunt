@@ -1,0 +1,102 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > UserInventoryRepository</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.geohunt.backend.Shop</a>
+</div>
+
+<h1>Coverage Summary for Class: UserInventoryRepository (com.geohunt.backend.Shop)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+</tr>
+<tr>
+  <td class="name">UserInventoryRepository</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.geohunt.backend.Shop;
+&nbsp;
+&nbsp;import com.geohunt.backend.database.Account;
+&nbsp;import jakarta.transaction.Transactional;
+&nbsp;import org.springframework.data.jpa.repository.JpaRepository;
+&nbsp;import org.springframework.stereotype.Repository;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;@Repository
+&nbsp;public interface UserInventoryRepository extends JpaRepository&lt;UserInventory, Long&gt; {
+&nbsp;    List&lt;UserInventory&gt; findAllByUser(Account user);
+&nbsp;
+&nbsp;    List&lt;UserInventory&gt; findAllByUserId(Long userId);
+&nbsp;
+&nbsp;    Optional&lt;UserInventory&gt; findByUserIdAndShopItemId(Long userId, Long shopItemId);
+&nbsp;
+&nbsp;    Optional&lt;UserInventory&gt; findByShopItem(Shop shopItem);
+&nbsp;
+&nbsp;    @Transactional
+&nbsp;    void deleteAllByShopItem(Shop shop);
+&nbsp;
+&nbsp;    @Transactional
+&nbsp;    void deleteAllByUser(Account user);
+&nbsp;
+&nbsp;    @Transactional
+&nbsp;    void deleteByUserIdAndShopItem(Long userId, Shop shop);
+&nbsp;
+&nbsp;    @Transactional
+&nbsp;    void deleteById(Long id);
+&nbsp;
+&nbsp;    Optional&lt;UserInventory&gt; findByUserIdAndShopItemId(long userId, long shopItemId);
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 21:04</div>
+</div>
+</body>
+</html>

@@ -4,6 +4,9 @@ package com.geohunt.backend.util;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * @author evan juslon
+ */
 @Getter
 @Setter
 public class Location {

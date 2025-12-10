@@ -14,4 +14,6 @@ public interface TransactionsRepository extends JpaRepository<Transactions, Long
     List<Transactions> findByUser(Account user);
     @Transactional
     void deleteAllByUser(Account user);
+    @Transactional
+    void deleteAllByShopItem(Shop shopItem);
 }

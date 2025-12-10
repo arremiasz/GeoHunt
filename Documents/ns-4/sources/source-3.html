@@ -56,26 +56,26 @@ Current scope:     <a href="../../index.html">all classes</a>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    40%
+    90%
   </span>
   <span class="absValue">
-    (4/10)
+    (9/10)
   </span>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    0%
+    50%
   </span>
   <span class="absValue">
-    (0/2)
+    (1/2)
   </span>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    32%
+    96%
   </span>
   <span class="absValue">
-    (8/25)
+    (24/25)
   </span>
 </td>
 </tr>
@@ -112,40 +112,40 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;
 &nbsp;    // Create and store a new notification by username
 &nbsp;    public void sendNotificationToUser(String username, String message) {
-<b class="nc">&nbsp;        Optional&lt;Account&gt; target = accountRepository.findByUsername(username);</b>
-<b class="nc">&nbsp;        if (target != null) {</b>
-<b class="nc">&nbsp;            Notifications notif = new Notifications();</b>
-<b class="nc">&nbsp;            notif.setMessage(message);</b>
-<b class="nc">&nbsp;            notif.setTarget(target.get());</b>
-<b class="nc">&nbsp;            notificationsRepository.save(notif);</b>
+<b class="fc">&nbsp;        Optional&lt;Account&gt; target = accountRepository.findByUsername(username);</b>
+<b class="pc">&nbsp;        if (target.isPresent()) {</b>
+<b class="fc">&nbsp;            Notifications notif = new Notifications();</b>
+<b class="fc">&nbsp;            notif.setMessage(message);</b>
+<b class="fc">&nbsp;            notif.setTarget(target.get());</b>
+<b class="fc">&nbsp;            notificationsRepository.save(notif);</b>
 &nbsp;        }
 &nbsp;    }
 &nbsp;
 &nbsp;    // Get all notifications for a user ID
 &nbsp;    public List&lt;Notifications&gt; getMyNotifs(Long targetId) {
-<b class="nc">&nbsp;        return notificationsRepository.findAllByTargetId(targetId);</b>
+<b class="fc">&nbsp;        return notificationsRepository.findAllByTargetId(targetId);</b>
 &nbsp;    }
 &nbsp;
 &nbsp;    // Delete a single notification by its ID
 &nbsp;    public void deleteNotification(Long notifId) {
-<b class="nc">&nbsp;        notificationsRepository.deleteById(notifId);</b>
+<b class="fc">&nbsp;        notificationsRepository.deleteById(notifId);</b>
 &nbsp;    }
 &nbsp;
 &nbsp;    // Optionally mark notification as read
 &nbsp;    public void markAsRead(Long notifId) {
-<b class="nc">&nbsp;        notificationsRepository.findById(notifId).ifPresent(notif -&gt; {</b>
-<b class="nc">&nbsp;            notif.setReadStatus(true);</b>
-<b class="nc">&nbsp;            notificationsRepository.save(notif);</b>
+<b class="fc">&nbsp;        notificationsRepository.findById(notifId).ifPresent(notif -&gt; {</b>
+<b class="fc">&nbsp;            notif.setReadStatus(true);</b>
+<b class="fc">&nbsp;            notificationsRepository.save(notif);</b>
 &nbsp;        });
 &nbsp;    }
 &nbsp;
 &nbsp;    public void saveNotification(Account target, String message) {
-<b class="nc">&nbsp;        Notifications n = new Notifications();</b>
-<b class="nc">&nbsp;        n.setTarget(target);</b>
-<b class="nc">&nbsp;        n.setMessage(message);</b>
-<b class="nc">&nbsp;        n.setReadStatus(false);</b>
-<b class="nc">&nbsp;        n.setSentAt(LocalDateTime.now());</b>
-<b class="nc">&nbsp;        notificationsRepository.save(n);</b>
+<b class="fc">&nbsp;        Notifications n = new Notifications();</b>
+<b class="fc">&nbsp;        n.setTarget(target);</b>
+<b class="fc">&nbsp;        n.setMessage(message);</b>
+<b class="fc">&nbsp;        n.setReadStatus(false);</b>
+<b class="fc">&nbsp;        n.setSentAt(LocalDateTime.now());</b>
+<b class="fc">&nbsp;        notificationsRepository.save(n);</b>
 &nbsp;    }
 &nbsp;
 &nbsp;    public ResponseEntity&lt;Void&gt; editNotification(long notifId, String message) {
@@ -160,7 +160,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;    }
 &nbsp;
 &nbsp;    public Notifications getNotificationById(Long notifId) {
-<b class="fc">&nbsp;        return notificationsRepository.findById(notifId).orElse(null);</b>
+<b class="nc">&nbsp;        return notificationsRepository.findById(notifId).orElse(null);</b>
 &nbsp;    }
 &nbsp;
 &nbsp;}
@@ -187,7 +187,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2025-12-06 21:25</div>
+    <div style="float:right;">generated on 2025-12-09 21:04</div>
 </div>
 </body>
 </html>
