@@ -30,10 +30,6 @@ public class Shop {
     @JsonIgnoreProperties("shopItem")
     private List<UserInventory> userInventoryEntries = new ArrayList<>();
 
-    @OneToOne()
-    @JsonIgnoreProperties("shopItem")
-    private Reward reward;
-
     private String name;
     private String description;
 

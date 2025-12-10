@@ -21,6 +21,6 @@ public class Reward {
 
     private int value; // Value used to determine probability of getting reward.
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     Shop shopItem; // Reference to the shop item
 }
