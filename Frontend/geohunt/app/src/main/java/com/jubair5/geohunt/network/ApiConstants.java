@@ -40,6 +40,6 @@ public final class ApiConstants {
     // Statistics Endpoints
     public static final String GET_SUBMISSIONS_ENDPOINT = "/account/{uid}/submissions";
     public static final String GET_FRIENDS_ENDPOINT = "/friends";
-    public static final String GET_COMMENTS_ENDPOINT = "/account/{uid}/comments";
+    public static final String GET_USER_COMMENTS_ENDPOINT = "/account/{uid}/comments";
 
 }

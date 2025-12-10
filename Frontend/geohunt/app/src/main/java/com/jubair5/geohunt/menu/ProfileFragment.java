@@ -36,7 +36,6 @@ import java.io.ByteArrayOutputStream;
 
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.google.android.material.textfield.TextInputLayout;
 import com.jubair5.geohunt.LauncherActivity;
@@ -693,7 +692,7 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
      */
     private void fetchComments(int userId) {
         String url = ApiConstants.BASE_URL
-                + ApiConstants.GET_COMMENTS_ENDPOINT.replace("{uid}", String.valueOf(userId));
+                + ApiConstants.GET_USER_COMMENTS_ENDPOINT.replace("{uid}", String.valueOf(userId));
 
         JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
                 response -> {
