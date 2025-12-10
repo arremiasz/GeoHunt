@@ -176,4 +176,26 @@ public class geohuntController {
         challengesRepository.save(challenge);
         return ResponseEntity.status(HttpStatus.OK).body("Rating Added");
     }
+
+    @Operation(summary = "Get challenge rating")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Rating processed", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Challenge not found.", content = @Content)})
+    @GetMapping("/geohunt/challenge/{cid}/rating")
+    public ResponseEntity<Double> getChallengeRating(@PathVariable long cid){
+        // Get challenge
+        if(challengesRepository.findById(cid).isEmpty()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        Challenges challenge = challengesRepository.findById(cid).get();
+
+        List<Integer> ratings = challenge.getChallengeRatings();
+        int sum = 0;
+        for(Integer rating : ratings){
+            sum += rating;
+        }
+        double avgRating = ((double)sum)/ratings.size();
+
+        return ResponseEntity.status(HttpStatus.OK).body(avgRating);
+    }
 }
