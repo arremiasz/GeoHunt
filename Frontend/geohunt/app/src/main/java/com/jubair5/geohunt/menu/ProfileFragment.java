@@ -226,7 +226,7 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
 
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null,
                 response -> {
-                    Log.d(TAG, "Response: " + response.toString());
+                    Log.d(TAG, "Custom Location Response: " + response.toString());
                     try {
                         placesList.clear();
                         for (int i = response.length() - 1; i >= 0; i--) {

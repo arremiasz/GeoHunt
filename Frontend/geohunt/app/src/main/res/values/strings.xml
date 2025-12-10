@@ -16,5 +16,11 @@
     <string name="new_password_optional">New Password (optional)</string>
     <string name="current_password">Current Password</string>
     <string name="my_places">My Places</string>
+    <string name="friends">Friends</string>
+    <string name="search_for_friends">Search For Friends</string>
+    <string name="send_friend_request">Send Friend Request</string>
+    <string name="enter">Enter</string>
+    <string name="stats">Stats</string>
     <string name="go">GO!</string>
+    <string name="status">Status</string>
 </resources>

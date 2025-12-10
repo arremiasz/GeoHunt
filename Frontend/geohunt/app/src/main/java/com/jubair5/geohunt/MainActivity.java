@@ -8,7 +8,7 @@ import androidx.fragment.app.FragmentManager;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.jubair5.geohunt.menu.HomeFragment;
-import com.jubair5.geohunt.menu.MapFragment;
+import com.jubair5.geohunt.menu.FriendFragment;
 import com.jubair5.geohunt.menu.ProfileFragment;
 import com.jubair5.geohunt.menu.ShopFragment;
 
@@ -21,7 +21,7 @@ public class MainActivity extends AppCompatActivity {
     private BottomNavigationView botNav;
     private final FragmentManager fm = getSupportFragmentManager();
     private final Fragment homeFragment = new HomeFragment();
-    private final Fragment mapFragment = new MapFragment();
+    private final Fragment friendFragment = new FriendFragment();
     private final Fragment profileFragment = new ProfileFragment();
     private final Fragment shopFragment = new ShopFragment();
     private Fragment active;
@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
         if (savedInstanceState == null) {
             fm.beginTransaction().add(R.id.fragment_container, shopFragment, "4").hide(shopFragment).commit();
             fm.beginTransaction().add(R.id.fragment_container, profileFragment, "3").hide(profileFragment).commit();
-            fm.beginTransaction().add(R.id.fragment_container, mapFragment, "2").hide(mapFragment).commit();
+            fm.beginTransaction().add(R.id.fragment_container, friendFragment, "2").hide(friendFragment).commit();
             fm.beginTransaction().add(R.id.fragment_container, homeFragment, "1").commit();
 
             if (getSupportActionBar() != null) {
@@ -60,9 +60,9 @@ public class MainActivity extends AppCompatActivity {
             if (itemId == R.id.nav_home) {
                 selectedFragment = homeFragment;
                 title = "Home";
-            } else if (itemId == R.id.nav_map) {
-                selectedFragment = mapFragment;
-                title = "Map";
+            } else if (itemId == R.id.nav_friends) {
+                selectedFragment = friendFragment;
+                title = "Friends";
             } else if (itemId == R.id.nav_profile) {
                 selectedFragment = profileFragment;
                 title = "Profile";
