@@ -172,6 +172,13 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         return root;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        fetchSubmissions();
+        fetchStatistics();
+    }
+
     /**
      * Launches the image cropper activity.
      * Configures the cropper to allow picking from gallery, sets a 1:1 aspect
@@ -576,7 +583,7 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         fetchMatches(userId);
         fetchFriends(userId);
         fetchItemsBought(userId);
-        fetchPlaces();
+        fetchPlaces(userId);
         fetchComments(userId);
     }
 
@@ -670,8 +677,8 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
     /**
      * Fetches the total number of places available.
      */
-    private void fetchPlaces() {
-        String url = ApiConstants.BASE_URL + ApiConstants.GET_SUBMITTED_PLACES_ENDPOINT;
+    private void fetchPlaces(int userId) {
+        String url = ApiConstants.BASE_URL + ApiConstants.GET_SUBMITTED_PLACES_ENDPOINT + "?id=" + userId;
 
         JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
                 response -> {
