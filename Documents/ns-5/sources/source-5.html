@@ -1,0 +1,567 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > shopController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.geohunt.backend.Shop</a>
+</div>
+
+<h1>Coverage Summary for Class: shopController (com.geohunt.backend.Shop)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">shopController</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    5.9%
+  </span>
+  <span class="absValue">
+    (1/17)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    5.9%
+  </span>
+  <span class="absValue">
+    (1/17)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.geohunt.backend.Shop;
+&nbsp;
+&nbsp;import com.geohunt.backend.Shop.DTOs.PowerupShopDTO;
+&nbsp;import com.geohunt.backend.Shop.DTOs.ShopResponseDTO;
+&nbsp;import com.geohunt.backend.Shop.DTOs.PowerupResponseDTO;
+&nbsp;import com.geohunt.backend.database.AccountRepository;
+&nbsp;import io.swagger.v3.oas.annotations.Operation;
+&nbsp;import io.swagger.v3.oas.annotations.Parameter;
+&nbsp;import io.swagger.v3.oas.annotations.media.Content;
+&nbsp;import io.swagger.v3.oas.annotations.media.ExampleObject;
+&nbsp;import io.swagger.v3.oas.annotations.media.Schema;
+&nbsp;import io.swagger.v3.oas.annotations.parameters.RequestBody;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponse;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponses;
+&nbsp;import io.swagger.v3.oas.annotations.tags.Tag;
+&nbsp;import org.springframework.beans.factory.annotation.Autowired;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Map;
+&nbsp;
+&nbsp;@Tag(
+&nbsp;        name = &quot;Shop&quot;,
+&nbsp;        description = &quot;&quot;&quot;
+&nbsp;                Operations related to the GeoHunt in-game shop.  
+&nbsp;                Includes purchasing items, equipping/unequipping cosmetics, 
+&nbsp;                consuming powerups, and retrieving transactions.
+&nbsp;                &quot;&quot;&quot;
+&nbsp;)
+&nbsp;@RestController
+&nbsp;@RequestMapping(&quot;/shop&quot;)
+<b class="fc">&nbsp;public class shopController {</b>
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    private ShopService shopService;
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    private TransactionService transactionService;
+&nbsp;
+&nbsp;    // ========================================================================
+&nbsp;    // RETRIEVAL ENDPOINTS
+&nbsp;    // ========================================================================
+&nbsp;
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Retrieve a shop item by name&quot;,
+&nbsp;            description = &quot;Looks up a shop item using its unique name.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses({
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Shop item found&quot;,
+&nbsp;                    content = @Content(schema = @Schema(implementation = Shop.class))),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Shop item not found&quot;)
+&nbsp;    })
+&nbsp;    @GetMapping(&quot;/getItem&quot;)
+&nbsp;    public ResponseEntity&lt;Shop&gt; getItem(
+&nbsp;            @Parameter(description = &quot;Name of the shop item to retrieve&quot;, example = &quot;Cool Hat&quot;)
+&nbsp;            @RequestParam String name) {
+&nbsp;
+<b class="nc">&nbsp;        return shopService.getItem(name);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Retrieve a shop item by ID&quot;,
+&nbsp;            description = &quot;Queries the shop database for an item using its internal ID.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses({
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Shop item found&quot;,
+&nbsp;                    content = @Content(schema = @Schema(implementation = Shop.class))),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Item not found&quot;)
+&nbsp;    })
+&nbsp;    @GetMapping(&quot;/getItemId&quot;)
+&nbsp;    public ResponseEntity&lt;Shop&gt; getItemId(
+&nbsp;            @Parameter(description = &quot;Shop item ID&quot;, example = &quot;12&quot;)
+&nbsp;            @RequestParam long id) {
+&nbsp;
+<b class="nc">&nbsp;        return shopService.getItem(id);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Retrieve all shop items of a given type&quot;,
+&nbsp;            description = &quot;Returns all items belonging to a desired category (decorations, customizations, powerups, etc.)&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses({
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Matching items returned&quot;,
+&nbsp;                    content = @Content(schema = @Schema(implementation = Shop.class))),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;No items of this type exist&quot;)
+&nbsp;    })
+&nbsp;    @GetMapping(&quot;/getType&quot;)
+&nbsp;    public ResponseEntity&lt;List&lt;Shop&gt;&gt; getItemType(
+&nbsp;            @Parameter(description = &quot;Type of item&quot;, example = &quot;DECORATION&quot;)
+&nbsp;            @RequestParam SHOP_ITEM_TYPE itemType) {
+&nbsp;
+<b class="nc">&nbsp;        return shopService.getOfType(itemType);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    // ========================================================================
+&nbsp;    // SHOP ADMINISTRATION
+&nbsp;    // ========================================================================
+&nbsp;
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Delete a shop item by name&quot;,
+&nbsp;            description = &quot;&quot;&quot;
+&nbsp;                    Removes a shop item entirely.  
+&nbsp;                    All user inventory entries referencing this item are deleted as well.
+&nbsp;                    &quot;&quot;&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses({
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Item successfully deleted&quot;),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Item not found&quot;)
+&nbsp;    })
+&nbsp;    @DeleteMapping(&quot;/deleteItem&quot;)
+&nbsp;    public ResponseEntity&lt;String&gt; deleteItem(
+&nbsp;            @Parameter(description = &quot;Name of the shop item to delete&quot;) @RequestParam String name) {
+<b class="nc">&nbsp;        return shopService.deleteItem(name);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Add a non-powerup shop item&quot;,
+&nbsp;            description = &quot;&quot;&quot;
+&nbsp;                    Creates a normal shop item such as a decoration or profile customization.  
+&nbsp;                    Cannot be used to add powerups (use /addPowerup instead).
+&nbsp;                    &quot;&quot;&quot;,
+&nbsp;            requestBody = @RequestBody(
+&nbsp;                    required = true,
+&nbsp;                    description = &quot;Shop object to add&quot;,
+&nbsp;                    content = @Content(
+&nbsp;                            schema = @Schema(implementation = Shop.class),
+&nbsp;                            examples = @ExampleObject(
+&nbsp;                                    value = &quot;&quot;&quot;
+&nbsp;                                    {
+&nbsp;                                      &quot;name&quot;: &quot;Cool Hat&quot;,
+&nbsp;                                      &quot;description&quot;: &quot;A stylish cosmetic hat.&quot;,
+&nbsp;                                      &quot;image&quot;: &quot;image_base64_here&quot;,
+&nbsp;                                      &quot;itemType&quot;: &quot;DECORATION&quot;,
+&nbsp;                                      &quot;price&quot;: 150.0
+&nbsp;                                    }
+&nbsp;                                    &quot;&quot;&quot;
+&nbsp;                            )
+&nbsp;                    )
+&nbsp;            )
+&nbsp;    )
+&nbsp;    @ApiResponses({
+&nbsp;            @ApiResponse(responseCode = &quot;201&quot;, description = &quot;Item created&quot;),
+&nbsp;            @ApiResponse(responseCode = &quot;409&quot;, description = &quot;Item name already exists&quot;)
+&nbsp;    })
+&nbsp;    @PostMapping(&quot;/addItem&quot;)
+&nbsp;    public ResponseEntity&lt;Shop&gt; addItem(@org.springframework.web.bind.annotation.RequestBody Shop shop) {
+<b class="nc">&nbsp;        return shopService.addItem(shop);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Add a powerup shop item&quot;,
+&nbsp;            description = &quot;&quot;&quot;
+&nbsp;                    Creates a shop entry that grants a powerup when purchased.  
+&nbsp;                    The powerup must already exist in the Powerup database.
+&nbsp;                    &quot;&quot;&quot;,
+&nbsp;            requestBody = @RequestBody(
+&nbsp;                    required = true,
+&nbsp;                    description = &quot;DTO linking a powerup to a shop item&quot;,
+&nbsp;                    content = @Content(
+&nbsp;                            schema = @Schema(implementation = PowerupShopDTO.class),
+&nbsp;                            examples = @ExampleObject(
+&nbsp;                                    value = &quot;&quot;&quot;
+&nbsp;                                    {
+&nbsp;                                      &quot;shopName&quot;: &quot;General Hint Pack&quot;,
+&nbsp;                                      &quot;description&quot;: &quot;Unlocks a general hint powerup&quot;,
+&nbsp;                                      &quot;image&quot;: &quot;base64_here&quot;,
+&nbsp;                                      &quot;price&quot;: 50.0,
+&nbsp;                                      &quot;powerupName&quot;: &quot;General Hint&quot;
+&nbsp;                                    }
+&nbsp;                                    &quot;&quot;&quot;
+&nbsp;                            )
+&nbsp;                    )
+&nbsp;            )
+&nbsp;    )
+&nbsp;    @ApiResponses({
+&nbsp;            @ApiResponse(responseCode = &quot;201&quot;, description = &quot;Powerup shop item created&quot;),
+&nbsp;            @ApiResponse(responseCode = &quot;409&quot;, description = &quot;Shop item already exists or powerup already linked&quot;),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Powerup not found&quot;)
+&nbsp;    })
+&nbsp;    @PostMapping(&quot;/addPowerup&quot;)
+&nbsp;    public ResponseEntity&lt;Shop&gt; addPowerup(@org.springframework.web.bind.annotation.RequestBody PowerupShopDTO powerupDTO) {
+<b class="nc">&nbsp;        return shopService.addPowerupItem(powerupDTO);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    // ========================================================================
+&nbsp;    // INVENTORY ACTIONS (EQUIP, UNEQUIP, CONSUME POWERUPS)
+&nbsp;    // ========================================================================
+&nbsp;
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Equip an item or consume a powerup&quot;,
+&nbsp;            description = &quot;&quot;&quot;
+&nbsp;                    - Decorations / cosmetics → marked as equipped  
+&nbsp;                    - Powerups → consumed and removed from inventory  
+&nbsp;                    
+&nbsp;                    Returns either:
+&nbsp;                    • ShopResponseDTO (for equippable items)  
+&nbsp;                    • PowerupResponseDTO (for consumed powerups)
+&nbsp;                    &quot;&quot;&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses({
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Item equipped or powerup consumed&quot;,
+&nbsp;                    content = @Content(schema = @Schema(oneOf = {
+&nbsp;                            PowerupResponseDTO.class,
+&nbsp;                            ShopResponseDTO.class
+&nbsp;                    }))
+&nbsp;            ),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;User or item not found&quot;),
+&nbsp;            @ApiResponse(responseCode = &quot;409&quot;, description = &quot;Item already equipped or invalid state&quot;)
+&nbsp;    })
+&nbsp;    @PutMapping(&quot;/equip&quot;)
+&nbsp;    public ResponseEntity equip(
+&nbsp;            @Parameter(description = &quot;Name of the shop item&quot;) @RequestParam String itemName,
+&nbsp;            @Parameter(description = &quot;User ID&quot;) @RequestParam long uid) {
+<b class="nc">&nbsp;        return shopService.equip(itemName, uid);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Unequip an item&quot;,
+&nbsp;            description = &quot;&quot;&quot;
+&nbsp;                    Only applies to decorations/profile customizations.  
+&nbsp;                    Powerups **cannot** be unequipped.
+&nbsp;                    &quot;&quot;&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses({
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Item unequipped&quot;),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Item or user not found&quot;),
+&nbsp;            @ApiResponse(responseCode = &quot;409&quot;, description = &quot;Item already unequipped or is a powerup&quot;)
+&nbsp;    })
+&nbsp;    @PutMapping(&quot;/unequip&quot;)
+&nbsp;    public ResponseEntity unequip(
+&nbsp;            @Parameter(description = &quot;Item name&quot;) @RequestParam String itemName,
+&nbsp;            @Parameter(description = &quot;User ID&quot;) @RequestParam long uid) {
+&nbsp;
+<b class="nc">&nbsp;        return shopService.unequip(itemName, uid);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Consume a powerup directly&quot;,
+&nbsp;            description = &quot;&quot;&quot;
+&nbsp;                    Removes one copy of a powerup from the user&#39;s inventory  
+&nbsp;                    and grants the user the corresponding Powerup object.
+&nbsp;                    &quot;&quot;&quot;)
+&nbsp;    @ApiResponses({
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Powerup consumed&quot;,
+&nbsp;                    content = @Content(schema = @Schema(implementation = PowerupResponseDTO.class))),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;User or powerup not found&quot;),
+&nbsp;            @ApiResponse(responseCode = &quot;400&quot;, description = &quot;Item is not a powerup&quot;)
+&nbsp;    })
+&nbsp;    @GetMapping(&quot;/usePowerup&quot;)
+&nbsp;    public ResponseEntity usePowerup(
+&nbsp;            @Parameter(description = &quot;Powerup shop item name&quot;) @RequestParam String itemName,
+&nbsp;            @Parameter(description = &quot;User ID&quot;) @RequestParam long uid) {
+&nbsp;
+<b class="nc">&nbsp;        return shopService.userPowerup(itemName, uid);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    // ========================================================================
+&nbsp;    // TRANSACTIONS
+&nbsp;    // ========================================================================
+&nbsp;
+&nbsp;
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Get a specific transaction by ID&quot;,
+&nbsp;            description = &quot;Returns full transaction details including price, timestamp, user, and item.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses({
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Transaction found&quot;,
+&nbsp;                    content = @Content(schema = @Schema(implementation = Transactions.class))),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Transaction not found&quot;)
+&nbsp;    })
+&nbsp;    @GetMapping(&quot;/transactions/by-id&quot;)
+&nbsp;    public ResponseEntity getTransaction(
+&nbsp;            @Parameter(description = &quot;Transaction ID&quot;) @RequestParam long tid) {
+<b class="nc">&nbsp;        return transactionService.getTransactionById(tid);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Get all transactions for a specific user&quot;,
+&nbsp;            description = &quot;Returns a list of all purchases made by a user.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses({
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Transactions returned&quot;,
+&nbsp;                    content = @Content(schema = @Schema(implementation = Transactions.class))),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;User not found&quot;)
+&nbsp;    })
+&nbsp;    @GetMapping(&quot;/transactions/by-user&quot;)
+&nbsp;    public ResponseEntity getTransactions(
+&nbsp;            @Parameter(description = &quot;User ID&quot;) @RequestParam long uid) {
+<b class="nc">&nbsp;        return transactionService.getUsersTransactions(uid);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Delete a transaction (DEV ONLY)&quot;,
+&nbsp;            description = &quot;Removes a transaction from the system. For debugging only.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses({
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Transaction deleted&quot;)
+&nbsp;    })
+&nbsp;    @DeleteMapping(&quot;/transactions&quot;)
+&nbsp;    public void deleteTransaction(
+&nbsp;            @Parameter(description = &quot;Transaction ID (DEV)&quot;) @RequestParam long tid) {
+<b class="nc">&nbsp;        transactionService.deleteTransaction(tid);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Get all shop items grouped by type&quot;,
+&nbsp;            description = &quot;&quot;&quot;
+&nbsp;            Returns a categorized list of all shop items, grouped by:
+&nbsp;            
+&nbsp;            • DECORATION  
+&nbsp;            • PROFILE_CUSTOMIZATION  
+&nbsp;            • POWERUP  
+&nbsp;            • OTHER  
+&nbsp;            
+&nbsp;            Only types that have at least one item will appear in the response.
+&nbsp;            Returns 404 if no shop items exist at all.
+&nbsp;            &quot;&quot;&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses({
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Successfully retrieved all shop items grouped by type&quot;,
+&nbsp;                    content = @Content(
+&nbsp;                            mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = Shop.class),
+&nbsp;                            examples = @ExampleObject(
+&nbsp;                                    value = &quot;&quot;&quot;
+&nbsp;                                {
+&nbsp;                                  &quot;DECORATION&quot;: [
+&nbsp;                                    {
+&nbsp;                                      &quot;id&quot;: 1,
+&nbsp;                                      &quot;name&quot;: &quot;Blue Trail Banner&quot;,
+&nbsp;                                      &quot;description&quot;: &quot;A decorative banner&quot;,
+&nbsp;                                      &quot;image&quot;: &quot;base64string&quot;,
+&nbsp;                                      &quot;itemType&quot;: &quot;DECORATION&quot;,
+&nbsp;                                      &quot;price&quot;: 150
+&nbsp;                                    }
+&nbsp;                                  ],
+&nbsp;                                  &quot;POWERUP&quot;: [
+&nbsp;                                    {
+&nbsp;                                      &quot;id&quot;: 3,
+&nbsp;                                      &quot;name&quot;: &quot;General Hint Powerup&quot;,
+&nbsp;                                      &quot;description&quot;: &quot;Reveals the city of the challenge&quot;,
+&nbsp;                                      &quot;image&quot;: &quot;base64string&quot;,
+&nbsp;                                      &quot;itemType&quot;: &quot;POWERUP&quot;,
+&nbsp;                                      &quot;price&quot;: 500
+&nbsp;                                    }
+&nbsp;                                  ]
+&nbsp;                                }
+&nbsp;                                &quot;&quot;&quot;
+&nbsp;                            )
+&nbsp;                    )
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;No shop items exist in the database&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    @GetMapping(&quot;/all&quot;)
+&nbsp;    public ResponseEntity&lt;Map&lt;SHOP_ITEM_TYPE, List&lt;Shop&gt;&gt;&gt; getAllItems() {
+<b class="nc">&nbsp;        return shopService.getAllItems();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Purchase an item from the shop&quot;,
+&nbsp;            description = &quot;&quot;&quot;
+&nbsp;                Allows a user to purchase a shop item using in-game points.
+&nbsp;                
+&nbsp;                Rules:
+&nbsp;                • User must have enough points  
+&nbsp;                • User cannot repurchase non-powerup items 
+&nbsp;                • A transaction entry is automatically created  
+&nbsp;                • Powerups are immediately added to the user’s account  
+&nbsp;                
+&nbsp;                Returns a success message with the transaction ID.
+&nbsp;                &quot;&quot;&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses({
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Purchase successful&quot;,
+&nbsp;                    content = @Content(
+&nbsp;                            mediaType = &quot;application/json&quot;,
+&nbsp;                            examples = @ExampleObject(
+&nbsp;                                    value = &quot;\&quot;Successfully purchased! Item transaction id: 42\&quot;&quot;
+&nbsp;                            )
+&nbsp;                    )
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;Account or shop item not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;409&quot;,
+&nbsp;                    description = &quot;User already owns this item (non-powerups cannot be duplicated)&quot;
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;400&quot;,
+&nbsp;                    description = &quot;User does not have enough points&quot;
+&nbsp;            )
+&nbsp;    })
+&nbsp;    @GetMapping(&quot;/purchase&quot;)
+&nbsp;    public ResponseEntity purchase(
+&nbsp;            @Parameter(description = &quot;User ID of the buyer&quot;, example = &quot;10&quot;, required = true)
+&nbsp;            @RequestParam long uid,
+&nbsp;
+&nbsp;            @Parameter(description = &quot;Shop item ID being purchased&quot;, example = &quot;5&quot;, required = true)
+&nbsp;            @RequestParam long shopId
+&nbsp;    ) {
+<b class="nc">&nbsp;        return shopService.purchase(uid, shopId);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @DeleteMapping(&quot;/by-id&quot;)
+&nbsp;    public void deleteByID(@RequestParam long id) {
+<b class="nc">&nbsp;        shopService.deleteById(id);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Delete an item from a user&#39;s inventory&quot;,
+&nbsp;            description = &quot;&quot;&quot;
+&nbsp;                Removes one inventory entry for the given user and shop item ID.  
+&nbsp;                If the user does not own the item, a 404 is returned.  
+&nbsp;                Does not modify account points or perform refunds.
+&nbsp;                &quot;&quot;&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses({
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Item successfully removed from inventory&quot;
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;Shop item not found or not owned by the user&quot;
+&nbsp;            )
+&nbsp;    })
+&nbsp;    @DeleteMapping(&quot;/inventory/delete&quot;)
+&nbsp;    public ResponseEntity deleteFromInventory(
+&nbsp;            @Parameter(description = &quot;ID of the user&quot;, example = &quot;12&quot;, required = true)
+&nbsp;            @RequestParam long userId,
+&nbsp;
+&nbsp;            @Parameter(description = &quot;ID of the shop item&quot;, example = &quot;5&quot;, required = true)
+&nbsp;            @RequestParam long shopItemId
+&nbsp;    ) {
+<b class="nc">&nbsp;        return shopService.deleteFromInventory(userId, shopItemId);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 20:59</div>
+</div>
+</body>
+</html>

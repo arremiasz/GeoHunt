@@ -1,0 +1,106 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > Friends</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.geohunt.backend.database</a>
+</div>
+
+<h1>Coverage Summary for Class: Friends (com.geohunt.backend.database)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+</tr>
+  <tr>
+    <td class="name">Friends$HibernateInstantiator</td>
+  </tr>
+  <tr>
+    <td class="name">Friends$HibernateProxy</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.geohunt.backend.database;
+&nbsp;
+&nbsp;import com.fasterxml.jackson.annotation.JsonBackReference;
+&nbsp;import jakarta.persistence.*;
+&nbsp;import lombok.Getter;
+&nbsp;import lombok.NoArgsConstructor;
+&nbsp;import lombok.Setter;
+&nbsp;
+&nbsp;@Entity
+&nbsp;@Getter
+&nbsp;@Setter
+&nbsp;@NoArgsConstructor
+&nbsp;public class Friends {
+&nbsp;
+&nbsp;    @EmbeddedId
+&nbsp;    private FriendKey id;
+&nbsp;
+&nbsp;    @ManyToOne
+&nbsp;    @MapsId(&quot;primaryId&quot;)
+&nbsp;    @JoinColumn(name = &quot;primary_id&quot;)
+&nbsp;    @JsonBackReference(&quot;primary-friends&quot;)
+&nbsp;    private Account primary;
+&nbsp;
+&nbsp;    @ManyToOne
+&nbsp;    @MapsId(&quot;targetId&quot;)
+&nbsp;    @JoinColumn(name = &quot;target_id&quot;)
+&nbsp;    @JsonBackReference(&quot;target-friends&quot;)
+&nbsp;    private Account target;
+&nbsp;
+&nbsp;    @Column(nullable = false)
+&nbsp;    private boolean isAccepted;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 20:59</div>
+</div>
+</body>
+</html>

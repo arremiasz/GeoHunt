@@ -1,0 +1,570 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > PowerupService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.geohunt.backend.powerup</a>
+</div>
+
+<h1>Coverage Summary for Class: PowerupService (com.geohunt.backend.powerup)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">PowerupService</td>
+<td class="coverageStat">
+  <span class="percent">
+    84.2%
+  </span>
+  <span class="absValue">
+    (16/19)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    44.3%
+  </span>
+  <span class="absValue">
+    (35/79)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    56.9%
+  </span>
+  <span class="absValue">
+    (112/197)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">PowerupService$$SpringCGLIB$$0</td>
+  </tr>
+  <tr>
+    <td class="name">PowerupService$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    85%
+  </span>
+  <span class="absValue">
+    (17/20)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    44.3%
+  </span>
+  <span class="absValue">
+    (35/79)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    57.1%
+  </span>
+  <span class="absValue">
+    (113/198)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.geohunt.backend.powerup;
+&nbsp;
+&nbsp;import com.fasterxml.jackson.databind.JsonNode;
+&nbsp;import com.fasterxml.jackson.databind.ObjectMapper;
+&nbsp;import com.geohunt.backend.Services.AccountService;
+&nbsp;import com.geohunt.backend.Services.GeohuntService;
+&nbsp;import com.geohunt.backend.database.Account;
+&nbsp;import com.geohunt.backend.database.AccountRepository;
+&nbsp;import com.geohunt.backend.database.Challenges;
+&nbsp;import com.geohunt.backend.database.ChallengesRepository;
+&nbsp;import com.geohunt.backend.util.Location;
+&nbsp;import jakarta.transaction.Transactional;
+&nbsp;import org.springframework.beans.factory.annotation.Autowired;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;
+&nbsp;import java.net.URI;
+&nbsp;import java.net.http.HttpClient;
+&nbsp;import java.net.http.HttpRequest;
+&nbsp;import java.net.http.HttpResponse;
+&nbsp;import java.util.*;
+&nbsp;
+&nbsp;
+&nbsp;@Service
+<b class="fc">&nbsp;public class PowerupService {</b>
+&nbsp;    @Autowired
+&nbsp;    private AccountRepository accountRepository;
+&nbsp;    @Autowired
+&nbsp;    private PowerupRepository repository;
+&nbsp;    @Autowired
+&nbsp;    private GeohuntService geohuntService;
+&nbsp;    @Autowired
+&nbsp;    private ChallengesRepository challengesRepository;
+&nbsp;    @Autowired
+&nbsp;    private AccountService accountService;
+&nbsp;
+&nbsp;    public ResponseEntity add(Powerup powerup) {
+<b class="fc">&nbsp;        if(repository.findByName(powerup.getName()).isPresent()){</b>
+<b class="fc">&nbsp;            return ResponseEntity.status(HttpStatus.CONFLICT).build();</b>
+&nbsp;        }
+<b class="fc">&nbsp;        repository.save(powerup);</b>
+<b class="fc">&nbsp;        return ResponseEntity.status(HttpStatus.CREATED).body(powerup.getId());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public ResponseEntity delete(long id) {
+<b class="fc">&nbsp;        if(repository.findById(id).isPresent()){</b>
+<b class="fc">&nbsp;            repository.deleteById(id);</b>
+<b class="fc">&nbsp;            return ResponseEntity.status(HttpStatus.OK).build();</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public ResponseEntity get(long id) {
+<b class="fc">&nbsp;        Optional&lt;Powerup&gt; powerup = repository.findById(id);</b>
+<b class="pc">&nbsp;        if(powerup.isPresent()){</b>
+<b class="fc">&nbsp;            return ResponseEntity.status(HttpStatus.OK).body(powerup.get());</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public ResponseEntity get(String name) {
+<b class="fc">&nbsp;        Optional&lt;Powerup&gt; powerup = repository.findByName(name);</b>
+<b class="pc">&nbsp;        if(powerup.isPresent()){</b>
+<b class="fc">&nbsp;            return ResponseEntity.status(HttpStatus.OK).body(powerup.get());</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public ResponseEntity generate(long chalid, Location loc, long powerid){
+<b class="nc">&nbsp;        Optional&lt;Powerup&gt; p = repository.findById(powerid);</b>
+<b class="nc">&nbsp;        if(p.isEmpty()){</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(&quot;Powerup not found.&quot;);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return getCoords(chalid, loc, p.get());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public ResponseEntity generate(long chalid, Location loc) {
+<b class="fc">&nbsp;        Powerup pUp = repository.getRandomPowerupPortable();</b>
+<b class="fc">&nbsp;        return getCoords(chalid, loc, pUp);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public ResponseEntity getCoords(long chalid, Location loc, Powerup pUp) {
+<b class="fc">&nbsp;        Optional&lt;Challenges&gt; c = challengesRepository.findById(chalid);</b>
+&nbsp;
+<b class="pc">&nbsp;        if(c.isEmpty()){</b>
+<b class="fc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();</b>
+&nbsp;        }
+<b class="nc">&nbsp;        Challenges chal = c.get();</b>
+&nbsp;
+<b class="nc">&nbsp;        Random random = new Random();</b>
+&nbsp;
+<b class="nc">&nbsp;        int min = 30;</b>
+<b class="nc">&nbsp;        int max = 70;</b>
+&nbsp;
+<b class="nc">&nbsp;        int randomNumber = random.nextInt(max - min + 1) + min;</b>
+&nbsp;
+<b class="nc">&nbsp;        double t = (randomNumber / 100.0);</b>
+&nbsp;
+<b class="nc">&nbsp;        double newLat = loc.getLatitude() + t * (chal.getLatitude() - loc.getLatitude());</b>
+<b class="nc">&nbsp;        double newLon = loc.getLongitude() + t * (chal.getLongitude() - loc.getLongitude());</b>
+&nbsp;
+<b class="nc">&nbsp;        double dx = chal.getLongitude() - loc.getLongitude();</b>
+<b class="nc">&nbsp;        double dy = chal.getLatitude() - loc.getLatitude();</b>
+&nbsp;
+<b class="nc">&nbsp;        double len = Math.sqrt(dy * dy + dx * dx);</b>
+&nbsp;
+<b class="nc">&nbsp;        double px = -dy / len;</b>
+<b class="nc">&nbsp;        double py = dx / len;</b>
+&nbsp;
+<b class="nc">&nbsp;        randomNumber = random.nextInt(max - min + 1) + min;</b>
+&nbsp;
+<b class="nc">&nbsp;        double latBaseRadians = Math.toRadians(newLat);</b>
+&nbsp;
+<b class="nc">&nbsp;        double MetersToLat = randomNumber / 111000;</b>
+<b class="nc">&nbsp;        double MetersToLon = randomNumber / (111000 * Math.cos(latBaseRadians));</b>
+&nbsp;
+<b class="nc">&nbsp;        double sign = random.nextBoolean() ? 1 : -1;</b>
+&nbsp;
+<b class="nc">&nbsp;        double lat_powerup = newLat + sign * py * MetersToLat;</b>
+<b class="nc">&nbsp;        double lon_powerup = newLon + sign * px * MetersToLon;</b>
+&nbsp;
+<b class="nc">&nbsp;        RandomGenerationDTO rgd = new RandomGenerationDTO();</b>
+<b class="nc">&nbsp;        rgd.setLon(lon_powerup);</b>
+<b class="nc">&nbsp;        rgd.setLat(lat_powerup);</b>
+<b class="nc">&nbsp;        rgd.setPowerup(pUp);</b>
+&nbsp;
+<b class="nc">&nbsp;        return ResponseEntity.status(HttpStatus.CREATED).body(rgd);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public ResponseEntity deduce(long powerupId, long uid, long chalid, Location loc, Location pup) {
+<b class="fc">&nbsp;        Optional&lt;Powerup&gt; powerup = repository.findById(powerupId);</b>
+<b class="pc">&nbsp;        if(powerup.isEmpty()){</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(&quot;Powerup not found&quot;);</b>
+&nbsp;        }
+&nbsp;        Account acc;
+&nbsp;        try{
+<b class="fc">&nbsp;            acc = accountService.getAccountById(uid);</b>
+&nbsp;        } catch (IllegalArgumentException e){
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(&quot;Account not found&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        Powerup p = powerup.get();</b>
+<b class="fc">&nbsp;        PowerupEffectDTO ped = new PowerupEffectDTO();</b>
+<b class="fc">&nbsp;        ped.setPowerup(p);</b>
+<b class="fc">&nbsp;        ped.setAccount(acc);</b>
+<b class="fc">&nbsp;        ped.setEffects(p.getType());</b>
+<b class="pc">&nbsp;        switch(p.getType()){</b>
+&nbsp;            case MINUS_MINUTES:
+<b class="fc">&nbsp;                ped.setLocationName(&quot;NULL&quot;);</b>
+<b class="fc">&nbsp;                ped.setTimeDecreaseInSeconds(deduceTimeDeduction(chalid, loc, pup));</b>
+&nbsp;                break;
+&nbsp;
+&nbsp;            case MINUS_MORE_MINUTES:
+<b class="nc">&nbsp;                ped.setLocationName(&quot;NULL&quot;);</b>
+<b class="nc">&nbsp;                ped.setTimeDecreaseInSeconds(deduceTimeDeduction(chalid, loc, pup) + 900);</b>
+&nbsp;                break;
+&nbsp;            case LOCATION_HINT_GENERAL:
+<b class="nc">&nbsp;                ped.setTimeDecreaseInSeconds(0);</b>
+<b class="nc">&nbsp;                ped.setLocationName(generalClue(chalid));</b>
+&nbsp;                break;
+&nbsp;            case LOCATION_HINT_SPECIFIC:
+<b class="fc">&nbsp;                ped.setTimeDecreaseInSeconds(0);</b>
+<b class="fc">&nbsp;                ped.setLocationName(specificClue(chalid));</b>
+&nbsp;                break;
+&nbsp;            case OTHER:
+<b class="nc">&nbsp;                ped.setLocationName(p.getAffect());</b>
+<b class="nc">&nbsp;                ped.setTimeDecreaseInSeconds(0);</b>
+&nbsp;                break;
+&nbsp;        }
+<b class="fc">&nbsp;        return ResponseEntity.status(HttpStatus.OK).body(ped);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int deduceTimeDeduction(long chalid, Location loc, Location pup) {
+<b class="fc">&nbsp;        Optional&lt;Challenges&gt; c = challengesRepository.findById(chalid);</b>
+<b class="fc">&nbsp;        if(c.isEmpty()){</b>
+<b class="fc">&nbsp;            return -1;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        Location endLoc = new Location(c.get().getLatitude(), c.get().getLongitude());</b>
+&nbsp;
+<b class="fc">&nbsp;        int baseTime = 20;</b>
+&nbsp;
+<b class="fc">&nbsp;        double totalDistance = loc.distanceKM(endLoc) * 1000;</b>
+&nbsp;
+<b class="fc">&nbsp;        double offset = perpendicularDistance(loc, endLoc, pup);</b>
+&nbsp;
+<b class="fc">&nbsp;        double timeDeduction = baseTime + (totalDistance * 0.02) + (offset*0.01);</b>
+&nbsp;
+<b class="fc">&nbsp;        return (int) Math.round(timeDeduction);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**Formula from: https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line **/
+&nbsp;
+&nbsp;    public double perpendicularDistance(Location loc, Location end, Location pup) {
+&nbsp;
+<b class="fc">&nbsp;        double x1 = loc.lonToMeters();</b>
+<b class="fc">&nbsp;        double y1 = loc.latToMeters();</b>
+&nbsp;
+<b class="fc">&nbsp;        double x2 = end.lonToMeters();</b>
+<b class="fc">&nbsp;        double y2 = end.latToMeters();</b>
+&nbsp;
+<b class="fc">&nbsp;        double xp = pup.lonToMeters();</b>
+<b class="fc">&nbsp;        double yp = pup.latToMeters();</b>
+&nbsp;
+<b class="fc">&nbsp;        double A = xp - x1;</b>
+<b class="fc">&nbsp;        double B = yp - y1;</b>
+<b class="fc">&nbsp;        double C = x2 - x1;</b>
+<b class="fc">&nbsp;        double D = y2 - y1;</b>
+&nbsp;
+<b class="fc">&nbsp;        double dot = A * C + B * D;</b>
+<b class="fc">&nbsp;        double lenSq = C * C + D * D;</b>
+<b class="fc">&nbsp;        double param = dot / lenSq;</b>
+&nbsp;
+&nbsp;        double xx, yy;
+&nbsp;
+<b class="pc">&nbsp;        if (param &lt; 0) {</b>
+<b class="nc">&nbsp;            xx = x1;</b>
+<b class="nc">&nbsp;            yy = y1;</b>
+<b class="pc">&nbsp;        } else if (param &gt; 1) {</b>
+<b class="nc">&nbsp;            xx = x2;</b>
+<b class="nc">&nbsp;            yy = y2;</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            xx = x1 + param * C;</b>
+<b class="fc">&nbsp;            yy = y1 + param * D;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        double dx = xp - xx;</b>
+<b class="fc">&nbsp;        double dy = yp - yy;</b>
+&nbsp;
+<b class="fc">&nbsp;        return Math.sqrt(dx * dx + dy * dy);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public String specificClue(long chalid) {
+<b class="fc">&nbsp;        Optional&lt;Challenges&gt; c = challengesRepository.findById(chalid);</b>
+<b class="fc">&nbsp;        if(c.isEmpty()){</b>
+<b class="fc">&nbsp;            return &quot;Error - No challenge found&quot;;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        JsonNode results = APIInteractions(c);</b>
+&nbsp;
+<b class="pc">&nbsp;        if (results == null || !results.isArray() || results.isEmpty()) {</b>
+<b class="nc">&nbsp;            return &quot;Error - no results returned from Google API&quot;;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        JsonNode result = results.get(0);</b>
+&nbsp;
+<b class="pc">&nbsp;        if (result == null) {</b>
+<b class="nc">&nbsp;            return &quot;Error - empty result&quot;;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        JsonNode components = result.get(&quot;address_components&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        String streetName = getAddressComponent(components, &quot;route&quot;);</b>
+&nbsp;
+<b class="pc">&nbsp;        if (streetName != null) return streetName;</b>
+&nbsp;
+<b class="fc">&nbsp;        String neighborhood = getAddressComponent(components, &quot;sublocality&quot;);</b>
+&nbsp;
+<b class="pc">&nbsp;        if (neighborhood != null) return neighborhood;</b>
+&nbsp;
+<b class="fc">&nbsp;        String zip = getAddressComponent(components, &quot;postal_code&quot;);</b>
+&nbsp;
+<b class="pc">&nbsp;        if (zip != null) return zip;</b>
+&nbsp;
+<b class="nc">&nbsp;        return &quot;No street name found&quot;;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    public String generalClue(long chalid){
+<b class="fc">&nbsp;        Optional&lt;Challenges&gt; c = challengesRepository.findById(chalid);</b>
+<b class="pc">&nbsp;        if(c.isEmpty()){</b>
+<b class="fc">&nbsp;            return &quot;Error - No challenge found&quot;;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        JsonNode results = APIInteractions(c);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (results == null || !results.isArray() || results.isEmpty()) {</b>
+<b class="nc">&nbsp;            return &quot;Error - no results returned from Google API&quot;;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        JsonNode result = results.get(0);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (result == null) {</b>
+<b class="nc">&nbsp;            return &quot;Error - empty result&quot;;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        JsonNode components = result.get(&quot;address_components&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        String locality = getAddressComponent(components, &quot;long_name&quot;);</b>
+<b class="nc">&nbsp;        if ( locality != null) return locality;</b>
+<b class="nc">&nbsp;        String county = getAddressComponent(components, &quot;administrative_area_level_2&quot;);</b>
+<b class="nc">&nbsp;        if (county != null) return county;</b>
+<b class="nc">&nbsp;        String state = getAddressComponent(components, &quot;administrative_area_level_1&quot;);</b>
+<b class="nc">&nbsp;        if (state != null) return state;</b>
+&nbsp;
+<b class="nc">&nbsp;        return &quot;Error - No locality county or state found.&quot;;</b>
+&nbsp;
+&nbsp;    }
+&nbsp;
+&nbsp;    public JsonNode APIInteractions(Optional&lt;Challenges&gt; c) {
+<b class="fc">&nbsp;        ObjectMapper mapper = new ObjectMapper();</b>
+<b class="fc">&nbsp;        HttpClient client = HttpClient.newHttpClient();</b>
+&nbsp;
+&nbsp;        try{
+<b class="fc">&nbsp;            String apiKey = &quot;AIzaSyA4cGMdtzfM4Ub-1agmFLqKP5WLWLLwLLg&quot;;</b>
+&nbsp;
+<b class="fc">&nbsp;            String url = String.format(&quot;https://maps.googleapis.com/maps/api/geocode/json?latlng=%,.2f,%,.2f&amp;key=%s&quot;,</b>
+<b class="fc">&nbsp;                    c.get().getLatitude(), c.get().getLongitude(), apiKey);</b>
+&nbsp;
+<b class="fc">&nbsp;            HttpRequest request = HttpRequest.newBuilder()</b>
+<b class="fc">&nbsp;                    .uri(URI.create(url))</b>
+<b class="fc">&nbsp;                    .GET()</b>
+<b class="fc">&nbsp;                    .build();</b>
+&nbsp;
+<b class="fc">&nbsp;            HttpResponse&lt;String&gt; response = client.send(request, HttpResponse.BodyHandlers.ofString());</b>
+<b class="fc">&nbsp;            JsonNode root = mapper.readTree(response.body());</b>
+<b class="fc">&nbsp;            JsonNode results = root.get(&quot;results&quot;);</b>
+<b class="fc">&nbsp;            return results;</b>
+&nbsp;        } catch (Exception e){
+<b class="nc">&nbsp;            e.printStackTrace();</b>
+<b class="nc">&nbsp;            return null;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public String getAddressComponent(JsonNode components, String typeToFind) {
+<b class="pc">&nbsp;        if (components == null || !components.isArray()) {</b>
+<b class="nc">&nbsp;            return null;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        for (JsonNode comp : components) {</b>
+<b class="fc">&nbsp;            JsonNode types = comp.get(&quot;types&quot;);</b>
+<b class="pc">&nbsp;            if (types == null) continue;</b>
+&nbsp;
+<b class="fc">&nbsp;            for (JsonNode t : types) {</b>
+<b class="fc">&nbsp;                if (t.asText().equals(typeToFind)) {</b>
+<b class="fc">&nbsp;                    return comp.get(&quot;long_name&quot;).asText();  // or &quot;short_name&quot;</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Transactional
+&nbsp;    public ResponseEntity addToAcc(long powerupId, long uid) {
+&nbsp;        Account acc;
+&nbsp;        try{
+<b class="fc">&nbsp;            acc = accountService.getAccountById(uid);</b>
+&nbsp;        } catch(IllegalArgumentException e){
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(&quot;Account not found&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        Optional&lt;Powerup&gt; powerup = repository.findById(powerupId);</b>
+<b class="pc">&nbsp;        if(powerup.isEmpty()){</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(&quot;Powerup not found&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        acc.getPowerups().add(powerup.get());</b>
+<b class="fc">&nbsp;        powerup.get().getAccounts().add(acc);</b>
+&nbsp;
+<b class="fc">&nbsp;        accountRepository.save(acc);</b>
+<b class="fc">&nbsp;        return ResponseEntity.status(HttpStatus.CREATED).body(&quot;Successfully added power up to user&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Transactional
+&nbsp;    public ResponseEntity getPowerupsForAccount(long uid) {
+&nbsp;        Set&lt;Powerup&gt; p;
+&nbsp;        try{
+<b class="nc">&nbsp;            p = accountRepository.findById(uid)</b>
+<b class="nc">&nbsp;                    .orElseThrow()</b>
+<b class="nc">&nbsp;                    .getPowerups();</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(p);</b>
+&nbsp;        } catch(NoSuchElementException e){
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(&quot;Account Not Found or No Powerups.&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;    }
+&nbsp;
+&nbsp;    @Transactional
+&nbsp;    public ResponseEntity removePowerupForAccount(long uid, long powerupId) {
+&nbsp;        Account acc;
+&nbsp;        try{
+<b class="nc">&nbsp;            acc = accountService.getAccountById(uid);</b>
+&nbsp;        } catch (IllegalArgumentException e){
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(&quot;Account not found&quot;);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        Optional&lt;Powerup&gt; powerup = repository.findById(powerupId);</b>
+<b class="nc">&nbsp;        if(powerup.isEmpty()){</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(&quot;Powerup not found&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        Powerup p = powerup.get();</b>
+&nbsp;
+<b class="nc">&nbsp;        boolean removedFromUser = acc.getPowerups().remove(p);</b>
+<b class="nc">&nbsp;        boolean removedFromPowerup = p.getAccounts().remove(acc);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (!removedFromUser) {</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND)</b>
+<b class="nc">&nbsp;                    .body(&quot;User does not own this powerup&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        accountRepository.save(acc);</b>
+&nbsp;
+<b class="nc">&nbsp;        return ResponseEntity.status(HttpStatus.OK)</b>
+<b class="nc">&nbsp;                .body(&quot;Successfully removed powerup from user&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Set&lt;Account&gt; getPowerupOwners(long pid){
+<b class="fc">&nbsp;        Optional&lt;Powerup&gt; powerup = repository.findById(pid);</b>
+<b class="pc">&nbsp;        if(powerup.isEmpty()){</b>
+<b class="nc">&nbsp;            return new HashSet&lt;&gt;();</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        Powerup p = powerup.get();</b>
+<b class="fc">&nbsp;        return p.getAccounts();</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 20:59</div>
+</div>
+</body>
+</html>

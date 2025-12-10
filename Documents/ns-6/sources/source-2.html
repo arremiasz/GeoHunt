@@ -5,7 +5,7 @@
 <html id="htmlId">
 <head>
   <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
-  <title>Coverage Report > FriendKey</title>
+  <title>Coverage Report > Notifications</title>
   <style type="text/css">
     @import "../../css/coverage.css";
     @import "../../css/idea.min.css";
@@ -19,10 +19,10 @@
 <div class="breadCrumbs">
 Current scope:     <a href="../../index.html">all classes</a>
     <span class="separator">|</span>
-    <a href="../index.html">com.geohunt.backend.database</a>
+    <a href="../index.html">com.geohunt.backend.WebSockets</a>
 </div>
 
-<h1>Coverage Summary for Class: FriendKey (com.geohunt.backend.database)</h1>
+<h1>Coverage Summary for Class: Notifications (com.geohunt.backend.WebSockets)</h1>
 
 <table class="coverageStats">
 <tr>
@@ -45,13 +45,21 @@ Current scope:     <a href="../../index.html">all classes</a>
 </th>
 </tr>
 <tr>
-  <td class="name">FriendKey</td>
+  <td class="name">Notifications</td>
 <td class="coverageStat">
   <span class="percent">
-    0%
+    100%
   </span>
   <span class="absValue">
-    (0/1)
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    25%
+  </span>
+  <span class="absValue">
+    (2/8)
   </span>
 </td>
 <td class="coverageStat">
@@ -59,23 +67,15 @@ Current scope:     <a href="../../index.html">all classes</a>
     0%
   </span>
   <span class="absValue">
-    (0/3)
+    (0/92)
   </span>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    0%
+    4.7%
   </span>
   <span class="absValue">
-    (0/6)
-  </span>
-</td>
-<td class="coverageStat">
-  <span class="percent">
-    0%
-  </span>
-  <span class="absValue">
-    (0/7)
+    (7/150)
   </span>
 </td>
 </tr>
@@ -87,38 +87,334 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 
 <pre>
-<code class="sourceCode" id="sourceCode">&nbsp;package com.geohunt.backend.database;
+<code class="sourceCode" id="sourceCode">&nbsp;package com.geohunt.backend.WebSockets;
 &nbsp;
-&nbsp;import jakarta.persistence.Column;
-&nbsp;import jakarta.persistence.Embeddable;
-&nbsp;import lombok.Getter;
+&nbsp;import com.geohunt.backend.Config.SpringContext;
+&nbsp;import com.geohunt.backend.Services.AccountService;
+&nbsp;import com.geohunt.backend.Services.NotificationsService;
+&nbsp;import jakarta.annotation.PostConstruct;
+&nbsp;import jakarta.websocket.OnClose;
+&nbsp;import jakarta.websocket.OnMessage;
+&nbsp;import jakarta.websocket.OnOpen;
+&nbsp;import jakarta.websocket.Session;
+&nbsp;import jakarta.websocket.server.PathParam;
+&nbsp;import jakarta.websocket.server.ServerEndpoint;
 &nbsp;import lombok.Setter;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;import org.springframework.beans.factory.annotation.Autowired;
+&nbsp;import org.springframework.stereotype.Component;
 &nbsp;
-&nbsp;import java.io.Serializable;
-&nbsp;import java.util.Objects;
+&nbsp;import java.io.IOException;
+&nbsp;import java.util.Arrays;
+&nbsp;import java.util.HashSet;
+&nbsp;import java.util.Hashtable;
+&nbsp;import java.util.Map;
 &nbsp;
-&nbsp;@Getter
+&nbsp;
+&nbsp;@ServerEndpoint(&quot;/notify/{name}&quot;)
+&nbsp;@Component
 &nbsp;@Setter
-&nbsp;@Embeddable
-<b class="nc">&nbsp;class FriendKey implements Serializable {</b>
-&nbsp;    @Column(name=&quot;primary_id&quot;)
-&nbsp;    private long primaryId;
+<b class="fc">&nbsp;public class Notifications {</b>
+<b class="fc">&nbsp;    private static Map&lt;Session, String&gt; sessionUsernameMap = new Hashtable&lt;&gt;();</b>
+<b class="fc">&nbsp;    private static Map&lt;String, Session&gt; usernameSessionMap = new Hashtable&lt;&gt;();</b>
+<b class="fc">&nbsp;    private static Map&lt;String, java.util.Set&lt;String&gt;&gt; groupMembersMap = new Hashtable&lt;&gt;();</b>
+<b class="fc">&nbsp;    private final Logger logger = LoggerFactory.getLogger(Notifications.class);</b>
+&nbsp;    private String currentGroup;
 &nbsp;
-&nbsp;    @Column(name=&quot;target_id&quot;)
-&nbsp;    private long targetId;
+<b class="fc">&nbsp;    private AccountService accountService = SpringContext.getBean(AccountService.class);</b>
+<b class="fc">&nbsp;    private NotificationsService notificationsService = SpringContext.getBean(NotificationsService.class);</b>
 &nbsp;
-&nbsp;    @Override
-&nbsp;    public boolean equals(Object o) {
-<b class="nc">&nbsp;        if (this == o) return true;</b>
-<b class="nc">&nbsp;        if (!(o instanceof FriendKey)) return false;</b>
-<b class="nc">&nbsp;        FriendKey key = (FriendKey) o;</b>
-<b class="nc">&nbsp;        return Objects.equals(primaryId, key.primaryId) &amp;&amp;</b>
-<b class="nc">&nbsp;                Objects.equals(targetId, key.targetId);</b>
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;    @OnOpen
+&nbsp;    public void onOpen(Session session, @PathParam(&quot;name&quot;) String name) throws IOException {
+<b class="nc">&nbsp;        logger.info(&quot;[onOpen]: {}&quot;, name);</b>
+&nbsp;        try{
+<b class="nc">&nbsp;            if (usernameSessionMap.containsKey(name) || accountService.getAccountByUsername(name) == null) {</b>
+<b class="nc">&nbsp;                session.getBasicRemote().sendText(&quot;Check your username.&quot;);</b>
+&nbsp;                session.close();
+&nbsp;            } else {
+&nbsp;                // map current session with username
+<b class="nc">&nbsp;                sessionUsernameMap.put(session, name);</b>
+&nbsp;
+&nbsp;                // map current username with session
+<b class="nc">&nbsp;                usernameSessionMap.put(name, session);</b>
+&nbsp;
+&nbsp;            }
+&nbsp;        } catch(IllegalArgumentException e){
+<b class="nc">&nbsp;            session.getBasicRemote().sendText(&quot;Check your username.&quot;);</b>
+&nbsp;            session.close();
+&nbsp;        }
+&nbsp;
+&nbsp;
 &nbsp;    }
 &nbsp;
-&nbsp;    @Override
-&nbsp;    public int hashCode() {
-<b class="nc">&nbsp;        return Objects.hash(primaryId, targetId);</b>
+&nbsp;    @OnMessage
+&nbsp;    public void onMessage(Session session, String message) throws IOException {
+&nbsp;
+&nbsp;        // get the username by session
+<b class="nc">&nbsp;        String username = sessionUsernameMap.get(session);</b>
+&nbsp;
+&nbsp;        // server side log
+<b class="nc">&nbsp;        logger.info(&quot;[onMessage] &quot; + username + &quot;: &quot; + message);</b>
+&nbsp;
+&nbsp;        //Friend Request: FriendReq &lt;username&gt;
+&nbsp;        //Friend Request Accepted: FriendAcc &lt;username&gt;
+&nbsp;        //Multiplayer Invite: Invite &lt;username&gt; &lt;groupId&gt; //GroupId &quot;N&quot; if none currently. Will return a groupId.
+&nbsp;        //Multiplayer Invite Accept: AcceptInvite &lt;groupId&gt;
+&nbsp;        //Multiplayer leave group: Leave &lt;groupId&gt;
+&nbsp;        //Multplayer Challenge Complete: MultComplete &lt;groupId&gt;
+&nbsp;        //Solo challenge complete: ChallComplete
+&nbsp;        //Custom Group Message: CustomGroupMsg &lt;groupId&gt; msg
+&nbsp;        //custom DM: CustomDM &lt;username&gt; msg
+&nbsp;        //Create Group (For adding custom ID): CreateGroup &lt;groupId&gt;
+&nbsp;        //Add User to group: ForceAdd &lt;groupId&gt; &lt;CommaSeparatedListOfUsernames&gt;
+&nbsp;
+<b class="nc">&nbsp;        if (message.startsWith(&quot;FriendReq&quot;)) {</b>
+<b class="nc">&nbsp;            String[] splitMsg = message.split(&quot; &quot;);</b>
+<b class="nc">&nbsp;            if (splitMsg.length &lt; 2) { argError(username); return; }</b>
+&nbsp;
+<b class="nc">&nbsp;            String targetUser = splitMsg[1];</b>
+<b class="nc">&nbsp;            String msg = &quot;You have been sent a friend request by: &quot; + username;</b>
+<b class="nc">&nbsp;            if(targetUser.equals(username)) {</b>
+<b class="nc">&nbsp;                sendMessageToParticularUser(username, &quot;You cannot send a friend request to yourself.&quot;);</b>
+&nbsp;            }
+&nbsp;            try{
+<b class="nc">&nbsp;                sendMessageToParticularUser(targetUser, msg);</b>
+&nbsp;            } catch (IllegalArgumentException e){
+<b class="nc">&nbsp;                sendMessageToParticularUser(username, &quot;Target not found.&quot; );</b>
+&nbsp;            }
+&nbsp;
+&nbsp;
+<b class="nc">&nbsp;        } else if (message.startsWith(&quot;FriendAcc&quot;)) {</b>
+<b class="nc">&nbsp;            String[] splitMsg = message.split(&quot; &quot;);</b>
+<b class="nc">&nbsp;            if (splitMsg.length &lt; 2) { argError(username); return; }</b>
+&nbsp;
+<b class="nc">&nbsp;            String targetUser = splitMsg[1];</b>
+<b class="nc">&nbsp;            String msg = username + &quot; has accepted your friend request!&quot;;</b>
+<b class="nc">&nbsp;            sendMessageToParticularUser(targetUser, msg);</b>
+&nbsp;
+<b class="nc">&nbsp;        } else if (message.startsWith(&quot;Invite&quot;)) {</b>
+<b class="nc">&nbsp;            String[] splitMsg = message.split(&quot; &quot;);</b>
+<b class="nc">&nbsp;            if (splitMsg.length &lt; 3) { argError(username); return; }</b>
+&nbsp;
+<b class="nc">&nbsp;            String targetUser = splitMsg[1];</b>
+<b class="nc">&nbsp;            String groupId = splitMsg[2];</b>
+&nbsp;
+<b class="nc">&nbsp;            if (groupId.equals(&quot;N&quot;)) {</b>
+<b class="nc">&nbsp;                String newId = username + &quot;sGrp&quot;;</b>
+<b class="nc">&nbsp;                groupMembersMap.putIfAbsent(newId, new HashSet&lt;&gt;());</b>
+<b class="nc">&nbsp;                groupMembersMap.get(newId).add(username);</b>
+<b class="nc">&nbsp;                sendMessageToParticularUser(username, &quot;Your new groupId is: &quot; + newId);</b>
+<b class="nc">&nbsp;                currentGroup = newId;</b>
+<b class="nc">&nbsp;                groupId = newId;</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            String msg = username + &quot; invited you to join their group (&quot; + groupId + &quot;)&quot;;</b>
+<b class="nc">&nbsp;            sendMessageToParticularUser(targetUser, msg);</b>
+&nbsp;
+<b class="nc">&nbsp;        } else if (message.startsWith(&quot;AcceptInvite&quot;)) {</b>
+<b class="nc">&nbsp;            String[] splitMsg = message.split(&quot; &quot;);</b>
+<b class="nc">&nbsp;            if (splitMsg.length &lt; 2) { argError(username); return; }</b>
+&nbsp;
+<b class="nc">&nbsp;            String groupId = splitMsg[1];</b>
+<b class="nc">&nbsp;            if (!groupMembersMap.containsKey(groupId)) {</b>
+<b class="nc">&nbsp;                sendMessageToParticularUser(username, &quot;Group does not exist.&quot;);</b>
+&nbsp;                return;
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            boolean alreadyIn = !groupMembersMap.get(groupId).add(username);</b>
+<b class="nc">&nbsp;            if (alreadyIn) {</b>
+<b class="nc">&nbsp;                sendMessageToParticularUser(username, &quot;You are already in this group.&quot;);</b>
+&nbsp;                return;
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            currentGroup = groupId;</b>
+<b class="nc">&nbsp;            sendMessageToParticularUser(username, &quot;You have been added to the group!&quot;);</b>
+<b class="nc">&nbsp;            broadcastInGroup(username + &quot; has joined your group!&quot;, groupId, username);</b>
+&nbsp;
+<b class="nc">&nbsp;        } else if (message.startsWith(&quot;Leave&quot;)) {</b>
+<b class="nc">&nbsp;            String[] splitMsg = message.split(&quot; &quot;);</b>
+<b class="nc">&nbsp;            if (splitMsg.length &lt; 2) { argError(username); return; }</b>
+&nbsp;
+<b class="nc">&nbsp;            String groupId = splitMsg[1];</b>
+<b class="nc">&nbsp;            if (!groupMembersMap.containsKey(groupId)) {</b>
+<b class="nc">&nbsp;                sendMessageToParticularUser(username, &quot;Group does not exist.&quot;);</b>
+&nbsp;                return;
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            boolean didRemove = groupMembersMap.get(groupId).remove(username);</b>
+<b class="nc">&nbsp;            if (groupMembersMap.get(groupId).isEmpty()) { groupMembersMap.remove(groupId); }</b>
+&nbsp;
+<b class="nc">&nbsp;            if (didRemove) {</b>
+<b class="nc">&nbsp;                broadcastInGroup(username + &quot; left the group!&quot;, groupId, username);</b>
+<b class="nc">&nbsp;                sendMessageToParticularUser(username, &quot;You have left the group!&quot;);</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                sendMessageToParticularUser(username, &quot;You are not in that group.&quot;);</b>
+&nbsp;
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;        } else if (message.startsWith(&quot;MultComplete&quot;)) {</b>
+<b class="nc">&nbsp;            String[] splitMsg = message.split(&quot; &quot;);</b>
+<b class="nc">&nbsp;            if (splitMsg.length &lt; 2) { argError(username); return; }</b>
+&nbsp;
+<b class="nc">&nbsp;            String groupId = splitMsg[1];</b>
+<b class="nc">&nbsp;            if (!groupMembersMap.containsKey(groupId)) {</b>
+<b class="nc">&nbsp;                sendMessageToParticularUser(username, &quot;Group does not exist.&quot;);</b>
+&nbsp;                return;
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            String msg = username + &quot; has finished the challenge!&quot;;</b>
+<b class="nc">&nbsp;            broadcastInGroup(msg, groupId, username);</b>
+<b class="nc">&nbsp;            sendMessageToParticularUser(username, &quot;You have finished the challenge!&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        } else if (message.startsWith(&quot;ChallComplete&quot;)) {</b>
+&nbsp;
+<b class="nc">&nbsp;            sendMessageToParticularUser(username, &quot;You have completed the challenge!&quot;);</b>
+&nbsp;
+&nbsp;
+<b class="nc">&nbsp;        } else if (message.startsWith(&quot;CustomDM&quot;)) {</b>
+<b class="nc">&nbsp;            String[] splitMsg = message.split(&quot; &quot;);</b>
+<b class="nc">&nbsp;            if (splitMsg.length &lt; 3) { argError(username); return; }</b>
+&nbsp;
+<b class="nc">&nbsp;            String targetUser = splitMsg[1];</b>
+<b class="nc">&nbsp;            String msg = String.join(&quot; &quot;, Arrays.copyOfRange(splitMsg, 2, splitMsg.length));</b>
+<b class="nc">&nbsp;            String donemsg = &quot;[&quot; + username + &quot;] &quot; + msg;</b>
+<b class="nc">&nbsp;            sendMessageToParticularUser(targetUser, donemsg);</b>
+&nbsp;
+<b class="nc">&nbsp;        } else if (message.startsWith(&quot;CustomGroupMsg&quot;)) {</b>
+<b class="nc">&nbsp;            String[] splitMsg = message.split(&quot; &quot;);</b>
+<b class="nc">&nbsp;            if (splitMsg.length &lt; 3) { argError(username); return; }</b>
+&nbsp;
+<b class="nc">&nbsp;            String groupId = splitMsg[1];</b>
+<b class="nc">&nbsp;            if (!groupMembersMap.containsKey(groupId)) {</b>
+<b class="nc">&nbsp;                sendMessageToParticularUser(username, &quot;Group does not exist.&quot;);</b>
+&nbsp;                return;
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            String msg = String.join(&quot; &quot;, Arrays.copyOfRange(splitMsg, 2, splitMsg.length));</b>
+<b class="nc">&nbsp;            broadcastInGroup(msg, groupId, username);</b>
+&nbsp;
+<b class="nc">&nbsp;        } else if (message.startsWith(&quot;CreateGroup&quot;)) {</b>
+<b class="nc">&nbsp;            String[] splitMsg = message.split(&quot; &quot;);</b>
+<b class="nc">&nbsp;            if (splitMsg.length &lt; 2) { argError(username); return; }</b>
+&nbsp;
+<b class="nc">&nbsp;            String groupId = splitMsg[1];</b>
+<b class="nc">&nbsp;            if (groupMembersMap.containsKey(groupId)) {</b>
+<b class="nc">&nbsp;                sendMessageToParticularUser(username, &quot;groupId already exists&quot;);</b>
+&nbsp;                return;
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            groupMembersMap.putIfAbsent(groupId, new HashSet&lt;&gt;());</b>
+<b class="nc">&nbsp;            groupMembersMap.get(groupId).add(username);</b>
+<b class="nc">&nbsp;            sendMessageToParticularUser(username, &quot;You have been added to the group with groupId: &quot; + groupId);</b>
+<b class="nc">&nbsp;            currentGroup = groupId;</b>
+&nbsp;
+<b class="nc">&nbsp;        } else if (message.startsWith(&quot;ForceAdd&quot;)) {</b>
+<b class="nc">&nbsp;            String[] splitMsg = message.split(&quot; &quot;);</b>
+<b class="nc">&nbsp;            if (splitMsg.length &lt; 3) { argError(username); return; }</b>
+&nbsp;
+<b class="nc">&nbsp;            String groupId = splitMsg[1];</b>
+<b class="nc">&nbsp;            String userGeneral = splitMsg[2];</b>
+&nbsp;
+&nbsp;
+<b class="nc">&nbsp;            groupMembersMap.putIfAbsent(groupId, new HashSet&lt;&gt;());</b>
+&nbsp;
+<b class="nc">&nbsp;            String[] usersToAdd = userGeneral.split(&quot;,&quot;);</b>
+<b class="nc">&nbsp;            StringBuilder added = new StringBuilder();</b>
+<b class="nc">&nbsp;            for (String u : usersToAdd) {</b>
+<b class="nc">&nbsp;                String trimmed = u.trim();</b>
+<b class="nc">&nbsp;                if (trimmed.isEmpty()) continue;</b>
+<b class="nc">&nbsp;                boolean addedNow = groupMembersMap.get(groupId).add(trimmed);</b>
+<b class="nc">&nbsp;                if (addedNow) {</b>
+<b class="nc">&nbsp;                    added.append(trimmed).append(&quot;,&quot;);</b>
+<b class="nc">&nbsp;                    sendMessageToParticularUser(trimmed, &quot;You have been added to group with groupId: &quot; + groupId + &quot; by &quot; + username);</b>
+&nbsp;                }
+&nbsp;            }
+<b class="nc">&nbsp;            if (added.length() &gt; 0) {</b>
+<b class="nc">&nbsp;                added.setLength(added.length() - 1);</b>
+<b class="nc">&nbsp;                sendMessageToParticularUser(username, &quot;Added users to &quot; + groupId + &quot;: &quot; + added.toString());</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                sendMessageToParticularUser(username, &quot;No new users were added to &quot; + groupId + &quot;.&quot;);</b>
+&nbsp;            }
+&nbsp;
+&nbsp;        } else {
+<b class="nc">&nbsp;            sendMessageToParticularUser(username, &quot;Unknown command: &quot; + message);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @OnClose
+&nbsp;    public void onClose(Session session) throws IOException {
+&nbsp;
+&nbsp;        // get the username from session-username mapping
+<b class="nc">&nbsp;        String username = sessionUsernameMap.get(session);</b>
+&nbsp;
+&nbsp;        // server side log
+<b class="nc">&nbsp;        logger.info(&quot;[onClose] &quot; + username);</b>
+&nbsp;
+&nbsp;        // remove user from memory mappings
+&nbsp;        try{
+<b class="nc">&nbsp;            sessionUsernameMap.remove(session);</b>
+<b class="nc">&nbsp;            usernameSessionMap.remove(username);</b>
+&nbsp;        }catch (NullPointerException e){
+&nbsp;            ;
+&nbsp;        }
+&nbsp;
+&nbsp;
+&nbsp;        // send the message to the group
+&nbsp;
+<b class="nc">&nbsp;        if(currentGroup != null) {</b>
+<b class="nc">&nbsp;            broadcastInGroup(username + &quot; has disconnected.&quot;, currentGroup, username);</b>
+<b class="nc">&nbsp;            if (!groupMembersMap.containsKey(currentGroup)) {</b>
+<b class="nc">&nbsp;                sendMessageToParticularUser(username, &quot;Group does not exist.&quot;);</b>
+&nbsp;                return;
+&nbsp;            }
+<b class="nc">&nbsp;            groupMembersMap.get(currentGroup).remove(username);</b>
+<b class="nc">&nbsp;            if(groupMembersMap.get(currentGroup).size() == 0) {</b>
+<b class="nc">&nbsp;                groupMembersMap.remove(currentGroup);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;    private boolean broadcastInGroup(String message, String groupId, String avoid) {
+<b class="nc">&nbsp;        if (!groupMembersMap.containsKey(groupId)) return false;</b>
+&nbsp;
+<b class="nc">&nbsp;        for (String a : groupMembersMap.get(groupId)) {</b>
+<b class="nc">&nbsp;            if (!a.equals(avoid)) {</b>
+<b class="nc">&nbsp;                Session userSession = usernameSessionMap.get(a);</b>
+<b class="nc">&nbsp;                if (userSession != null) {</b>
+&nbsp;                    try {
+<b class="nc">&nbsp;                        userSession.getBasicRemote().sendText(message);</b>
+<b class="nc">&nbsp;                        notificationsService.saveNotification(accountService.getAccountByUsername(sessionUsernameMap.get(userSession)), message);</b>
+&nbsp;                    } catch (IOException e) {
+<b class="nc">&nbsp;                        logger.info(&quot;[Broadcast Exception] &quot; + e.getMessage());</b>
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        return true;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;    private void sendMessageToParticularUser(String username, String message) {
+&nbsp;        try {
+<b class="nc">&nbsp;            Session userSession = usernameSessionMap.get(username);</b>
+<b class="nc">&nbsp;            if (userSession != null &amp;&amp; userSession.isOpen()) {</b>
+<b class="nc">&nbsp;                userSession.getBasicRemote().sendText(message);</b>
+<b class="nc">&nbsp;                notificationsService.saveNotification(accountService.getAccountByUsername(username), message);</b>
+&nbsp;            }
+&nbsp;        } catch (IOException e) {
+<b class="nc">&nbsp;            logger.info(&quot;[DM Exception] &quot; + e.getMessage());</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private void argError(String username){
+<b class="nc">&nbsp;        sendMessageToParticularUser(username, &quot;Incorrect usage of websocket endpoints.&quot;);</b>
 &nbsp;    }
 &nbsp;}
 </code>
@@ -144,7 +440,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2025-12-06 21:25</div>
+    <div style="float:right;">generated on 2025-12-09 20:59</div>
 </div>
 </body>
 </html>

@@ -5,7 +5,7 @@
 <html id="htmlId">
 <head>
   <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
-  <title>Coverage Report > Notifications</title>
+  <title>Coverage Report > ShopService</title>
   <style type="text/css">
     @import "../../css/coverage.css";
     @import "../../css/idea.min.css";
@@ -19,18 +19,15 @@
 <div class="breadCrumbs">
 Current scope:     <a href="../../index.html">all classes</a>
     <span class="separator">|</span>
-    <a href="../index.html">com.geohunt.backend.WebSockets</a>
+    <a href="../index.html">com.geohunt.backend.Shop</a>
 </div>
 
-<h1>Coverage Summary for Class: Notifications (com.geohunt.backend.WebSockets)</h1>
+<h1>Coverage Summary for Class: ShopService (com.geohunt.backend.Shop)</h1>
 
 <table class="coverageStats">
+
 <tr>
   <th class="name">Class</th>
-<th class="coverageStat 
-">
-  Class, %
-</th>
 <th class="coverageStat 
 ">
   Method, %
@@ -45,41 +42,62 @@ Current scope:     <a href="../../index.html">all classes</a>
 </th>
 </tr>
 <tr>
-  <td class="name">Notifications</td>
+  <td class="name">ShopService</td>
 <td class="coverageStat">
   <span class="percent">
-    100%
+    66.7%
   </span>
   <span class="absValue">
-    (1/1)
+    (10/15)
   </span>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    25%
+    41.9%
   </span>
   <span class="absValue">
-    (2/8)
+    (31/74)
   </span>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    0%
+    52.9%
   </span>
   <span class="absValue">
-    (0/92)
-  </span>
-</td>
-<td class="coverageStat">
-  <span class="percent">
-    4.7%
-  </span>
-  <span class="absValue">
-    (7/150)
+    (100/189)
   </span>
 </td>
 </tr>
-
+  <tr>
+    <td class="name">ShopService$$SpringCGLIB$$0</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    66.7%
+  </span>
+  <span class="absValue">
+    (10/15)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    41.9%
+  </span>
+  <span class="absValue">
+    (31/74)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    52.9%
+  </span>
+  <span class="absValue">
+    (100/189)
+  </span>
+</td>
+</tr>
 </table>
 
 <br/>
@@ -87,336 +105,427 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 
 <pre>
-<code class="sourceCode" id="sourceCode">&nbsp;package com.geohunt.backend.WebSockets;
+<code class="sourceCode" id="sourceCode">&nbsp;package com.geohunt.backend.Shop;
 &nbsp;
-&nbsp;import com.geohunt.backend.Config.SpringContext;
-&nbsp;import com.geohunt.backend.Services.AccountService;
-&nbsp;import com.geohunt.backend.Services.NotificationsService;
-&nbsp;import jakarta.annotation.PostConstruct;
-&nbsp;import jakarta.websocket.OnClose;
-&nbsp;import jakarta.websocket.OnMessage;
-&nbsp;import jakarta.websocket.OnOpen;
-&nbsp;import jakarta.websocket.Session;
-&nbsp;import jakarta.websocket.server.PathParam;
-&nbsp;import jakarta.websocket.server.ServerEndpoint;
-&nbsp;import lombok.Setter;
-&nbsp;import org.slf4j.Logger;
-&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;import com.geohunt.backend.Shop.DTOs.PowerupResponseDTO;
+&nbsp;import com.geohunt.backend.Shop.DTOs.PowerupShopDTO;
+&nbsp;import com.geohunt.backend.Shop.DTOs.ShopResponseDTO;
+&nbsp;import com.geohunt.backend.Shop.DTOs.TransactionDTO;
+&nbsp;import com.geohunt.backend.database.Account;
+&nbsp;import com.geohunt.backend.database.AccountRepository;
+&nbsp;//import com.stripe.exception.StripeException;
+&nbsp;//import com.stripe.model.checkout.Session;
+&nbsp;//import com.stripe.param.checkout.SessionCreateParams;
+&nbsp;import com.geohunt.backend.powerup.Powerup;
+&nbsp;import com.geohunt.backend.powerup.PowerupRepository;
+&nbsp;import com.geohunt.backend.powerup.PowerupService;
+&nbsp;import jakarta.transaction.Transactional;
 &nbsp;import org.springframework.beans.factory.annotation.Autowired;
-&nbsp;import org.springframework.stereotype.Component;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.stereotype.Service;
 &nbsp;
-&nbsp;import java.io.IOException;
-&nbsp;import java.util.Arrays;
-&nbsp;import java.util.HashSet;
-&nbsp;import java.util.Hashtable;
-&nbsp;import java.util.Map;
+&nbsp;import java.util.*;
 &nbsp;
+&nbsp;@Service
+<b class="fc">&nbsp;public class ShopService {</b>
+&nbsp;    @Autowired
+&nbsp;    private ShopRepository shopRepository;
+&nbsp;    @Autowired
+&nbsp;    private AccountRepository accountRepository;
+&nbsp;    @Autowired
+&nbsp;    private PowerupRepository powerupRepository;
+&nbsp;    @Autowired
+&nbsp;    private UserInventoryRepository userInventoryRepository;
+&nbsp;    @Autowired
+&nbsp;    private TransactionService transactionService;
+&nbsp;    @Autowired
+&nbsp;    private PowerupService powerupService;
+&nbsp;    @Autowired
+&nbsp;    private TransactionsRepository transactionsRepository;
 &nbsp;
-&nbsp;@ServerEndpoint(&quot;/notify/{name}&quot;)
-&nbsp;@Component
-&nbsp;@Setter
-<b class="fc">&nbsp;public class Notifications {</b>
-<b class="fc">&nbsp;    private static Map&lt;Session, String&gt; sessionUsernameMap = new Hashtable&lt;&gt;();</b>
-<b class="fc">&nbsp;    private static Map&lt;String, Session&gt; usernameSessionMap = new Hashtable&lt;&gt;();</b>
-<b class="fc">&nbsp;    private static Map&lt;String, java.util.Set&lt;String&gt;&gt; groupMembersMap = new Hashtable&lt;&gt;();</b>
-<b class="fc">&nbsp;    private final Logger logger = LoggerFactory.getLogger(Notifications.class);</b>
-&nbsp;    private String currentGroup;
-&nbsp;
-<b class="fc">&nbsp;    private AccountService accountService = SpringContext.getBean(AccountService.class);</b>
-<b class="fc">&nbsp;    private NotificationsService notificationsService = SpringContext.getBean(NotificationsService.class);</b>
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;    @OnOpen
-&nbsp;    public void onOpen(Session session, @PathParam(&quot;name&quot;) String name) throws IOException {
-<b class="nc">&nbsp;        logger.info(&quot;[onOpen]: {}&quot;, name);</b>
-&nbsp;        try{
-<b class="nc">&nbsp;            if (usernameSessionMap.containsKey(name) || accountService.getAccountByUsername(name) == null) {</b>
-<b class="nc">&nbsp;                session.getBasicRemote().sendText(&quot;Check your username.&quot;);</b>
-&nbsp;                session.close();
-&nbsp;            } else {
-&nbsp;                // map current session with username
-<b class="nc">&nbsp;                sessionUsernameMap.put(session, name);</b>
-&nbsp;
-&nbsp;                // map current username with session
-<b class="nc">&nbsp;                usernameSessionMap.put(name, session);</b>
-&nbsp;
-&nbsp;            }
-&nbsp;        } catch(IllegalArgumentException e){
-<b class="nc">&nbsp;            session.getBasicRemote().sendText(&quot;Check your username.&quot;);</b>
-&nbsp;            session.close();
+&nbsp;    public ResponseEntity&lt;String&gt; deleteItem(String name) {
+<b class="fc">&nbsp;        Optional&lt;Shop&gt; s = shopRepository.findByName(name);</b>
+<b class="pc">&nbsp;        if (s.isEmpty()) {</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(&quot;Shop Item not found.&quot;);</b>
 &nbsp;        }
-&nbsp;
-&nbsp;
+<b class="fc">&nbsp;        shopRepository.delete(s.get());</b>
+<b class="fc">&nbsp;        userInventoryRepository.deleteAllByShopItem(s.get());</b>
+<b class="fc">&nbsp;        return ResponseEntity.status(HttpStatus.OK).body(&quot;Shop Item deleted.&quot;);</b>
 &nbsp;    }
 &nbsp;
-&nbsp;    @OnMessage
-&nbsp;    public void onMessage(Session session, String message) throws IOException {
+&nbsp;    public ResponseEntity&lt;Map&lt;SHOP_ITEM_TYPE, List&lt;Shop&gt;&gt;&gt; getAllItems() {
+<b class="nc">&nbsp;        Map&lt;SHOP_ITEM_TYPE, List&lt;Shop&gt;&gt; map = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;        ResponseEntity a = getOfType(SHOP_ITEM_TYPE.DECORATION);</b>
+<b class="nc">&nbsp;        if(a.getStatusCode() == HttpStatus.OK) {</b>
+<b class="nc">&nbsp;            List&lt;Shop&gt; DECORATION = (List) a.getBody();</b>
+<b class="nc">&nbsp;            map.put(SHOP_ITEM_TYPE.DECORATION, DECORATION);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        ResponseEntity b = getOfType(SHOP_ITEM_TYPE.PROFILE_CUSTOMIZATION);</b>
+<b class="nc">&nbsp;        if(b.getStatusCode() == HttpStatus.OK) {</b>
+<b class="nc">&nbsp;            List&lt;Shop&gt; PROFILE_CUSTOMIZATION = (List) b.getBody();</b>
+<b class="nc">&nbsp;            map.put(SHOP_ITEM_TYPE.PROFILE_CUSTOMIZATION, PROFILE_CUSTOMIZATION);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        ResponseEntity c = getOfType(SHOP_ITEM_TYPE.POWERUP);</b>
+<b class="nc">&nbsp;        if(c.getStatusCode() == HttpStatus.OK) {</b>
+<b class="nc">&nbsp;            List&lt;Shop&gt; POWERUP = (List) c.getBody();</b>
+<b class="nc">&nbsp;            map.put(SHOP_ITEM_TYPE.POWERUP, POWERUP);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        ResponseEntity d = getOfType(SHOP_ITEM_TYPE.OTHER);</b>
+<b class="nc">&nbsp;        if(d.getStatusCode() == HttpStatus.OK) {</b>
+<b class="nc">&nbsp;            List&lt;Shop&gt; OTHER = (List) d.getBody();</b>
+<b class="nc">&nbsp;            map.put(SHOP_ITEM_TYPE.OTHER, OTHER);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if(map.isEmpty()){</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return ResponseEntity.status(HttpStatus.OK).body(map);</b>
+&nbsp;    }
 &nbsp;
-&nbsp;        // get the username by session
-<b class="nc">&nbsp;        String username = sessionUsernameMap.get(session);</b>
+&nbsp;    public ResponseEntity&lt;Shop&gt; getItem(String name) {
+<b class="fc">&nbsp;        Optional&lt;Shop&gt; item = shopRepository.findByName(name);</b>
+<b class="fc">&nbsp;        return item.map(shop -&gt; ResponseEntity.status(HttpStatus.OK).body(shop)).orElseGet(() -&gt; ResponseEntity.status(HttpStatus.NOT_FOUND).build());</b>
+&nbsp;    }
 &nbsp;
-&nbsp;        // server side log
-<b class="nc">&nbsp;        logger.info(&quot;[onMessage] &quot; + username + &quot;: &quot; + message);</b>
+&nbsp;    public ResponseEntity&lt;Shop&gt; getItem(long id) {
+<b class="fc">&nbsp;        Optional&lt;Shop&gt; item = shopRepository.findById(id);</b>
+<b class="fc">&nbsp;        return item.map(shop -&gt; ResponseEntity.status(HttpStatus.OK).body(shop)).orElseGet(() -&gt; ResponseEntity.status(HttpStatus.NOT_FOUND).build());</b>
+&nbsp;    }
 &nbsp;
-&nbsp;        //Friend Request: FriendReq &lt;username&gt;
-&nbsp;        //Friend Request Accepted: FriendAcc &lt;username&gt;
-&nbsp;        //Multiplayer Invite: Invite &lt;username&gt; &lt;groupId&gt; //GroupId &quot;N&quot; if none currently. Will return a groupId.
-&nbsp;        //Multiplayer Invite Accept: AcceptInvite &lt;groupId&gt;
-&nbsp;        //Multiplayer leave group: Leave &lt;groupId&gt;
-&nbsp;        //Multplayer Challenge Complete: MultComplete &lt;groupId&gt;
-&nbsp;        //Solo challenge complete: ChallComplete
-&nbsp;        //Custom Group Message: CustomGroupMsg &lt;groupId&gt; msg
-&nbsp;        //custom DM: CustomDM &lt;username&gt; msg
-&nbsp;        //Create Group (For adding custom ID): CreateGroup &lt;groupId&gt;
-&nbsp;        //Add User to group: ForceAdd &lt;groupId&gt; &lt;CommaSeparatedListOfUsernames&gt;
+&nbsp;    public boolean doesExist(String name) {
+<b class="fc">&nbsp;        Optional&lt;Shop&gt; item = shopRepository.findByName(name);</b>
+<b class="fc">&nbsp;        return item.isPresent();</b>
+&nbsp;    }
 &nbsp;
-<b class="nc">&nbsp;        if (message.startsWith(&quot;FriendReq&quot;)) {</b>
-<b class="nc">&nbsp;            String[] splitMsg = message.split(&quot; &quot;);</b>
-<b class="nc">&nbsp;            if (splitMsg.length &lt; 2) { argError(username); return; }</b>
+&nbsp;    public ResponseEntity&lt;Shop&gt; addItem(Shop shop) {
+<b class="nc">&nbsp;        if (doesExist(shop.getName())) {</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.CONFLICT).build();</b>
+&nbsp;        }
+<b class="nc">&nbsp;        shop.setPowerup(null);</b>
+<b class="nc">&nbsp;        shopRepository.save(shop);</b>
+<b class="nc">&nbsp;        return ResponseEntity.status(HttpStatus.CREATED).body(shop);</b>
+&nbsp;    }
 &nbsp;
-<b class="nc">&nbsp;            String targetUser = splitMsg[1];</b>
-<b class="nc">&nbsp;            String msg = &quot;You have been sent a friend request by: &quot; + username;</b>
-<b class="nc">&nbsp;            if(targetUser.equals(username)) {</b>
-<b class="nc">&nbsp;                sendMessageToParticularUser(username, &quot;You cannot send a friend request to yourself.&quot;);</b>
-&nbsp;            }
-&nbsp;            try{
-<b class="nc">&nbsp;                sendMessageToParticularUser(targetUser, msg);</b>
-&nbsp;            } catch (IllegalArgumentException e){
-<b class="nc">&nbsp;                sendMessageToParticularUser(username, &quot;Target not found.&quot; );</b>
-&nbsp;            }
-&nbsp;
-&nbsp;
-<b class="nc">&nbsp;        } else if (message.startsWith(&quot;FriendAcc&quot;)) {</b>
-<b class="nc">&nbsp;            String[] splitMsg = message.split(&quot; &quot;);</b>
-<b class="nc">&nbsp;            if (splitMsg.length &lt; 2) { argError(username); return; }</b>
-&nbsp;
-<b class="nc">&nbsp;            String targetUser = splitMsg[1];</b>
-<b class="nc">&nbsp;            String msg = username + &quot; has accepted your friend request!&quot;;</b>
-<b class="nc">&nbsp;            sendMessageToParticularUser(targetUser, msg);</b>
-&nbsp;
-<b class="nc">&nbsp;        } else if (message.startsWith(&quot;Invite&quot;)) {</b>
-<b class="nc">&nbsp;            String[] splitMsg = message.split(&quot; &quot;);</b>
-<b class="nc">&nbsp;            if (splitMsg.length &lt; 3) { argError(username); return; }</b>
-&nbsp;
-<b class="nc">&nbsp;            String targetUser = splitMsg[1];</b>
-<b class="nc">&nbsp;            String groupId = splitMsg[2];</b>
-&nbsp;
-<b class="nc">&nbsp;            if (groupId.equals(&quot;N&quot;)) {</b>
-<b class="nc">&nbsp;                String newId = username + &quot;sGrp&quot;;</b>
-<b class="nc">&nbsp;                groupMembersMap.putIfAbsent(newId, new HashSet&lt;&gt;());</b>
-<b class="nc">&nbsp;                groupMembersMap.get(newId).add(username);</b>
-<b class="nc">&nbsp;                sendMessageToParticularUser(username, &quot;Your new groupId is: &quot; + newId);</b>
-<b class="nc">&nbsp;                currentGroup = newId;</b>
-<b class="nc">&nbsp;                groupId = newId;</b>
-&nbsp;            }
-&nbsp;
-<b class="nc">&nbsp;            String msg = username + &quot; invited you to join their group (&quot; + groupId + &quot;)&quot;;</b>
-<b class="nc">&nbsp;            sendMessageToParticularUser(targetUser, msg);</b>
-&nbsp;
-<b class="nc">&nbsp;        } else if (message.startsWith(&quot;AcceptInvite&quot;)) {</b>
-<b class="nc">&nbsp;            String[] splitMsg = message.split(&quot; &quot;);</b>
-<b class="nc">&nbsp;            if (splitMsg.length &lt; 2) { argError(username); return; }</b>
-&nbsp;
-<b class="nc">&nbsp;            String groupId = splitMsg[1];</b>
-<b class="nc">&nbsp;            if (!groupMembersMap.containsKey(groupId)) {</b>
-<b class="nc">&nbsp;                sendMessageToParticularUser(username, &quot;Group does not exist.&quot;);</b>
-&nbsp;                return;
-&nbsp;            }
-&nbsp;
-<b class="nc">&nbsp;            boolean alreadyIn = !groupMembersMap.get(groupId).add(username);</b>
-<b class="nc">&nbsp;            if (alreadyIn) {</b>
-<b class="nc">&nbsp;                sendMessageToParticularUser(username, &quot;You are already in this group.&quot;);</b>
-&nbsp;                return;
-&nbsp;            }
-&nbsp;
-<b class="nc">&nbsp;            currentGroup = groupId;</b>
-<b class="nc">&nbsp;            sendMessageToParticularUser(username, &quot;You have been added to the group!&quot;);</b>
-<b class="nc">&nbsp;            broadcastInGroup(username + &quot; has joined your group!&quot;, groupId, username);</b>
-&nbsp;
-<b class="nc">&nbsp;        } else if (message.startsWith(&quot;Leave&quot;)) {</b>
-<b class="nc">&nbsp;            String[] splitMsg = message.split(&quot; &quot;);</b>
-<b class="nc">&nbsp;            if (splitMsg.length &lt; 2) { argError(username); return; }</b>
-&nbsp;
-<b class="nc">&nbsp;            String groupId = splitMsg[1];</b>
-<b class="nc">&nbsp;            if (!groupMembersMap.containsKey(groupId)) {</b>
-<b class="nc">&nbsp;                sendMessageToParticularUser(username, &quot;Group does not exist.&quot;);</b>
-&nbsp;                return;
-&nbsp;            }
-&nbsp;
-<b class="nc">&nbsp;            boolean didRemove = groupMembersMap.get(groupId).remove(username);</b>
-<b class="nc">&nbsp;            if (groupMembersMap.get(groupId).isEmpty()) { groupMembersMap.remove(groupId); }</b>
-&nbsp;
-<b class="nc">&nbsp;            if (didRemove) {</b>
-<b class="nc">&nbsp;                broadcastInGroup(username + &quot; left the group!&quot;, groupId, username);</b>
-<b class="nc">&nbsp;                sendMessageToParticularUser(username, &quot;You have left the group!&quot;);</b>
-&nbsp;            } else {
-<b class="nc">&nbsp;                sendMessageToParticularUser(username, &quot;You are not in that group.&quot;);</b>
-&nbsp;
-&nbsp;            }
-&nbsp;
-<b class="nc">&nbsp;        } else if (message.startsWith(&quot;MultComplete&quot;)) {</b>
-<b class="nc">&nbsp;            String[] splitMsg = message.split(&quot; &quot;);</b>
-<b class="nc">&nbsp;            if (splitMsg.length &lt; 2) { argError(username); return; }</b>
-&nbsp;
-<b class="nc">&nbsp;            String groupId = splitMsg[1];</b>
-<b class="nc">&nbsp;            if (!groupMembersMap.containsKey(groupId)) {</b>
-<b class="nc">&nbsp;                sendMessageToParticularUser(username, &quot;Group does not exist.&quot;);</b>
-&nbsp;                return;
-&nbsp;            }
-&nbsp;
-<b class="nc">&nbsp;            String msg = username + &quot; has finished the challenge!&quot;;</b>
-<b class="nc">&nbsp;            broadcastInGroup(msg, groupId, username);</b>
-<b class="nc">&nbsp;            sendMessageToParticularUser(username, &quot;You have finished the challenge!&quot;);</b>
-&nbsp;
-<b class="nc">&nbsp;        } else if (message.startsWith(&quot;ChallComplete&quot;)) {</b>
-&nbsp;
-<b class="nc">&nbsp;            sendMessageToParticularUser(username, &quot;You have completed the challenge!&quot;);</b>
+&nbsp;    @Transactional
+&nbsp;    public ResponseEntity&lt;String&gt; purchase(long uid, long shopId) {
+<b class="fc">&nbsp;        Optional&lt;Account&gt; accs = accountRepository.findById(uid);</b>
+<b class="fc">&nbsp;        if(accs.isEmpty()) {</b>
+<b class="fc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(&quot;Account not found.&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        Account acc = accs.get();</b>
 &nbsp;
 &nbsp;
-<b class="nc">&nbsp;        } else if (message.startsWith(&quot;CustomDM&quot;)) {</b>
-<b class="nc">&nbsp;            String[] splitMsg = message.split(&quot; &quot;);</b>
-<b class="nc">&nbsp;            if (splitMsg.length &lt; 3) { argError(username); return; }</b>
+<b class="fc">&nbsp;        Optional&lt;Shop&gt; items = shopRepository.findById(shopId);</b>
+<b class="fc">&nbsp;        if(items.isEmpty()) {</b>
+<b class="fc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(&quot;Shop Item not found.&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        Shop item = items.get();</b>
 &nbsp;
-<b class="nc">&nbsp;            String targetUser = splitMsg[1];</b>
-<b class="nc">&nbsp;            String msg = String.join(&quot; &quot;, Arrays.copyOfRange(splitMsg, 2, splitMsg.length));</b>
-<b class="nc">&nbsp;            String donemsg = &quot;[&quot; + username + &quot;] &quot; + msg;</b>
-<b class="nc">&nbsp;            sendMessageToParticularUser(targetUser, donemsg);</b>
+<b class="fc">&nbsp;        Optional&lt;UserInventory&gt; existing = userInventoryRepository</b>
+<b class="fc">&nbsp;                .findByUserIdAndShopItemId(uid, shopId);</b>
 &nbsp;
-<b class="nc">&nbsp;        } else if (message.startsWith(&quot;CustomGroupMsg&quot;)) {</b>
-<b class="nc">&nbsp;            String[] splitMsg = message.split(&quot; &quot;);</b>
-<b class="nc">&nbsp;            if (splitMsg.length &lt; 3) { argError(username); return; }</b>
+<b class="fc">&nbsp;        if (existing.isPresent() &amp;&amp; item.getItemType() != SHOP_ITEM_TYPE.POWERUP) {</b>
+<b class="fc">&nbsp;            return ResponseEntity.status(HttpStatus.CONFLICT)</b>
+<b class="fc">&nbsp;                    .body(&quot;You already own this item! Duplicate powerups are not allowed.&quot;);</b>
+&nbsp;        }
 &nbsp;
-<b class="nc">&nbsp;            String groupId = splitMsg[1];</b>
-<b class="nc">&nbsp;            if (!groupMembersMap.containsKey(groupId)) {</b>
-<b class="nc">&nbsp;                sendMessageToParticularUser(username, &quot;Group does not exist.&quot;);</b>
-&nbsp;                return;
-&nbsp;            }
+<b class="fc">&nbsp;        if (acc.getTotalPoints() &lt; item.getPrice()) {</b>
+<b class="fc">&nbsp;            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(&quot;Not enough points&quot;);</b>
+&nbsp;        }
 &nbsp;
-<b class="nc">&nbsp;            String msg = String.join(&quot; &quot;, Arrays.copyOfRange(splitMsg, 2, splitMsg.length));</b>
-<b class="nc">&nbsp;            broadcastInGroup(msg, groupId, username);</b>
+<b class="fc">&nbsp;        acc.setTotalPoints(acc.getTotalPoints() - item.getPrice());</b>
+<b class="fc">&nbsp;        accountRepository.save(acc);</b>
 &nbsp;
-<b class="nc">&nbsp;        } else if (message.startsWith(&quot;CreateGroup&quot;)) {</b>
-<b class="nc">&nbsp;            String[] splitMsg = message.split(&quot; &quot;);</b>
-<b class="nc">&nbsp;            if (splitMsg.length &lt; 2) { argError(username); return; }</b>
-&nbsp;
-<b class="nc">&nbsp;            String groupId = splitMsg[1];</b>
-<b class="nc">&nbsp;            if (groupMembersMap.containsKey(groupId)) {</b>
-<b class="nc">&nbsp;                sendMessageToParticularUser(username, &quot;groupId already exists&quot;);</b>
-&nbsp;                return;
-&nbsp;            }
-&nbsp;
-<b class="nc">&nbsp;            groupMembersMap.putIfAbsent(groupId, new HashSet&lt;&gt;());</b>
-<b class="nc">&nbsp;            groupMembersMap.get(groupId).add(username);</b>
-<b class="nc">&nbsp;            sendMessageToParticularUser(username, &quot;You have been added to the group with groupId: &quot; + groupId);</b>
-<b class="nc">&nbsp;            currentGroup = groupId;</b>
-&nbsp;
-<b class="nc">&nbsp;        } else if (message.startsWith(&quot;ForceAdd&quot;)) {</b>
-<b class="nc">&nbsp;            String[] splitMsg = message.split(&quot; &quot;);</b>
-<b class="nc">&nbsp;            if (splitMsg.length &lt; 3) { argError(username); return; }</b>
-&nbsp;
-<b class="nc">&nbsp;            String groupId = splitMsg[1];</b>
-<b class="nc">&nbsp;            String userGeneral = splitMsg[2];</b>
+<b class="fc">&nbsp;        TransactionDTO transaction = new TransactionDTO();</b>
+<b class="fc">&nbsp;        transaction.setDate(new Date());</b>
+<b class="fc">&nbsp;        transaction.setPrice(item.getPrice());</b>
+<b class="fc">&nbsp;        transaction.setUser(acc);</b>
+<b class="fc">&nbsp;        transaction.setShopItem(item);</b>
+<b class="fc">&nbsp;        long tId = transactionService.addTransaction(transaction);</b>
 &nbsp;
 &nbsp;
-<b class="nc">&nbsp;            groupMembersMap.putIfAbsent(groupId, new HashSet&lt;&gt;());</b>
-&nbsp;
-<b class="nc">&nbsp;            String[] usersToAdd = userGeneral.split(&quot;,&quot;);</b>
-<b class="nc">&nbsp;            StringBuilder added = new StringBuilder();</b>
-<b class="nc">&nbsp;            for (String u : usersToAdd) {</b>
-<b class="nc">&nbsp;                String trimmed = u.trim();</b>
-<b class="nc">&nbsp;                if (trimmed.isEmpty()) continue;</b>
-<b class="nc">&nbsp;                boolean addedNow = groupMembersMap.get(groupId).add(trimmed);</b>
-<b class="nc">&nbsp;                if (addedNow) {</b>
-<b class="nc">&nbsp;                    added.append(trimmed).append(&quot;,&quot;);</b>
-<b class="nc">&nbsp;                    sendMessageToParticularUser(trimmed, &quot;You have been added to group with groupId: &quot; + groupId + &quot; by &quot; + username);</b>
-&nbsp;                }
-&nbsp;            }
-<b class="nc">&nbsp;            if (added.length() &gt; 0) {</b>
-<b class="nc">&nbsp;                added.setLength(added.length() - 1);</b>
-<b class="nc">&nbsp;                sendMessageToParticularUser(username, &quot;Added users to &quot; + groupId + &quot;: &quot; + added.toString());</b>
-&nbsp;            } else {
-<b class="nc">&nbsp;                sendMessageToParticularUser(username, &quot;No new users were added to &quot; + groupId + &quot;.&quot;);</b>
-&nbsp;            }
-&nbsp;
+<b class="fc">&nbsp;        if(existing.isEmpty()){</b>
+<b class="fc">&nbsp;            UserInventory ui = new UserInventory();</b>
+<b class="fc">&nbsp;            ui.setUser(acc);</b>
+<b class="fc">&nbsp;            ui.setShopItem(item);</b>
+<b class="fc">&nbsp;            ui.setQuantity(1);</b>
+<b class="fc">&nbsp;            ui.setEquipped(false);</b>
+<b class="fc">&nbsp;            ui.setAcquiredAt(new Date());</b>
+<b class="fc">&nbsp;            userInventoryRepository.save(ui);</b>
 &nbsp;        } else {
-<b class="nc">&nbsp;            sendMessageToParticularUser(username, &quot;Unknown command: &quot; + message);</b>
+<b class="fc">&nbsp;            UserInventory inv = existing.get();</b>
+<b class="fc">&nbsp;            inv.setQuantity(inv.getQuantity() + 1);</b>
+<b class="fc">&nbsp;            userInventoryRepository.save(inv);</b>
 &nbsp;        }
+&nbsp;
+&nbsp;
+&nbsp;
+<b class="fc">&nbsp;        if(item.getItemType() == SHOP_ITEM_TYPE.POWERUP) {</b>
+<b class="fc">&nbsp;            powerupService.addToAcc(item.getPowerup().getId(), uid);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        String success = String.format(&quot;Sucessfully purchased! Item transaction id: %d&quot;, tId);</b>
+<b class="fc">&nbsp;        return ResponseEntity.ok(success);</b>
 &nbsp;    }
 &nbsp;
-&nbsp;    @OnClose
-&nbsp;    public void onClose(Session session) throws IOException {
+&nbsp;    public ResponseEntity&lt;Shop&gt; addPowerupItem(PowerupShopDTO psDTO) {
 &nbsp;
-&nbsp;        // get the username from session-username mapping
-<b class="nc">&nbsp;        String username = sessionUsernameMap.get(session);</b>
+<b class="nc">&nbsp;        boolean shopExists = shopRepository.findByName(psDTO.getShopName()).isPresent();</b>
 &nbsp;
-&nbsp;        // server side log
-<b class="nc">&nbsp;        logger.info(&quot;[onClose] &quot; + username);</b>
-&nbsp;
-&nbsp;        // remove user from memory mappings
-&nbsp;        try{
-<b class="nc">&nbsp;            sessionUsernameMap.remove(session);</b>
-<b class="nc">&nbsp;            usernameSessionMap.remove(username);</b>
-&nbsp;        }catch (NullPointerException e){
-&nbsp;            ;
+<b class="nc">&nbsp;        if (shopExists) {</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.CONFLICT).build();</b>
 &nbsp;        }
 &nbsp;
 &nbsp;
-&nbsp;        // send the message to the group
+<b class="nc">&nbsp;        Optional&lt;Powerup&gt; powerup = powerupRepository.findByName(psDTO.getPowerupName());</b>
+<b class="nc">&nbsp;        if (powerup.isEmpty()) {</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();</b>
+&nbsp;        }
 &nbsp;
-<b class="nc">&nbsp;        if(currentGroup != null) {</b>
-<b class="nc">&nbsp;            broadcastInGroup(username + &quot; has disconnected.&quot;, currentGroup, username);</b>
-<b class="nc">&nbsp;            if (!groupMembersMap.containsKey(currentGroup)) {</b>
-<b class="nc">&nbsp;                sendMessageToParticularUser(username, &quot;Group does not exist.&quot;);</b>
-&nbsp;                return;
+<b class="nc">&nbsp;        if (shopRepository.existsByPowerup(powerup.get())) {</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.CONFLICT).build();</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        Shop s = new Shop();</b>
+<b class="nc">&nbsp;        s.setItemType(SHOP_ITEM_TYPE.POWERUP);</b>
+<b class="nc">&nbsp;        s.setPowerup(powerup.get());</b>
+<b class="nc">&nbsp;        s.setName(psDTO.getShopName());</b>
+<b class="nc">&nbsp;        s.setImage(psDTO.getImage());</b>
+<b class="nc">&nbsp;        s.setPrice(psDTO.getPrice());</b>
+<b class="nc">&nbsp;        s.setDescription(psDTO.getDescription());</b>
+&nbsp;
+<b class="nc">&nbsp;        Shop saved = shopRepository.save(s);</b>
+&nbsp;
+<b class="nc">&nbsp;        return ResponseEntity.status(HttpStatus.CREATED).body(saved);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    public ResponseEntity&lt;List&lt;Shop&gt;&gt; getOfType(SHOP_ITEM_TYPE itemType) {
+<b class="fc">&nbsp;        List&lt;Shop&gt; returnable = shopRepository.findAllByItemType(itemType);</b>
+<b class="pc">&nbsp;        if (returnable.isEmpty()) {</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return ResponseEntity.status(HttpStatus.OK).body(returnable);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Transactional
+&nbsp;    public ResponseEntity equip(String itemName, long uid) {
+&nbsp;
+<b class="fc">&nbsp;        Account acc = accountRepository.findById(uid).orElse(null);</b>
+<b class="pc">&nbsp;        if (acc == null) {</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(&quot;Account not found.&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        Shop shopItem = shopRepository.findByName(itemName).orElse(null);</b>
+<b class="pc">&nbsp;        if (shopItem == null) {</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(&quot;Shop Item not found.&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        UserInventory inv = userInventoryRepository</b>
+<b class="fc">&nbsp;                .findByUserIdAndShopItemId(uid, shopItem.getId())</b>
+<b class="fc">&nbsp;                .orElse(null);</b>
+&nbsp;
+<b class="pc">&nbsp;        if (inv == null) {</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(&quot;Item not found in user&#39;s inventory.&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        if (shopItem.getItemType() == SHOP_ITEM_TYPE.POWERUP) {</b>
+&nbsp;
+<b class="nc">&nbsp;            PowerupResponseDTO dto = new PowerupResponseDTO();</b>
+<b class="nc">&nbsp;            dto.setPowerup(shopItem.getPowerup());</b>
+<b class="nc">&nbsp;            dto.setMessage(&quot;Powerup consumed.&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;            if (inv.getQuantity() &gt; 1) {</b>
+<b class="nc">&nbsp;                inv.setQuantity(inv.getQuantity() - 1);</b>
+<b class="nc">&nbsp;                userInventoryRepository.save(inv);</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                userInventoryRepository.delete(inv);</b>
 &nbsp;            }
-<b class="nc">&nbsp;            groupMembersMap.get(currentGroup).remove(username);</b>
-<b class="nc">&nbsp;            if(groupMembersMap.get(currentGroup).size() == 0) {</b>
-<b class="nc">&nbsp;                groupMembersMap.remove(currentGroup);</b>
-&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            powerupService.addToAcc(shopItem.getPowerup().getId(), uid);</b>
+&nbsp;
+<b class="nc">&nbsp;            return ResponseEntity.ok(dto);</b>
 &nbsp;        }
-&nbsp;    }
 &nbsp;
-&nbsp;
-&nbsp;
-&nbsp;    private boolean broadcastInGroup(String message, String groupId, String avoid) {
-<b class="nc">&nbsp;        if (!groupMembersMap.containsKey(groupId)) return false;</b>
-&nbsp;
-<b class="nc">&nbsp;        for (String a : groupMembersMap.get(groupId)) {</b>
-<b class="nc">&nbsp;            if (!a.equals(avoid)) {</b>
-<b class="nc">&nbsp;                Session userSession = usernameSessionMap.get(a);</b>
-<b class="nc">&nbsp;                if (userSession != null) {</b>
-&nbsp;                    try {
-<b class="nc">&nbsp;                        userSession.getBasicRemote().sendText(message);</b>
-<b class="nc">&nbsp;                        notificationsService.saveNotification(accountService.getAccountByUsername(sessionUsernameMap.get(userSession)), message);</b>
-&nbsp;                    } catch (IOException e) {
-<b class="nc">&nbsp;                        logger.info(&quot;[Broadcast Exception] &quot; + e.getMessage());</b>
-&nbsp;                    }
-&nbsp;                }
-&nbsp;            }
+<b class="pc">&nbsp;        if (inv.isEquipped()) {</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.CONFLICT).body(&quot;Item already equipped.&quot;);</b>
 &nbsp;        }
-<b class="nc">&nbsp;        return true;</b>
+&nbsp;
+<b class="fc">&nbsp;        inv.setEquipped(true);</b>
+<b class="fc">&nbsp;        userInventoryRepository.save(inv);</b>
+&nbsp;
+<b class="fc">&nbsp;        ShopResponseDTO dto = new ShopResponseDTO();</b>
+<b class="fc">&nbsp;        dto.setMessage(&quot;Item equipped successfully.&quot;);</b>
+<b class="fc">&nbsp;        dto.setShop(shopItem);</b>
+&nbsp;
+<b class="fc">&nbsp;        return ResponseEntity.ok(dto);</b>
 &nbsp;    }
 &nbsp;
 &nbsp;
+&nbsp;    @Transactional
+&nbsp;    public ResponseEntity unequip(String itemName, long uid) {
 &nbsp;
-&nbsp;    private void sendMessageToParticularUser(String username, String message) {
-&nbsp;        try {
-<b class="nc">&nbsp;            Session userSession = usernameSessionMap.get(username);</b>
-<b class="nc">&nbsp;            if (userSession != null &amp;&amp; userSession.isOpen()) {</b>
-<b class="nc">&nbsp;                userSession.getBasicRemote().sendText(message);</b>
-<b class="nc">&nbsp;                notificationsService.saveNotification(accountService.getAccountByUsername(username), message);</b>
-&nbsp;            }
-&nbsp;        } catch (IOException e) {
-<b class="nc">&nbsp;            logger.info(&quot;[DM Exception] &quot; + e.getMessage());</b>
+<b class="fc">&nbsp;        Account acc = accountRepository.findById(uid).orElse(null);</b>
+<b class="pc">&nbsp;        if (acc == null) {</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(&quot;Account not found.&quot;);</b>
 &nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        Shop shopItem = shopRepository.findByName(itemName).orElse(null);</b>
+<b class="pc">&nbsp;        if (shopItem == null) {</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(&quot;Shop Item not found.&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        UserInventory inv = userInventoryRepository</b>
+<b class="fc">&nbsp;                .findByUserIdAndShopItemId(uid, shopItem.getId())</b>
+<b class="fc">&nbsp;                .orElse(null);</b>
+&nbsp;
+<b class="pc">&nbsp;        if (inv == null) {</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(&quot;Item not found in user&#39;s inventory.&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        if (shopItem.getItemType() == SHOP_ITEM_TYPE.POWERUP) {</b>
+<b class="nc">&nbsp;            PowerupResponseDTO dto = new PowerupResponseDTO();</b>
+<b class="nc">&nbsp;            dto.setPowerup(null);</b>
+<b class="nc">&nbsp;            dto.setMessage(&quot;Powerups cannot be unequipped.&quot;);</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.CONFLICT).body(dto);</b>
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        if (!inv.isEquipped()) {</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.CONFLICT).body(&quot;Item is already unequipped.&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        inv.setEquipped(false);</b>
+<b class="fc">&nbsp;        userInventoryRepository.save(inv);</b>
+&nbsp;
+<b class="fc">&nbsp;        return ResponseEntity.ok(&quot;Item unequipped successfully.&quot;);</b>
 &nbsp;    }
 &nbsp;
-&nbsp;    private void argError(String username){
-<b class="nc">&nbsp;        sendMessageToParticularUser(username, &quot;Incorrect usage of websocket endpoints.&quot;);</b>
+&nbsp;    @Transactional
+&nbsp;    public ResponseEntity userPowerup(String itemName, long uid) {
+&nbsp;
+<b class="fc">&nbsp;        Account acc = accountRepository.findById(uid).orElse(null);</b>
+<b class="pc">&nbsp;        if (acc == null) {</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(&quot;Account not found.&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        Shop shopItem = shopRepository.findByName(itemName).orElse(null);</b>
+<b class="pc">&nbsp;        if (shopItem == null) {</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(&quot;Shop Item not found.&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        if (shopItem.getItemType() != SHOP_ITEM_TYPE.POWERUP) {</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.BAD_REQUEST)</b>
+<b class="nc">&nbsp;                    .body(&quot;This item is not a powerup.&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        UserInventory inv = userInventoryRepository</b>
+<b class="fc">&nbsp;                .findByUserIdAndShopItemId(uid, shopItem.getId())</b>
+<b class="fc">&nbsp;                .orElse(null);</b>
+&nbsp;
+<b class="pc">&nbsp;        if (inv == null) {</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(&quot;Powerup not in user&#39;s inventory.&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        Powerup powerup = shopItem.getPowerup();</b>
+&nbsp;
+<b class="pc">&nbsp;        if (inv.getQuantity() &gt; 1) {</b>
+<b class="fc">&nbsp;            inv.setQuantity(inv.getQuantity() - 1);</b>
+<b class="fc">&nbsp;            userInventoryRepository.save(inv);</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            userInventoryRepository.delete(inv);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        powerupService.addToAcc(powerup.getId(), uid);</b>
+&nbsp;
+<b class="fc">&nbsp;        PowerupResponseDTO dto = new PowerupResponseDTO();</b>
+<b class="fc">&nbsp;        dto.setPowerup(powerup);</b>
+<b class="fc">&nbsp;        dto.setMessage(&quot;Powerup used successfully.&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        return ResponseEntity.ok(dto);</b>
 &nbsp;    }
+&nbsp;
+&nbsp;    public ResponseEntity deleteById(long id){
+<b class="nc">&nbsp;        Optional&lt;Shop&gt; s = shopRepository.findById(id);</b>
+<b class="nc">&nbsp;        if (s.isPresent()) {</b>
+<b class="nc">&nbsp;            userInventoryRepository.deleteAllByShopItem(s.get());</b>
+<b class="nc">&nbsp;            transactionsRepository.deleteAllByShopItem(s.get());</b>
+<b class="nc">&nbsp;            shopRepository.deleteById(id);</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.OK).build();</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(&quot;Shop Item not found.&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public ResponseEntity deleteFromInventory(long userId, long shopItemId) {
+&nbsp;
+<b class="nc">&nbsp;        Optional&lt;Shop&gt; s = shopRepository.findById(shopItemId);</b>
+<b class="nc">&nbsp;        if (s.isEmpty()) {</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND)</b>
+<b class="nc">&nbsp;                    .body(&quot;Shop item not found.&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        Optional&lt;UserInventory&gt; entry =</b>
+<b class="nc">&nbsp;                userInventoryRepository.findByUserIdAndShopItemId(userId, shopItemId);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (entry.isEmpty()) {</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND)</b>
+<b class="nc">&nbsp;                    .body(&quot;Shop item not found in user&#39;s inventory.&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        userInventoryRepository.deleteByUserIdAndShopItem(userId, s.get());</b>
+&nbsp;
+<b class="nc">&nbsp;        return ResponseEntity.status(HttpStatus.OK).build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;
 &nbsp;}
+&nbsp;
+&nbsp;    /**public ResponseEntity&lt;String&gt; purchaseControl(PaymentDTO paymentDTO) {
+&nbsp;        Optional&lt;Shop&gt; item = shopRepository.findById(paymentDTO.getShopid());
+&nbsp;        Optional&lt;Account&gt; acc = accountRepository.findById(paymentDTO.getUserid());
+&nbsp;        if (item.isEmpty() || acc.isEmpty()) {
+&nbsp;            return ResponseEntity.notFound().build();
+&nbsp;        }
+&nbsp;
+&nbsp;        long priceInCents = (long)(item.get().getPrice() * 100);
+&nbsp;
+&nbsp;        SessionCreateParams.LineItem lineItem =
+&nbsp;                SessionCreateParams.LineItem.builder()
+&nbsp;                        .setQuantity(1L)
+&nbsp;                        .setPriceData(
+&nbsp;                                SessionCreateParams.LineItem.PriceData.builder()
+&nbsp;                                        .setCurrency(&quot;usd&quot;)
+&nbsp;                                        .setUnitAmount(priceInCents)
+&nbsp;                                        .setProductData(
+&nbsp;                                                SessionCreateParams.LineItem.PriceData.ProductData.builder()
+&nbsp;                                                        .setName(item.get().getName())
+&nbsp;                                                        .build()
+&nbsp;                                        )
+&nbsp;                                        .build()
+&nbsp;                        )
+&nbsp;                        .build();
+&nbsp;
+&nbsp;        SessionCreateParams params =
+&nbsp;                SessionCreateParams.builder()
+&nbsp;                        .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
+&nbsp;                        .addLineItem(lineItem)
+&nbsp;                        .setMode(SessionCreateParams.Mode.PAYMENT)
+&nbsp;                        .setSuccessUrl(&quot;https://example.com/success&quot;)
+&nbsp;                        .setCancelUrl(&quot;https://example.com/cancel&quot;)
+&nbsp;                        .putMetadata(&quot;userId&quot;, String.valueOf(paymentDTO.getUserid()))
+&nbsp;                        .putMetadata(&quot;shopId&quot;, String.valueOf(paymentDTO.getShopid()))
+&nbsp;                        .build();
+&nbsp;
+&nbsp;        Session session;
+&nbsp;        try{
+&nbsp;            session = Session.create(params);
+&nbsp;        } catch (StripeException e){
+&nbsp;            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+&nbsp;        }
+&nbsp;
+&nbsp;        return ResponseEntity.status(HttpStatus.CREATED).body(session.getUrl());
+&nbsp;    }**/
+&nbsp;
+&nbsp;
 </code>
 </pre>
 </div>
@@ -440,7 +549,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2025-12-06 21:25</div>
+    <div style="float:right;">generated on 2025-12-09 20:59</div>
 </div>
 </body>
 </html>

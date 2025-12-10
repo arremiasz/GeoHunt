@@ -56,10 +56,10 @@ Current scope:     <a href="../../index.html">all classes</a>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    12.5%
+    9.1%
   </span>
   <span class="absValue">
-    (1/8)
+    (1/11)
   </span>
 </td>
 <td class="coverageStat">
@@ -72,10 +72,10 @@ Current scope:     <a href="../../index.html">all classes</a>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    4%
+    2.8%
   </span>
   <span class="absValue">
-    (1/25)
+    (1/36)
   </span>
 </td>
 </tr>
@@ -89,6 +89,8 @@ Current scope:     <a href="../../index.html">all classes</a>
 <pre>
 <code class="sourceCode" id="sourceCode">&nbsp;package com.geohunt.backend.Controllers;
 &nbsp;
+&nbsp;import com.geohunt.backend.Shop.UserInventory;
+&nbsp;import com.geohunt.backend.Shop.UserInventoryRepository;
 &nbsp;import com.geohunt.backend.database.Account;
 &nbsp;import com.geohunt.backend.Services.AccountService;
 &nbsp;import io.swagger.v3.oas.annotations.Operation;
@@ -103,6 +105,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;import org.springframework.http.ResponseEntity;
 &nbsp;import org.springframework.web.bind.annotation.*;
 &nbsp;
+&nbsp;import java.util.List;
 &nbsp;
 &nbsp;
 &nbsp;@Tag(name = &quot;Accounts Management&quot;, description = &quot;Operations related to new and existing accounts&quot;)
@@ -111,6 +114,9 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;
 &nbsp;    @Autowired
 &nbsp;    private AccountService accountService;
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    private UserInventoryRepository userInventoryRepository;
 &nbsp;
 &nbsp;    @Operation(summary = &quot;Create a new account&quot;)
 &nbsp;    @ApiResponses(value = {
@@ -238,6 +244,142 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;    public ResponseEntity&lt;String&gt; getPfp(@RequestParam long id) {
 <b class="nc">&nbsp;        return accountService.getPfp(id);</b>
 &nbsp;    }
+&nbsp;
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Get a user&#39;s total points&quot;,
+&nbsp;            description = &quot;&quot;&quot;
+&nbsp;                Retrieves the total point balance stored on the user&#39;s account.
+&nbsp;                Points are used for purchasing shop items such as decorations,
+&nbsp;                cosmetics, and powerups.
+&nbsp;                &quot;&quot;&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses({
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Successfully retrieved user points.&quot;,
+&nbsp;                    content = @Content(
+&nbsp;                            mediaType = &quot;application/json&quot;,
+&nbsp;                            examples = @ExampleObject(
+&nbsp;                                    value = &quot;4120&quot;
+&nbsp;                            )
+&nbsp;                    )
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;Account not found.&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    @GetMapping(&quot;/points&quot;)
+&nbsp;    public ResponseEntity getPoints(
+&nbsp;            @Parameter(description = &quot;User ID&quot;, required = true)
+&nbsp;            @RequestParam long id
+&nbsp;    ) {
+&nbsp;        try {
+<b class="nc">&nbsp;            Account acc = accountService.getAccountById(id);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(acc.getTotalPoints());</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            return ResponseEntity.notFound().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Add points to a user&#39;s account&quot;,
+&nbsp;            description = &quot;&quot;&quot;
+&nbsp;                Adds points to a user&#39;s account. 
+&nbsp;                Points added here can be used in the shop.
+&nbsp;                &quot;&quot;&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses({
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Points successfully added.&quot;,
+&nbsp;                    content = @Content(
+&nbsp;                            mediaType = &quot;application/json&quot;,
+&nbsp;                            examples = @ExampleObject(
+&nbsp;                                    value = &quot;\&quot;Points added successfully.\&quot;&quot;
+&nbsp;                            )
+&nbsp;                    )
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;Account not found.&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    @PutMapping(&quot;/addPoints&quot;)
+&nbsp;    public ResponseEntity addPoints(
+&nbsp;            @Parameter(description = &quot;User ID&quot;) @RequestParam long id,
+&nbsp;            @Parameter(description = &quot;Amount of points to add&quot;) @RequestParam long amount
+&nbsp;    ) {
+&nbsp;        try {
+<b class="nc">&nbsp;            Account acc = accountService.getAccountById(id);</b>
+<b class="nc">&nbsp;            accountService.giveAccountMoney(acc, amount);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(&quot;Points added successfully.&quot;);</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            return ResponseEntity.status(404).body(&quot;Account not found.&quot;);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Get a user&#39;s inventory (cosmetics, decorations, powerups)&quot;,
+&nbsp;            description = &quot;&quot;&quot;
+&nbsp;                Returns all items the user owns from the shop system.  
+&nbsp;                Includes equipped state, quantity, acquisition date, and item metadata.
+&nbsp;                &quot;&quot;&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses({
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Successfully retrieved user inventory.&quot;,
+&nbsp;                    content = @Content(
+&nbsp;                            mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = UserInventory.class),
+&nbsp;                            examples = @ExampleObject(
+&nbsp;                                    value = &quot;&quot;&quot;
+&nbsp;                                    [
+&nbsp;                                      {
+&nbsp;                                        &quot;id&quot;: 12,
+&nbsp;                                        &quot;equipped&quot;: true,
+&nbsp;                                        &quot;quantity&quot;: 1,
+&nbsp;                                        &quot;acquiredAt&quot;: &quot;2025-01-03T22:14:55.123+00:00&quot;,
+&nbsp;                                        &quot;shopItem&quot;: {
+&nbsp;                                          &quot;id&quot;: 4,
+&nbsp;                                          &quot;name&quot;: &quot;Golden Crown&quot;,
+&nbsp;                                          &quot;description&quot;: &quot;A rare cosmetic&quot;,
+&nbsp;                                          &quot;image&quot;: &quot;base64string&quot;,
+&nbsp;                                          &quot;itemType&quot;: &quot;DECORATION&quot;,
+&nbsp;                                          &quot;price&quot;: 2500
+&nbsp;                                        }
+&nbsp;                                      }
+&nbsp;                                    ]
+&nbsp;                                    &quot;&quot;&quot;
+&nbsp;                            )
+&nbsp;                    )
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;Account not found.&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    @GetMapping(&quot;/inventory&quot;)
+&nbsp;    public ResponseEntity getInventory(
+&nbsp;            @Parameter(description = &quot;User ID&quot;, required = true)
+&nbsp;            @RequestParam long id
+&nbsp;    ) {
+&nbsp;        try {
+<b class="nc">&nbsp;            Account acc = accountService.getAccountById(id);</b>
+<b class="nc">&nbsp;            List&lt;UserInventory&gt; inv = userInventoryRepository.findAllByUser(acc);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(inv);</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            return ResponseEntity.status(404).body(&quot;Account not found.&quot;);</b>
+&nbsp;        }
+&nbsp;    }
 &nbsp;}
 </code>
 </pre>
@@ -262,7 +404,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2025-12-06 21:25</div>
+    <div style="float:right;">generated on 2025-12-09 20:59</div>
 </div>
 </body>
 </html>
