@@ -224,7 +224,16 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
         }
 
         // Update
-        String url = ApiConstants.BASE_URL + ApiConstants.GET_REWARDS + "?uid=" + userId;
+        String url = ApiConstants.NATHAN_MOCK_URL + ApiConstants.GET_REWARDS + "?uid=" + userId;
+
+        JSONObject stats = new JSONObject();
+        try {
+            stats.put("distance", results);
+            stats.put("time", time);
+        } catch (JSONException e) {
+            Log.e(TAG, "Error creating login JSON for validation", e);
+            return;
+        }
 
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(
                 Request.Method.GET,

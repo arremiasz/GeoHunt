@@ -230,7 +230,7 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
                                 currentPowerUp.setAmount(1);
                                 powerUpList.add(currentPowerUp);
                             }
-                            else if(response.getJSONObject(i).getString("type").equals("MINUS_MINUETS")){
+                            else if(response.getJSONObject(i).getString("type").equals("MINUS_MINUTES")){
                                 currentPowerUp = new TimeReductionPU();
                                 currentPowerUp.setAmount(1);
                                 powerUpList.add(currentPowerUp);

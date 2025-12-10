@@ -2,6 +2,7 @@ package com.jubair5.geohunt.game;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -36,9 +37,12 @@ import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.transition.TransitionManager;
 
 import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.bumptech.glide.Glide;
@@ -60,6 +64,12 @@ import com.google.android.material.slider.Slider;
 import com.jubair5.geohunt.R;
 import com.jubair5.geohunt.network.ApiConstants;
 import com.jubair5.geohunt.network.VolleySingleton;
+import com.jubair5.geohunt.reward.powerups.LargeTimeReductionPU;
+import com.jubair5.geohunt.reward.powerups.PowerUp;
+import com.jubair5.geohunt.reward.powerups.PowerUpAdapter;
+import com.jubair5.geohunt.reward.powerups.SpecificHintPu;
+import com.jubair5.geohunt.reward.powerups.TimeReductionPU;
+import com.jubair5.geohunt.reward.powerups.hintPu;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -69,13 +79,15 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 /**
  * Activity responsible for handling the main game function
  * @author Alex Remiasz
  */
-public class GameActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class GameActivity extends AppCompatActivity implements OnMapReadyCallback, PowerUpAdapter.OnPowerUpClickListener {
 
     private static final String TAG = "GameActivity";
     protected MapView mapView;
@@ -88,6 +100,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected TextView countdownText;
     protected CardView stopwatchContainer;
     protected TextView stopwatchText;
+    protected CardView distanceContainer;
+    protected TextView distanceText;
     protected CardView hintContainer;
     protected ImageView hintImage;
     protected ImageView fullscreenPreview;
@@ -101,6 +115,14 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected int challengeId;
     protected int strokeColor = Color.BLUE;
     protected int fillColor = 0x220000FF;
+    private int powerUpTimeOffSet;
+    private int duration;
+    protected PowerUp currentPowerUp;
+    private RecyclerView powerUpsRecyclerView;
+    private LinearLayoutManager powerLayoutManager;
+    private PowerUpAdapter powerUpAdapter;
+    private List<PowerUp> powerUpList;
+
 
     protected Handler stopwatchHandler = new Handler(Looper.getMainLooper());
     protected long startTime = 0L;
@@ -131,11 +153,14 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         countdownText = findViewById(R.id.countdown_text);
         stopwatchContainer = findViewById(R.id.stopwatch_container);
         stopwatchText = findViewById(R.id.stopwatch_text);
+        distanceContainer = findViewById(R.id.distance_container);
+        distanceText = findViewById(R.id.distance_text);
         hintContainer = findViewById(R.id.hint_container);
         hintImage = findViewById(R.id.hint_image);
         fullscreenPreview = findViewById(R.id.fullscreen_preview);
         guessButton = findViewById(R.id.guess_button);
         usePUButton = findViewById(R.id.use_powerUp_button);
+        powerUpsRecyclerView = findViewById(R.id.powerUp_recycler_view);
 
         usePUButton.setVisibility(View.GONE);
         guessButton.setVisibility(View.GONE);
@@ -150,14 +175,146 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             updateCircleRadius();
         });
 
+        setupPowerUpRecyclerView();
+        getPowerUps();
         readyButton.setOnClickListener(v -> readyUp());
         usePUButton.setOnClickListener(v-> usePowerUp());
         guessButton.setOnClickListener(v -> startGuess());
         setupHintBoxListeners();
     }
 
-    protected void usePowerUp(){
+    /**
+     * Sets up the RecyclerView for displaying power-ups.
+     */
+    private void setupPowerUpRecyclerView() {
+        powerUpList = new ArrayList<>();
+        powerUpAdapter = new PowerUpAdapter(this, powerUpList, this);
+        powerLayoutManager = new LinearLayoutManager(this,LinearLayoutManager.HORIZONTAL,false);
+        powerUpsRecyclerView.setLayoutManager(powerLayoutManager);
+        powerUpsRecyclerView.setAdapter(powerUpAdapter);
+    }
 
+    /**
+     * Fetches the user's submissions from the server.
+     */
+    private void getPowerUps() {
+        currentPowerUp = null;
+        SharedPreferences prefs = getSharedPreferences("GeoHuntPrefs", Context.MODE_PRIVATE);
+        int userId = prefs.getInt("userId", -1);
+        if (userId == -1) {
+            Log.e(TAG, "User ID not found in shared preferences.");
+            return;
+        }
+
+        String url = ApiConstants.BASE_URL + ApiConstants.GET_POWERUPS_ENDPOINT + "?uid=" + userId;
+
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+                    Log.d(TAG, "Account Power Ups Response: " + response.toString());
+                    try {
+                        powerUpList.clear();
+                        for (int i = 0; i < response.length(); i++) {
+                            PowerUp currentPowerUp;
+                            if(response.getJSONObject(i).getString("type").equals("LOCATION_HINT_GENERAL")){
+                                currentPowerUp = new hintPu();
+                                currentPowerUp.setAmount(1);
+                                powerUpList.add(currentPowerUp);
+                            }
+                            else if(response.getJSONObject(i).getString("type").equals("LOCATION_HINT_SPECIFIC")){
+                                currentPowerUp = new SpecificHintPu();
+                                currentPowerUp.setAmount(1);
+                                powerUpList.add(currentPowerUp);
+                            }
+                            else if(response.getJSONObject(i).getString("type").equals("MINUS_MINUTES")){
+                                currentPowerUp = new TimeReductionPU();
+                                currentPowerUp.setAmount(1);
+                                powerUpList.add(currentPowerUp);
+                            }
+                            else if(response.getJSONObject(i).getString("type").equals("MINUS_MORE_MINUTES")){
+                                currentPowerUp = new LargeTimeReductionPU();
+                                currentPowerUp.setAmount(1);
+                                powerUpList.add(currentPowerUp);
+                            }
+                        }
+                        powerUpAdapter.notifyDataSetChanged();
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Error parsing power ups JSON", e);
+                    }
+                    },
+                error -> {
+                    Log.e(TAG, "Error getting powerUps", error);
+                });
+
+        VolleySingleton.getInstance(this).addToRequestQueue(jsonArrayRequest);
+    }
+    protected void usePowerUp(){
+        int type = 0;
+
+        if(currentPowerUp!=null){
+            Toast.makeText(this, "Using Power Up", Toast.LENGTH_SHORT).show();
+            if(currentPowerUp.getTitle().equals("Hint PowerUp")){
+                type = 1;
+                duration = 0;
+                distanceContainer.setVisibility(View.VISIBLE);
+
+
+
+
+
+            }
+            else if(currentPowerUp.getTitle().equals("Specific Hint PowerUp")){
+                type = 2;
+
+            }
+            else if(currentPowerUp.getTitle().equals("Time Reduction PowerUp")){
+                type = 3;
+                powerUpTimeOffSet += 150 * 1000;
+                Toast.makeText(this, "Time Reduction: Time reduced by 2:30", Toast.LENGTH_SHORT).show();
+            }
+            else if(currentPowerUp.getTitle().equals("Large Time Reduction PowerUp")){
+                type = 4;
+                powerUpTimeOffSet += 240 * 1000;
+                Toast.makeText(this, "Time Reduction: Time reduced by 4:00", Toast.LENGTH_SHORT).show();
+            }
+            removePowerUp(type);
+
+        }
+        else{
+            Toast.makeText(this, "Power Up already used or not equipped", Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
+    private void removePowerUp(int type) {
+        SharedPreferences prefs = getSharedPreferences("GeoHuntPrefs", Context.MODE_PRIVATE);
+        int userId = prefs.getInt("userId", -1);
+        if (userId == -1) {
+            Log.e(TAG, "User ID not found in shared preferences.");
+            return;
+        }
+
+        String url = ApiConstants.BASE_URL + ApiConstants.REMOVE_POWERUPS_ENDPOINT + "?uid=" + userId + "&&powerupId=" + type;
+
+        StringRequest removeRequest = new StringRequest(
+                Request.Method.DELETE,
+                url,
+                response -> {
+                    Log.d(TAG, "Response: "+ response);
+
+                },
+                volleyError -> {
+                    Log.e(TAG, "Error removing powerUp " + volleyError.toString());
+                    String responseBody = "";
+                    if(volleyError.networkResponse.data != null) {
+                        responseBody = new String(volleyError.networkResponse.data, StandardCharsets.UTF_8);
+                    }
+                }
+        );
+        VolleySingleton.getInstance(this).addToRequestQueue(removeRequest);
+        currentPowerUp = null;
     }
 
     /**
@@ -292,12 +449,13 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         stopwatchHandler.post(new Runnable() {
             @Override
             public void run() {
-                long millis = System.currentTimeMillis() - startTime;
+                long millis = System.currentTimeMillis() - powerUpTimeOffSet - startTime;
                 int seconds = (int) (millis / 1000);
                 int minutes = seconds / 60;
                 seconds = seconds % 60;
 
                 stopwatchText.setText(String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds));
+                distanceText.setText("");
 
                 stopwatchHandler.postDelayed(this, 500);
             }
@@ -781,4 +939,51 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onSaveInstanceState(outState);
         mapView.onSaveInstanceState(outState);
     }
+
+    @Override
+    public void onPowerUpClick(PowerUp powerUp) {
+        Dialog powerUpDescription = new Dialog(this, R.style.DialogStyle);
+        powerUpDescription.setContentView(R.layout.layout_power_up_usedescription);
+
+        TextView title = powerUpDescription.findViewById(R.id.powerUp_title);
+        title.setText(powerUp.getTitle());
+
+        TextView description = powerUpDescription.findViewById(R.id.powerUp_description);
+        description.setText(powerUp.getDescription());
+
+        ImageView imageView = powerUpDescription.findViewById(R.id.powerUp_icon);
+        imageView.setImageResource(powerUp.getImage());
+
+        ImageView btnClose = powerUpDescription.findViewById(R.id.btn_close);
+        btnClose.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                powerUpDescription.dismiss();
+            }
+        });
+
+        Button useButton = powerUpDescription.findViewById(R.id.use_btn);
+        useButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                currentPowerUp = powerUp;
+                Log.e(TAG, currentPowerUp + "");
+                powerUpDescription.dismiss();
+            }
+        });
+
+        Button deselectButton = powerUpDescription.findViewById(R.id.not_use_btn);
+        deselectButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                currentPowerUp = null;
+                powerUpDescription.dismiss();
+            }
+        });
+
+
+        powerUpDescription.show();
+
+    }
+
 }

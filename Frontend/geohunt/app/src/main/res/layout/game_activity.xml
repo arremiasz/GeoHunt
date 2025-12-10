@@ -16,6 +16,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+
     <LinearLayout
         android:id="@+id/settings_container"
         android:layout_width="0dp"
@@ -28,7 +29,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
+
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/powerUp_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="horizontal"
+            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+            app:spanCount="5" />
+
         <TextView
+            android:layout_marginTop="30dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Set Search Radius (miles)" />
@@ -92,6 +104,28 @@
             android:layout_height="wrap_content"
             android:padding="8dp"
             android:text="00:00"
+            android:textColor="@android:color/white"
+            android:textSize="24sp" />
+    </androidx.cardview.widget.CardView>
+
+    <!-- Distance UI -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/distance_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:visibility="gone"
+        app:cardBackgroundColor="#80000000"
+        app:cardCornerRadius="8dp"
+        app:layout_constraintStart_toEndOf="@id/stopwatch_container"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/distance_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:text="0 m"
             android:textColor="@android:color/white"
             android:textSize="24sp" />
     </androidx.cardview.widget.CardView>
