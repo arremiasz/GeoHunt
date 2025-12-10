@@ -92,7 +92,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected CardView hintContainer;
     protected ImageView hintImage;
     protected ImageView fullscreenPreview;
-    protected Button guessButton;
+    protected Button guessButton, usePUButton;
     protected double radius = 1.0; // Default radius in miles
     protected double currentLat;
     protected double currentLng;
@@ -135,6 +135,9 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         hintImage = findViewById(R.id.hint_image);
         fullscreenPreview = findViewById(R.id.fullscreen_preview);
         guessButton = findViewById(R.id.guess_button);
+        usePUButton = findViewById(R.id.use_powerUp_button);
+
+        usePUButton.setVisibility(View.GONE);
         guessButton.setVisibility(View.GONE);
 
         mapView.onCreate(savedInstanceState);
@@ -148,8 +151,13 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
 
         readyButton.setOnClickListener(v -> readyUp());
+        usePUButton.setOnClickListener(v-> usePowerUp());
         guessButton.setOnClickListener(v -> startGuess());
         setupHintBoxListeners();
+    }
+
+    protected void usePowerUp(){
+
     }
 
     /**
@@ -268,6 +276,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                 startStopwatch();
                 showHint(imageUrl);
                 guessButton.setVisibility(View.VISIBLE);
+                usePUButton.setVisibility(View.VISIBLE);
                 Log.d(TAG, "Countdown finished. Starting game with challenge ID: " + id);
                 challengeId = id;
             }

@@ -132,7 +132,20 @@
         android:text="Guess"
         app:cornerRadius="100dp"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/use_powerUp_button" />
+
+    <!-- Use Power Up Button -->
+    <Button
+        android:id="@+id/use_powerUp_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="32dp"
+        android:backgroundTint="@android:color/holo_red_dark"
+        android:text="Use"
+        app:cornerRadius="100dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toEndOf="@+id/guess_button" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
