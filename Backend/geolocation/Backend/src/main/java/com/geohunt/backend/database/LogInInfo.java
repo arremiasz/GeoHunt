@@ -3,6 +3,9 @@ package com.geohunt.backend.database;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * @author evan juslon
+ */
 @Setter
 @Getter
 public class LogInInfo {
