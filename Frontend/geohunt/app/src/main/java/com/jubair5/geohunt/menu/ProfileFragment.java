@@ -2,6 +2,7 @@ package com.jubair5.geohunt.menu;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -13,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,6 +24,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Base64;
@@ -46,6 +49,12 @@ import com.jubair5.geohunt.places.PlaceDetailActivity;
 import com.jubair5.geohunt.places.PlacesAdapter;
 import com.jubair5.geohunt.network.ApiConstants;
 import com.jubair5.geohunt.network.VolleySingleton;
+import com.jubair5.geohunt.reward.powerups.LargeTimeReductionPU;
+import com.jubair5.geohunt.reward.powerups.PowerUp;
+import com.jubair5.geohunt.reward.powerups.PowerUpAdapter;
+import com.jubair5.geohunt.reward.powerups.SpecificHintPu;
+import com.jubair5.geohunt.reward.powerups.TimeReductionPU;
+import com.jubair5.geohunt.reward.powerups.hintPu;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -60,7 +69,7 @@ import java.util.List;
  * 
  * @author Alex Remiasz
  */
-public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceClickListener {
+public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceClickListener, PowerUpAdapter.OnPowerUpClickListener {
 
     private static final String TAG = "ProfileFragment";
     private static final String SHARED_PREFS_NAME = "GeoHuntPrefs";
@@ -80,6 +89,10 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
     private RecyclerView placesRecyclerView;
     private PlacesAdapter placesAdapter;
     private List<Place> placesList;
+    private RecyclerView powerUpsRecyclerView;
+    private LinearLayoutManager powerLayoutManager;
+    private PowerUpAdapter powerUpAdapter;
+    private List<PowerUp> powerUpList;
 
     private SharedPreferences prefs;
     private View root;
@@ -139,9 +152,11 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         cancelButton = root.findViewById(R.id.cancel_button);
         logoutButton = root.findViewById(R.id.logout_button);
         placesRecyclerView = root.findViewById(R.id.places_recycler_view);
+        powerUpsRecyclerView = root.findViewById(R.id.powerUp_recycler_view);
 
         String username = prefs.getString(KEY_USER_NAME, "User");
         usernameLabel.setText("@" + username);
+
 
         loadProfilePicture();
 
@@ -156,6 +171,10 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         setupRecyclerView();
         fetchSubmissions();
         fetchStatistics();
+
+
+        setupPowerUpRecyclerView();
+        getPowerUps();
 
         editButton.setOnClickListener(v -> showEditOptions());
         deleteButton.setOnClickListener(v -> showDeleteConfirmationDialog());
@@ -217,6 +236,72 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         placesList = new ArrayList<>();
         placesAdapter = new PlacesAdapter(getContext(), placesList, this);
         placesRecyclerView.setAdapter(placesAdapter);
+    }
+
+    /**
+     * Sets up the RecyclerView for displaying power-ups.
+     */
+    private void setupPowerUpRecyclerView() {
+        powerUpList = new ArrayList<>();
+        powerUpAdapter = new PowerUpAdapter(getContext(), powerUpList, this);
+        powerLayoutManager = new LinearLayoutManager(getContext(),LinearLayoutManager.HORIZONTAL,false);
+        powerUpsRecyclerView.setLayoutManager(powerLayoutManager);
+        powerUpsRecyclerView.setAdapter(powerUpAdapter);
+    }
+
+    /**
+     * Fetches the user's submissions from the server.
+     */
+    private void getPowerUps() {
+        int userId = prefs.getInt(KEY_USER_ID, -1);
+        if (userId == -1) {
+            Log.e(TAG, "User ID not found in shared preferences.");
+            return;
+        }
+
+        String url = ApiConstants.BASE_URL + ApiConstants.GET_POWERUPS_ENDPOINT + "?uid=" + userId;
+
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+                    Log.d(TAG, "Account Power Ups Response: " + response.toString());
+                    try {
+                        powerUpList.clear();
+                        for (int i = 0; i < response.length(); i++) {
+                            PowerUp currentPowerUp;
+                            if(response.getJSONObject(i).getString("type").equals("LOCATION_HINT_GENERAL")){
+                                currentPowerUp = new hintPu();
+                                currentPowerUp.setAmount(1);
+                                powerUpList.add(currentPowerUp);
+                            }
+                            else if(response.getJSONObject(i).getString("type").equals("LOCATION_HINT_SPECIFIC")){
+                                currentPowerUp = new SpecificHintPu();
+                                currentPowerUp.setAmount(1);
+                                powerUpList.add(currentPowerUp);
+                            }
+                            else if(response.getJSONObject(i).getString("type").equals("MINUS_MINUETS")){
+                                currentPowerUp = new TimeReductionPU();
+                                currentPowerUp.setAmount(1);
+                                powerUpList.add(currentPowerUp);
+                            }
+                            else if(response.getJSONObject(i).getString("type").equals("MINUS_MORE_MINUETS")){
+                                currentPowerUp = new LargeTimeReductionPU();
+                                currentPowerUp.setAmount(1);
+                                powerUpList.add(currentPowerUp);
+                            }
+                        }
+                        powerUpAdapter.notifyDataSetChanged();
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Error parsing power ups JSON", e);
+                    }
+                },
+                error -> {
+                    Log.e(TAG, "Error getting powerUps", error);
+                });
+
+        VolleySingleton.getInstance(requireContext()).addToRequestQueue(jsonArrayRequest);
     }
 
     /**
@@ -733,5 +818,31 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         intent.putExtra("LATITUDE", place.getLatitude());
         intent.putExtra("LONGITUDE", place.getLongitude());
         activityLauncher.launch(intent);
+    }
+
+    @Override
+    public void onPowerUpClick(PowerUp powerUp) {
+        Dialog powerUpDescription = new Dialog(requireContext(), R.style.DialogStyle);
+        powerUpDescription.setContentView(R.layout.layout_power_up_description);
+
+        TextView title = powerUpDescription.findViewById(R.id.powerUp_title);
+        title.setText(powerUp.getTitle());
+
+        TextView description = powerUpDescription.findViewById(R.id.powerUp_description);
+        description.setText(powerUp.getDescription());
+
+        ImageView imageView = powerUpDescription.findViewById(R.id.powerUp_icon);
+        imageView.setImageResource(powerUp.getImage());
+
+        ImageView btnClose = powerUpDescription.findViewById(R.id.btn_close);
+        btnClose.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                powerUpDescription.dismiss();
+            }
+        });
+
+        powerUpDescription.show();
+
     }
 }

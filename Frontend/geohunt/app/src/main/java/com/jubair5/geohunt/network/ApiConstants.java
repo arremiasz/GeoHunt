@@ -6,8 +6,8 @@ package com.jubair5.geohunt.network;
  */
 public final class ApiConstants {
 
-    private ApiConstants() {
-    }
+
+    private ApiConstants() {}
 
     // Base URL for all API calls
        public static final String BASE_URL = "http://coms-3090-030.class.las.iastate.edu:8080";
@@ -15,7 +15,8 @@ public final class ApiConstants {
 //    public static final String BASE_URL = "https://6bfe1ae1-ae39-462f-910e-7d53b5da9867.mock.pstmn.io";
 //    public static final String BASE_URL = "http://10.0.2.2:3000";
     // Nathan Mock Server
-//    public static final String BASE_URL = "https://8ce22578-237f-43d8-bd05-9a8c9cc7d1db.mock.pstmn.io";
+    public static final String NATHAN_MOCK = "https://8ce22578-237f-43d8-bd05-9a8c9cc7d1db.mock.pstmn.io";
+//  public static final String BASE_URL = "https://8ce22578-237f-43d8-bd05-9a8c9cc7d1db.mock.pstmn.io";
 
     // Account Endpoints
     public static final String SIGNUP_ENDPOINT = "/signup";
@@ -56,5 +57,11 @@ public final class ApiConstants {
     public static final String Reject_Friend_Request_ENDPOINT= "/friends/reject";
     public static final String Remove_FRIEND = "/friends/remove";
 
+    // PowerUp EndPoints
+    public static final String GET_POWERUPS_ENDPOINT = "powerup/user";
+    public static final String GET_REWARDS = "/rewards/";
+    public static final String RESET_THEMES = "";
+    public static final String GET_THEMES_ENDPOINT = "";
+    public static final String PURCHASE_THEMES = "";
 
 }
