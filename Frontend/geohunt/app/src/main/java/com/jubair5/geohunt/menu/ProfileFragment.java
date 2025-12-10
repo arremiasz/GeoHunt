@@ -22,7 +22,17 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Base64;
+import android.widget.ImageView;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.canhub.cropper.CropImageContract;
+import com.canhub.cropper.CropImageContractOptions;
+import com.canhub.cropper.CropImageOptions;
+
+import java.io.ByteArrayOutputStream;
 
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonArrayRequest;
@@ -47,6 +57,7 @@ import java.util.List;
 /**
  * Profile Page Fragment
  * Displays user information, places, statistics and account settings.
+ * 
  * @author Alex Remiasz
  */
 public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceClickListener {
@@ -62,13 +73,16 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
     private TextView usernameLabel;
     private TextInputLayout editUsernameLayout, editEmailLayout, editNewPasswordLayout, editCurrentPasswordLayout;
     private EditText editUsername, editEmail, editNewPassword, editCurrentPassword;
-    private Button editButton, deleteButton, saveChangesButton, cancelButton, logoutButton;
+    private Button editButton, deleteButton, saveChangesButton, cancelButton, logoutButton, changePfpButton;
+    private ImageView profileIcon, editProfileImage;
     private RecyclerView placesRecyclerView;
     private PlacesAdapter placesAdapter;
     private List<Place> placesList;
 
     private SharedPreferences prefs;
     private View root;
+    private boolean isPfpChanged = false;
+    private Bitmap newPfpBitmap = null;
 
     private final ActivityResultLauncher<Intent> activityLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -79,15 +93,32 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
                 }
             });
 
+    private final ActivityResultLauncher<CropImageContractOptions> cropImage = registerForActivityResult(
+            new CropImageContract(),
+            result -> {
+                if (result.isSuccessful()) {
+                    Bitmap bitmap = BitmapFactory.decodeFile(result.getUriFilePath(requireContext(), true));
+                    editProfileImage.setImageBitmap(bitmap);
+                    newPfpBitmap = bitmap;
+                    isPfpChanged = true;
+                } else {
+                    Log.e(TAG, "Image crop failed", result.getError());
+                    Toast.makeText(getContext(), "Failed to crop image", Toast.LENGTH_SHORT).show();
+                }
+            });
+
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+            @Nullable Bundle savedInstanceState) {
         root = inflater.inflate(R.layout.profile_fragment, container, false);
         prefs = requireActivity().getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
 
         displayContainer = root.findViewById(R.id.display_container);
         editContainer = root.findViewById(R.id.edit_container);
         usernameLabel = root.findViewById(R.id.username_label);
+        profileIcon = root.findViewById(R.id.profile_icon);
+
         editUsernameLayout = root.findViewById(R.id.edit_username_layout);
         editUsername = root.findViewById(R.id.edit_username);
         editEmailLayout = root.findViewById(R.id.edit_email_layout);
@@ -96,6 +127,10 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         editNewPassword = root.findViewById(R.id.edit_new_password);
         editCurrentPasswordLayout = root.findViewById(R.id.edit_current_password_layout);
         editCurrentPassword = root.findViewById(R.id.edit_current_password);
+
+        editProfileImage = root.findViewById(R.id.edit_profile_image);
+        changePfpButton = root.findViewById(R.id.change_pfp_button);
+
         editButton = root.findViewById(R.id.edit_account_button);
         deleteButton = root.findViewById(R.id.delete_account_button);
         saveChangesButton = root.findViewById(R.id.save_changes_button);
@@ -106,6 +141,8 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         String username = prefs.getString(KEY_USER_NAME, "User");
         usernameLabel.setText("@" + username);
 
+        loadProfilePicture();
+
         setupRecyclerView();
         fetchSubmissions();
 
@@ -114,6 +151,7 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         saveChangesButton.setOnClickListener(v -> updatePreface());
         cancelButton.setOnClickListener(v -> showDisplayOptions());
         logoutButton.setOnClickListener(v -> logout());
+        changePfpButton.setOnClickListener(v -> startImageCrop());
 
         editCurrentPassword.setOnKeyListener((v, keyCode, event) -> {
             editCurrentPasswordLayout.setError(null);
@@ -121,6 +159,37 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         });
 
         return root;
+    }
+
+    /**
+     * Launches the image cropper activity.
+     * Configures the cropper to allow picking from gallery, sets a 1:1 aspect
+     * ratio,
+     * and fixes the aspect ratio for a square crop.
+     */
+    private void startImageCrop() {
+        CropImageOptions options = new CropImageOptions();
+        options.imageSourceIncludeGallery = true;
+        options.imageSourceIncludeCamera = false;
+        options.aspectRatioX = 1;
+        options.aspectRatioY = 1;
+        options.fixAspectRatio = true;
+        cropImage.launch(new CropImageContractOptions(null, options));
+    }
+
+    /**
+     * Loads the user's profile picture from SharedPreferences and displays it.
+     * Falls back to the placeholder icon if no profile picture is available.
+     */
+    private void loadProfilePicture() {
+        String pfp = prefs.getString(KEY_USER_PFP, "");
+        if (pfp != null && !pfp.isEmpty()) {
+            byte[] decodedImage = Base64.decode(pfp, Base64.DEFAULT);
+            Bitmap bitmap = BitmapFactory.decodeByteArray(decodedImage, 0, decodedImage.length);
+            profileIcon.setImageBitmap(bitmap);
+        } else {
+            profileIcon.setImageResource(android.R.drawable.ic_menu_gallery);
+        }
     }
 
     /**
@@ -165,7 +234,6 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         VolleySingleton.getInstance(requireContext()).addToRequestQueue(jsonArrayRequest);
     }
 
-
     /**
      * Switches the UI to edit mode
      */
@@ -178,6 +246,20 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
 
         editNewPassword.setText("");
         editCurrentPassword.setText("");
+
+        // Reset PFP state
+        isPfpChanged = false;
+        newPfpBitmap = null;
+
+        // Load current profile picture in edit view
+        String pfp = prefs.getString(KEY_USER_PFP, "");
+        if (pfp != null && !pfp.isEmpty()) {
+            byte[] decodedImage = Base64.decode(pfp, Base64.DEFAULT);
+            Bitmap bitmap = BitmapFactory.decodeByteArray(decodedImage, 0, decodedImage.length);
+            editProfileImage.setImageBitmap(bitmap);
+        } else {
+            editProfileImage.setImageResource(android.R.drawable.ic_menu_gallery);
+        }
     }
 
     /**
@@ -202,24 +284,40 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         String newPassword = editNewPassword.getText().toString().trim();
         String currentPassword = editCurrentPassword.getText().toString().trim();
 
-        if (TextUtils.isEmpty(currentPassword)) {
+        String currentStoredUsername = prefs.getString(KEY_USER_NAME, "");
+        String currentStoredEmail = prefs.getString(KEY_USER_EMAIL, "");
+
+        boolean isUserInfoChanged = !newUsername.equals(currentStoredUsername) || !newEmail.equals(currentStoredEmail)
+                || !newPassword.isEmpty();
+
+        if (isUserInfoChanged && TextUtils.isEmpty(currentPassword)) {
             editCurrentPasswordLayout.setError("Enter your current password to save changes");
             editCurrentPassword.requestFocus();
             return;
         }
 
-        validatePasswordAndContinue(newUsername, newEmail, newPassword, currentPassword);
+        if (isUserInfoChanged) {
+            validatePasswordAndContinue(newUsername, newEmail, newPassword, currentPassword);
+        } else if (isPfpChanged) {
+            performUpdate(newUsername, newEmail, newPassword);
+        } else {
+            Toast.makeText(getContext(), "No changes to save", Toast.LENGTH_SHORT).show();
+        }
     }
 
     /**
      * Validates the current password by attempting to log in.
      * If successful, proceeds with the update.
-     * @param newUsername The new username to set (can be empty to keep unchanged).
-     * @param newEmail The new email to set (can be empty to keep unchanged).
-     * @param newPassword The new password to set (can be empty to keep unchanged).
+     * 
+     * @param newUsername     The new username to set (can be empty to keep
+     *                        unchanged).
+     * @param newEmail        The new email to set (can be empty to keep unchanged).
+     * @param newPassword     The new password to set (can be empty to keep
+     *                        unchanged).
      * @param currentPassword The current password for validation.
      */
-    private void validatePasswordAndContinue(String newUsername, String newEmail, String newPassword, String currentPassword) {
+    private void validatePasswordAndContinue(String newUsername, String newEmail, String newPassword,
+            String currentPassword) {
         String currentUsername = prefs.getString(KEY_USER_NAME, "");
 
         JSONObject loginBody = new JSONObject();
@@ -231,7 +329,8 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
             return;
         }
 
-        StringRequest loginRequest = new StringRequest(Request.Method.POST, ApiConstants.BASE_URL + ApiConstants.LOGIN_ENDPOINT,
+        StringRequest loginRequest = new StringRequest(Request.Method.POST,
+                ApiConstants.BASE_URL + ApiConstants.LOGIN_ENDPOINT,
                 response -> {
                     Log.d(TAG, "Password validation successful. Proceeding with update.");
                     performUpdate(newUsername, newEmail, newPassword);
@@ -240,12 +339,12 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
                     Log.e(TAG, "Password validation failed", error);
                     editCurrentPasswordLayout.setError("Incorrect password");
                     editCurrentPassword.requestFocus();
-                }
-        ) {
+                }) {
             @Override
             public byte[] getBody() {
                 return loginBody.toString().getBytes(StandardCharsets.UTF_8);
             }
+
             @Override
             public String getBodyContentType() {
                 return "application/json; charset=utf-8";
@@ -257,8 +356,9 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
 
     /**
      * Sends the update request to the server with the new account details.
+     * 
      * @param newUsername The new username to set (can be empty to keep unchanged).
-     * @param newEmail The new email to set (can be empty to keep unchanged).
+     * @param newEmail    The new email to set (can be empty to keep unchanged).
      * @param newPassword The new password to set (can be empty to keep unchanged).
      */
     private void performUpdate(String newUsername, String newEmail, String newPassword) {
@@ -284,9 +384,14 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
 
             requestBody.put("username", newUsername);
             requestBody.put("email", newEmail);
-            requestBody.put("pfp", ""); // TODO: Implement profile picture update
-            requestBody.put("password", newPassword);
 
+            if (isPfpChanged && newPfpBitmap != null) {
+                requestBody.put("pfp", bitmapToString(newPfpBitmap));
+            } else {
+                requestBody.put("pfp", "");
+            }
+
+            requestBody.put("password", newPassword);
 
         } catch (JSONException e) {
             Log.e(TAG, "Error creating JSON for update", e);
@@ -300,8 +405,9 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
 
     /**
      * Creates a StringRequest for updating the user account.
+     * 
      * @param newUsername The new username to set (can be empty to keep unchanged).
-     * @param newEmail The new email to set (can be empty to keep unchanged).
+     * @param newEmail    The new email to set (can be empty to keep unchanged).
      * @param requestBody The JSON body containing update details.
      * @return The configured StringRequest.
      */
@@ -320,6 +426,10 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
                     if (!newEmail.isBlank()) {
                         editor.putString(KEY_USER_EMAIL, newEmail);
                     }
+                    if (isPfpChanged && newPfpBitmap != null) {
+                        editor.putString(KEY_USER_PFP, bitmapToString(newPfpBitmap));
+                        profileIcon.setImageBitmap(newPfpBitmap);
+                    }
                     editor.apply();
 
                     showDisplayOptions();
@@ -330,7 +440,7 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
                     if (error.networkResponse != null) {
                         Log.e(TAG, "Update Profile Error code: " + error.networkResponse.statusCode);
                         String responseBody = "";
-                        if(error.networkResponse.data != null) {
+                        if (error.networkResponse.data != null) {
                             responseBody = new String(error.networkResponse.data, StandardCharsets.UTF_8);
                         }
                         Log.e(TAG, "Signup error response body: " + responseBody);
@@ -340,7 +450,9 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
                             editUsernameLayout.setError("This email or username might already be taken.");
                             editEmailLayout.setError("This email or username might already be taken.");
                         } else {
-                            Toast.makeText(getContext(), "Signup failed. Server error: " + error.networkResponse.statusCode, Toast.LENGTH_LONG).show();
+                            Toast.makeText(getContext(),
+                                    "Signup failed. Server error: " + error.networkResponse.statusCode,
+                                    Toast.LENGTH_LONG).show();
                         }
                     }
                 }) {
@@ -355,6 +467,20 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
             }
         };
         return updateRequest;
+    }
+
+    /**
+     * Converts a Bitmap image to a Base64 encoded string.
+     * Compress the bitmap to JPEG format with 70% quality before encoding.
+     *
+     * @param bitmap The bitmap to convert.
+     * @return The Base64 encoded string of the image.
+     */
+    private String bitmapToString(Bitmap bitmap) {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 70, byteArrayOutputStream);
+        byte[] byteArray = byteArrayOutputStream.toByteArray();
+        return Base64.encodeToString(byteArray, Base64.DEFAULT);
     }
 
     /**
@@ -379,6 +505,7 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
     /**
      * Sends a DELETE request to the server to delete the user account.
      * On success, clears SharedPreferences and navigates to LauncherActivity.
+     * 
      * @param userId The ID of the user to delete.
      */
     private void deleteAccount(int userId) {
@@ -399,14 +526,16 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
                 },
                 error -> {
                     Log.e(TAG, "Failed to delete account", error);
-                    Toast.makeText(getContext(), "Failed to delete account. Please try again.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Failed to delete account. Please try again.", Toast.LENGTH_SHORT)
+                            .show();
                 });
 
         VolleySingleton.getInstance(requireContext()).addToRequestQueue(deleteRequest);
     }
 
     /**
-     * Logs out the user by clearing SharedPreferences and navigates to LauncherActivity.
+     * Logs out the user by clearing SharedPreferences and navigates to
+     * LauncherActivity.
      */
     private void logout() {
         prefs.edit().clear().apply();

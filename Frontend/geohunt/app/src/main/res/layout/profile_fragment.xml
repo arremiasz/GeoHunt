@@ -73,6 +73,23 @@
             android:orientation="vertical"
             android:visibility="gone">
 
+            <ImageView
+                android:id="@+id/edit_profile_image"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="16dp"
+                android:src="@android:drawable/ic_menu_gallery"
+                android:contentDescription="@string/profile_icon" />
+
+            <Button
+                android:id="@+id/change_pfp_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="Change Picture"
+                android:layout_marginBottom="16dp"/>
+
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/edit_username_layout"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
