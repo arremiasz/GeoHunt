@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -38,7 +39,7 @@ public class Challenges {
     @JsonIgnore
     private List<Comment> comments;
 
-    private List<Integer> challengeRatings;
+    private List<Integer> challengeRatings = new ArrayList<>();
 
     public void addRating(int rating){
         challengeRatings.add(rating);
