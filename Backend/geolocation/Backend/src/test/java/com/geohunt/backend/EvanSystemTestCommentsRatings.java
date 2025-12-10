@@ -220,6 +220,46 @@ public class EvanSystemTestCommentsRatings {
         assertEquals(200, statusCode);
     }
 
+    @Test
+    @Order(5)
+    public void addrating(){
+        // Variables
+        long challengeId = challengesIdList.get(0);
+        int rating = 4;
+
+        // Send request and receive response
+        Response response = RestAssured.given().
+                header("Content-Type", "text/plain").
+                header("charset","utf-8").
+                when().
+                post("/geohunt/rate?cid=" + challengeId + "&rating=" + rating);
+
+
+        // Check status code
+        int statusCode = response.getStatusCode();
+        assertEquals(200, statusCode);
+    }
+
+    @Test
+    @Order(5)
+    public void addrating_fail(){
+        // Variables
+        long challengeId = challengesIdList.get(0);
+        int rating = 7;
+
+        // Send request and receive response
+        Response response = RestAssured.given().
+                header("Content-Type", "text/plain").
+                header("charset","utf-8").
+                when().
+                post("/geohunt/rate?cid=" + challengeId + "&rating=" + rating);
+
+
+        // Check status code
+        int statusCode = response.getStatusCode();
+        assertEquals(400, statusCode);
+    }
+
     @AfterAll
     public void resetRepositories(){
         commentRepository.deleteAll();

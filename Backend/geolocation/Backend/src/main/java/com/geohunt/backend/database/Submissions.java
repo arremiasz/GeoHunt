@@ -12,6 +12,9 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
+/**
+ * @author evan juslon
+ */
 @Entity
 @Getter
 @Setter
