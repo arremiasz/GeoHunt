@@ -1,14 +1,14 @@
 package com.geohunt.backend.database;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.*;
+import com.geohunt.backend.comments.Comment;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -20,14 +20,28 @@ public class Challenges {
     private @Id long id;
     double latitude;
     double longitude;
+
     @Column(unique = true, columnDefinition = "MEDIUMTEXT")
     private String streetviewurl;
+
     @ManyToOne
     @JoinColumn(name="account_id")
     @JsonIgnore
     private Account creator;
+
     LocalDate creationdate;
+
     @OneToMany(mappedBy="challenge")
     @JsonManagedReference("challenges-submissions")
     private List<Submissions> submissions;
+
+    @OneToMany(mappedBy = "challenge")
+    @JsonIgnore
+    private List<Comment> comments;
+
+    private List<Integer> challengeRatings = new ArrayList<>();
+
+    public void addRating(int rating){
+        challengeRatings.add(rating);
+    }
 }

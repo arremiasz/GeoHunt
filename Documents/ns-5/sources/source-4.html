@@ -1,0 +1,154 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > TransactionService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.geohunt.backend.Shop</a>
+</div>
+
+<h1>Coverage Summary for Class: TransactionService (com.geohunt.backend.Shop)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TransactionService</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    80%
+  </span>
+  <span class="absValue">
+    (4/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    86.7%
+  </span>
+  <span class="absValue">
+    (13/15)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.geohunt.backend.Shop;
+&nbsp;
+&nbsp;import com.geohunt.backend.Services.AccountService;
+&nbsp;import com.geohunt.backend.Shop.DTOs.TransactionDTO;
+&nbsp;import com.geohunt.backend.database.Account;
+&nbsp;import org.springframework.beans.factory.annotation.Autowired;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;@Service
+<b class="fc">&nbsp;public class TransactionService {</b>
+&nbsp;    @Autowired
+&nbsp;    private TransactionsRepository transactionsRepository;
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    private AccountService accountService;
+&nbsp;
+&nbsp;    public ResponseEntity&lt;Transactions&gt; getTransactionById(long id){
+<b class="fc">&nbsp;        Optional&lt;Transactions&gt; transaction = transactionsRepository.findById(id);</b>
+<b class="fc">&nbsp;        return transaction.map(shop -&gt; ResponseEntity.status(HttpStatus.OK).body(shop)).orElseGet(() -&gt; ResponseEntity.status(HttpStatus.NOT_FOUND).build());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public ResponseEntity&lt;List&lt;Transactions&gt;&gt; getUsersTransactions(long userid){
+&nbsp;        try{
+<b class="fc">&nbsp;            Account ac = accountService.getAccountById(userid);</b>
+<b class="fc">&nbsp;            List&lt;Transactions&gt; transactions = transactionsRepository.findByUser(ac);</b>
+<b class="fc">&nbsp;            return ResponseEntity.status(HttpStatus.OK).body(transactions);</b>
+&nbsp;        } catch(IllegalArgumentException e){
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(HttpStatus.NOT_FOUND);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public long addTransaction(TransactionDTO transaction){
+<b class="fc">&nbsp;        Transactions t = new Transactions();</b>
+<b class="fc">&nbsp;        t.setDate(transaction.getDate());</b>
+<b class="fc">&nbsp;        t.setPrice(transaction.getPrice());</b>
+<b class="fc">&nbsp;        t.setUser(transaction.getUser());</b>
+<b class="fc">&nbsp;        t.setShopItem(transaction.getShopItem());</b>
+<b class="fc">&nbsp;        transactionsRepository.save(t);</b>
+<b class="fc">&nbsp;        return t.getTransactionid();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void deleteTransaction(long id){ //DEVONLY
+<b class="nc">&nbsp;        transactionsRepository.deleteById(id);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 21:04</div>
+</div>
+</body>
+</html>

@@ -1,7 +1,9 @@
 package com.geohunt.backend.database;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.geohunt.backend.util.Location;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -10,10 +12,17 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
+/**
+ * @author evan juslon
+ */
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id"
+)
 public class Submissions {
 
     public static final double DEFAULT_DOUBLE_VALUE = 0.0;
