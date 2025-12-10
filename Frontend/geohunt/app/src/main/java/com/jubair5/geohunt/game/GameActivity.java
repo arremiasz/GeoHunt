@@ -85,7 +85,7 @@ import java.util.Locale;
 
 /**
  * Activity responsible for handling the main game function
- * @author Alex Remiasz
+ * @author Alex Remiasz, Nathan Imig
  */
 public class GameActivity extends AppCompatActivity implements OnMapReadyCallback, PowerUpAdapter.OnPowerUpClickListener {
 
@@ -116,7 +116,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected int strokeColor = Color.BLUE;
     protected int fillColor = 0x220000FF;
     private int powerUpTimeOffSet;
-    private int duration;
+    private long currentDuration;
+    private final long MAX_DURATION = 180;
     protected PowerUp currentPowerUp;
     private RecyclerView powerUpsRecyclerView;
     private LinearLayoutManager powerLayoutManager;
@@ -257,13 +258,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             Toast.makeText(this, "Using Power Up", Toast.LENGTH_SHORT).show();
             if(currentPowerUp.getTitle().equals("Hint PowerUp")){
                 type = 1;
-                duration = 0;
-                distanceContainer.setVisibility(View.VISIBLE);
-
-
-
-
-
+                currentDuration = 0;
             }
             else if(currentPowerUp.getTitle().equals("Specific Hint PowerUp")){
                 type = 2;
@@ -446,20 +441,75 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void startStopwatch() {
         stopwatchContainer.setVisibility(View.VISIBLE);
         startTime = System.currentTimeMillis();
+        currentDuration = 300;
         stopwatchHandler.post(new Runnable() {
+            int seconds = 0;
             @Override
             public void run() {
+                if(currentDuration<MAX_DURATION){
+                    distanceContainer.setVisibility(View.VISIBLE);
+                    currentDuration = seconds;
+                    getDistance();
+                }else {
+                    distanceContainer.setVisibility(View.GONE);
+                }
                 long millis = System.currentTimeMillis() - powerUpTimeOffSet - startTime;
-                int seconds = (int) (millis / 1000);
+                seconds = (int) (millis / 1000);
                 int minutes = seconds / 60;
                 seconds = seconds % 60;
 
                 stopwatchText.setText(String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds));
-                distanceText.setText("");
+
 
                 stopwatchHandler.postDelayed(this, 500);
             }
         });
+    }
+
+    private void getDistance() {
+
+        SharedPreferences prefs = getSharedPreferences("GeoHuntPrefs", Context.MODE_PRIVATE);
+        int userId = prefs.getInt("userId", -1);
+
+        if (userId == -1) {
+            Toast.makeText(this, "Error: User not logged in.", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "User ID not found in shared preferences.");
+            return;
+        }
+
+        JSONObject requestBody = new JSONObject();
+        try {
+            requestBody.put("latitude", currentLat);
+            requestBody.put("longitude", currentLng);
+        } catch (JSONException e) {
+            Log.e(TAG, "Failed to create JSON object for submission.", e);
+        }
+
+        String url = ApiConstants.BASE_URL + ApiConstants.POWERUP_DISTANCE + "challengeId="
+                + challengeId;
+
+        StringRequest distanceRequest = new StringRequest(Request.Method.POST, url,
+                response -> {
+                    Log.d(TAG, "Getting Distance successful: " + response);
+                    distanceText.setText(response.trim());
+
+                },
+                error -> {
+                    Log.e(TAG, "Getting Distance failed.", error);
+                    Toast.makeText(this, "Error submitting guess. Please try again.", Toast.LENGTH_LONG).show();
+                }) {
+            @Override
+            public byte[] getBody() {
+                return requestBody.toString().getBytes(StandardCharsets.UTF_8);
+            }
+
+            @Override
+            public String getBodyContentType() {
+                return "application/json; charset=utf-8";
+            }
+        };
+
+        VolleySingleton.getInstance(this).addToRequestQueue(distanceRequest);
     }
 
     /**

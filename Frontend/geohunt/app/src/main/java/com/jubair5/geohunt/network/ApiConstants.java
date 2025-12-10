@@ -58,9 +58,8 @@ public final class ApiConstants {
     // PowerUp EndPoints
     public static final String GET_POWERUPS_ENDPOINT = "/powerup/user";
     public static final String REMOVE_POWERUPS_ENDPOINT = "/powerup/remove";
+    public static final String POWERUP_DISTANCE = "/powerup/challenge/distance";
     public static final String GET_REWARDS = "submit";
-    public static final String RESET_THEMES = "";
-    public static final String GET_THEMES_ENDPOINT = "";
-    public static final String PURCHASE_THEMES = "";
+
 
 }
