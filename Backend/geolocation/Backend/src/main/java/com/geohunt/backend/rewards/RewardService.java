@@ -82,6 +82,10 @@ public class RewardService {
         Reward[] rewards = getAllRewards().toArray(new Reward[0]);
         double[] weights = new double[rewards.length];
 
+        if(rewards.length == 0){
+            return null;
+        }
+
         // For each, get weight and add to array
         for(int i = 0; i < rewards.length; i++){
             weights[i] = getRewardWeight(submissionValue, rewards[i].getValue());

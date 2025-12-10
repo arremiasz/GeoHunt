@@ -48,9 +48,10 @@ public class RewardController {
             account.incrementPoints(submissionValue);
 
             Reward reward = rewardService.gradeSubmissionAndAssignReward(submissionValue);
-            rewardService.addRewardToUserInventory(account, reward);
-
             submissions.setHasGeneratedReward(true);
+            if(reward != null) {
+                rewardService.addRewardToUserInventory(account, reward);
+            }
 
             SubmissionRewardDTO data = new SubmissionRewardDTO();
             data.setReward(reward);
