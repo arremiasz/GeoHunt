@@ -6,9 +6,6 @@ import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -24,7 +21,6 @@ import com.android.volley.Request;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
-import com.bumptech.glide.Glide;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -386,7 +382,7 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
         if (challengeId == -1)
             return;
 
-        String url = ApiConstants.BASE_URL + ApiConstants.GET_COMMENTS_ENDPOINT + challengeId + "/comments";
+        String url = ApiConstants.BASE_URL + ApiConstants.GET_CHALLENGE_COMMENTS_ENDPOINT + challengeId + "/comments";
         Log.d(TAG, "Fetching comments from: " + url);
 
         JsonArrayRequest commentsRequest = new JsonArrayRequest(Request.Method.GET, url, null,

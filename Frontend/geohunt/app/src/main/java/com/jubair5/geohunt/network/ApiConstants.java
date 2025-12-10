@@ -31,7 +31,7 @@ public final class ApiConstants {
     public static final String POST_SUBMISSION_ENDPOINT = "/geohunt/submission";
     public static final String GET_CHALLENGE_BY_ID_ENDPOINT = "/geohunt/getChallengeByID";
     public static final String RATE_CHALLENGE_ENDPOINT = "/geohunt/rate";
-    public static final String GET_COMMENTS_ENDPOINT = "/challenges/";
+    public static final String GET_CHALLENGE_COMMENTS_ENDPOINT = "/challenges/";
 
     // Shop Endpoints
     public static final String GET_POINTS_ENDPOINT = "/points";
