@@ -37,6 +37,10 @@ Current scope:     <a href="../../index.html">all classes</a>
 </th>
 <th class="coverageStat 
 ">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
   Line, %
 </th>
 </tr>
@@ -52,18 +56,26 @@ Current scope:     <a href="../../index.html">all classes</a>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    10%
+    25%
   </span>
   <span class="absValue">
-    (1/10)
+    (3/12)
   </span>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    5.3%
+    70%
   </span>
   <span class="absValue">
-    (1/19)
+    (7/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    44.4%
+  </span>
+  <span class="absValue">
+    (16/36)
   </span>
 </td>
 </tr>
@@ -96,6 +108,9 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;import java.util.List;
 &nbsp;import java.util.Optional;
 &nbsp;
+&nbsp;/**
+&nbsp; * @author Arjava Tripathi
+&nbsp; */
 &nbsp;@Tag(name = &quot;Challenge Management&quot;, description = &quot;Operations related to challenges&quot;)
 &nbsp;@RestController
 <b class="fc">&nbsp;public class geohuntController {</b>
@@ -225,6 +240,53 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;
 <b class="nc">&nbsp;        return geohuntService.updateChallenge(userId, chalId, image, lng, lat);</b>
 &nbsp;    }
+&nbsp;
+&nbsp;    // Rate Challenges
+&nbsp;    @Operation(summary = &quot;Add a rating to a Challenge using Challenge id&quot;)
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Rating added.&quot;, content = @Content),
+&nbsp;            @ApiResponse(responseCode = &quot;400&quot;, description = &quot;Rating not within acceptable bounds.&quot;, content = @Content),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Challenge not found.&quot;, content = @Content)})
+&nbsp;    @PostMapping(&quot;/geohunt/rate&quot;)
+&nbsp;    public ResponseEntity&lt;String&gt; submitChallengeRating(@RequestParam long cid, @RequestParam int rating){
+&nbsp;        // Get challenge
+<b class="pc">&nbsp;        if(challengesRepository.findById(cid).isEmpty()){</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(&quot;Challenge Not Found&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        Challenges challenge = challengesRepository.findById(cid).get();</b>
+&nbsp;
+&nbsp;        // Verify rating is within bounds (1 - 5)
+<b class="pc">&nbsp;        if(rating &lt; 1 || rating &gt; 5){</b>
+<b class="fc">&nbsp;            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(&quot;Rating Not Within Acceptable Bounds&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // add rating to challenge
+<b class="fc">&nbsp;        challenge.addRating(rating);</b>
+<b class="fc">&nbsp;        challengesRepository.save(challenge);</b>
+<b class="fc">&nbsp;        return ResponseEntity.status(HttpStatus.OK).body(&quot;Rating Added&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Get challenge rating&quot;)
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Rating processed&quot;, content = @Content),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Challenge not found.&quot;, content = @Content)})
+&nbsp;    @GetMapping(&quot;/geohunt/challenge/{cid}/rating&quot;)
+&nbsp;    public ResponseEntity&lt;Double&gt; getChallengeRating(@PathVariable long cid){
+&nbsp;        // Get challenge
+<b class="pc">&nbsp;        if(challengesRepository.findById(cid).isEmpty()){</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();</b>
+&nbsp;        }
+<b class="fc">&nbsp;        Challenges challenge = challengesRepository.findById(cid).get();</b>
+&nbsp;
+<b class="fc">&nbsp;        List&lt;Integer&gt; ratings = challenge.getChallengeRatings();</b>
+<b class="fc">&nbsp;        int sum = 0;</b>
+<b class="fc">&nbsp;        for(Integer rating : ratings){</b>
+<b class="fc">&nbsp;            sum += rating;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        double avgRating = ((double)sum)/ratings.size();</b>
+&nbsp;
+<b class="fc">&nbsp;        return ResponseEntity.status(HttpStatus.OK).body(avgRating);</b>
+&nbsp;    }
 &nbsp;}
 </code>
 </pre>
@@ -249,7 +311,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2025-12-06 21:25</div>
+    <div style="float:right;">generated on 2025-12-09 21:04</div>
 </div>
 </body>
 </html>

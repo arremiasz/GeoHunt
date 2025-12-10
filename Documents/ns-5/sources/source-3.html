@@ -5,7 +5,7 @@
 <html id="htmlId">
 <head>
   <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
-  <title>Coverage Report > WebSocketConfig</title>
+  <title>Coverage Report > StripeWebhookController</title>
   <style type="text/css">
     @import "../../css/coverage.css";
     @import "../../css/idea.min.css";
@@ -19,10 +19,10 @@
 <div class="breadCrumbs">
 Current scope:     <a href="../../index.html">all classes</a>
     <span class="separator">|</span>
-    <a href="../index.html">com.geohunt.backend.WebSockets</a>
+    <a href="../index.html">com.geohunt.backend.Shop</a>
 </div>
 
-<h1>Coverage Summary for Class: WebSocketConfig (com.geohunt.backend.WebSockets)</h1>
+<h1>Coverage Summary for Class: StripeWebhookController (com.geohunt.backend.Shop)</h1>
 
 <table class="coverageStats">
 <tr>
@@ -41,29 +41,29 @@ Current scope:     <a href="../../index.html">all classes</a>
 </th>
 </tr>
 <tr>
-  <td class="name">WebSocketConfig</td>
+  <td class="name">StripeWebhookController</td>
 <td class="coverageStat">
   <span class="percent">
-    0%
+    100%
   </span>
   <span class="absValue">
-    (0/1)
+    (1/1)
   </span>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    0%
+    50%
   </span>
   <span class="absValue">
-    (0/2)
+    (1/2)
   </span>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    0%
+    50%
   </span>
   <span class="absValue">
-    (0/2)
+    (1/2)
   </span>
 </td>
 </tr>
@@ -75,19 +75,71 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 
 <pre>
-<code class="sourceCode" id="sourceCode">&nbsp;package com.geohunt.backend.WebSockets;
+<code class="sourceCode" id="sourceCode">&nbsp;package com.geohunt.backend.Shop;
 &nbsp;
-&nbsp;import org.springframework.context.annotation.Bean;
-&nbsp;import org.springframework.context.annotation.Configuration;
-&nbsp;import org.springframework.context.annotation.Profile;
-&nbsp;import org.springframework.web.socket.server.standard.ServerEndpointExporter;
+&nbsp;import com.geohunt.backend.database.*;
+&nbsp;//import com.stripe.model.Event;
+&nbsp;//import com.stripe.model.checkout.Session;
+&nbsp;//import com.stripe.net.Webhook;
+&nbsp;import org.springframework.beans.factory.annotation.Autowired;
+&nbsp;import org.springframework.beans.factory.annotation.Value;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.web.bind.annotation.*;
 &nbsp;
-&nbsp;@Configuration
-&nbsp;@Profile(&quot;!test&quot;)
-<b class="nc">&nbsp;public class WebSocketConfig {</b>
-&nbsp;    @Bean
-&nbsp;    public ServerEndpointExporter serverEndpointExporter(){
-<b class="nc">&nbsp;        return new ServerEndpointExporter();</b>
+&nbsp;import java.util.Date;
+&nbsp;
+&nbsp;@RestController
+&nbsp;@RequestMapping(&quot;/stripe&quot;)
+<b class="fc">&nbsp;public class StripeWebhookController {</b>
+&nbsp;    @Value(&quot;${stripe.webhook-secret}&quot;)
+&nbsp;    private String webhookSecret;
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    private AccountRepository accountRepository;
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    private ShopRepository shopRepository;
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    private TransactionsRepository transactionsRepository;
+&nbsp;
+&nbsp;    /**@PostMapping(&quot;/webhook&quot;)
+&nbsp;    public ResponseEntity&lt;String&gt; handleStripeEvents(
+&nbsp;            @RequestBody String payload,
+&nbsp;            @RequestHeader(&quot;Stripe-Signature&quot;) String sigHeader) {
+&nbsp;
+&nbsp;        try {
+&nbsp;            Event event = Webhook.constructEvent(payload, sigHeader, webhookSecret);
+&nbsp;
+&nbsp;            if (&quot;checkout.session.completed&quot;.equals(event.getType())) {
+&nbsp;
+&nbsp;                Session session = (Session) event.getData().getObject();
+&nbsp;
+&nbsp;                long userId = Long.parseLong(session.getMetadata().get(&quot;userId&quot;));
+&nbsp;                long shopId = Long.parseLong(session.getMetadata().get(&quot;shopId&quot;));
+&nbsp;
+&nbsp;                Account user = accountRepository.findById(userId).orElse(null);
+&nbsp;                Shop shop = shopRepository.findById(shopId).orElse(null);
+&nbsp;
+&nbsp;                Transactions t = new Transactions();
+&nbsp;                t.setUser(user);
+&nbsp;                t.setShopItem(shop);
+&nbsp;                t.setPrice(shop.getPrice());
+&nbsp;                t.setDate(new Date());
+&nbsp;
+&nbsp;                transactionsRepository.save(t);
+&nbsp;            }
+&nbsp;
+&nbsp;            return ResponseEntity.ok(&quot;Received&quot;);
+&nbsp;
+&nbsp;        } catch (Exception e) {
+&nbsp;            return ResponseEntity.badRequest().body(&quot;Webhook Error: &quot; + e.getMessage());
+&nbsp;        }
+&nbsp;    }**/
+&nbsp;
+&nbsp;    @GetMapping(&quot;/test&quot;)
+&nbsp;    public String test() {
+<b class="nc">&nbsp;        return &quot;OK&quot;;</b>
 &nbsp;    }
 &nbsp;}
 </code>
@@ -113,7 +165,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2025-12-06 21:25</div>
+    <div style="float:right;">generated on 2025-12-09 21:04</div>
 </div>
 </body>
 </html>

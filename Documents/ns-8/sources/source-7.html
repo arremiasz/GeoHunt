@@ -1,0 +1,237 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > SubmissionsService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.geohunt.backend.database</a>
+</div>
+
+<h1>Coverage Summary for Class: SubmissionsService (com.geohunt.backend.database)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">SubmissionsService</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    77.8%
+  </span>
+  <span class="absValue">
+    (7/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (5/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    74.2%
+  </span>
+  <span class="absValue">
+    (23/31)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.geohunt.backend.database;
+&nbsp;
+&nbsp;import com.geohunt.backend.Services.AccountService;
+&nbsp;import org.springframework.beans.factory.annotation.Autowired;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;import org.springframework.web.bind.annotation.PathVariable;
+&nbsp;import org.springframework.web.bind.annotation.RequestBody;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;/**
+&nbsp; * @author evan juslon
+&nbsp; */
+&nbsp;@Service
+<b class="fc">&nbsp;public class SubmissionsService {</b>
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    AccountService accountService;
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    ChallengesRepository challengesRepository;
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    SubmissionsRepository submissionsRepository;
+&nbsp;
+&nbsp;    // Save Submission
+&nbsp;
+&nbsp;    public Submissions saveSubmission(Submissions submission, long uid, long cid) throws IllegalArgumentException {
+&nbsp;        Account account;
+&nbsp;        Challenges challenge;
+<b class="pc">&nbsp;        if(challengesRepository.findById(cid).isEmpty()){</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Cannot find challenge via challenge id&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        account = accountService.getAccountById(uid);</b>
+<b class="fc">&nbsp;        challenge = challengesRepository.findById(cid).get();</b>
+&nbsp;
+&nbsp;        // Set Challenge and Account that the submission is tied to.
+<b class="fc">&nbsp;        submission.setSubmitter(account);</b>
+<b class="fc">&nbsp;        submission.setChallenge(challenge);</b>
+&nbsp;
+<b class="pc">&nbsp;        if(!submission.validate()) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Submission Missing Data&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Set Submission Time
+<b class="fc">&nbsp;        submission.setSubmissionTimeToNow();</b>
+&nbsp;
+&nbsp;        // Add Submission to Database
+<b class="fc">&nbsp;        submissionsRepository.save(submission);</b>
+&nbsp;
+<b class="fc">&nbsp;        return submission;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // Get Submission
+&nbsp;
+&nbsp;    public Submissions getSubmissionById(long sid) throws IllegalArgumentException {
+<b class="pc">&nbsp;        if(submissionsRepository.findById(sid).isPresent()){</b>
+<b class="fc">&nbsp;            return submissionsRepository.findById(sid).get();</b>
+&nbsp;        }
+&nbsp;        else{
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Cannot find submission with id &quot; + sid);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    // Update Submission
+&nbsp;
+&nbsp;    public Submissions updateSubmission(Submissions updatedValues, long sid) throws IllegalArgumentException {
+&nbsp;        // Get Submission with Id
+<b class="fc">&nbsp;        Submissions submissionToUpdate = getSubmissionById(sid);</b>
+&nbsp;
+&nbsp;        // Update Submission values
+<b class="fc">&nbsp;        submissionToUpdate.updateValues(updatedValues);</b>
+&nbsp;
+&nbsp;        // Save Submission
+<b class="fc">&nbsp;        submissionsRepository.save(submissionToUpdate);</b>
+&nbsp;
+&nbsp;        // Return updated Submission
+<b class="fc">&nbsp;        return submissionToUpdate;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // Delete Submission
+&nbsp;
+&nbsp;    public boolean deleteSubmissionById(long sid){
+<b class="pc">&nbsp;        if(submissionsRepository.findById(sid).isPresent()){</b>
+<b class="fc">&nbsp;            submissionsRepository.deleteById(sid);</b>
+<b class="fc">&nbsp;            return true;</b>
+&nbsp;        }
+&nbsp;        else {
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    // List Submission
+&nbsp;
+&nbsp;    public List&lt;Submissions&gt; getSubmissionListByChallenge(long cid) throws IllegalArgumentException {
+<b class="pc">&nbsp;        if(challengesRepository.findById(cid).isPresent()){</b>
+<b class="fc">&nbsp;            Challenges challenge = challengesRepository.findById(cid).get();</b>
+<b class="fc">&nbsp;            return getSubmissionListByChallenge(challenge);</b>
+&nbsp;        }
+&nbsp;        else {
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Cannot find challenge &quot; + cid);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Submissions&gt; getSubmissionListByChallenge(Challenges challenge){
+<b class="fc">&nbsp;        return challenge.getSubmissions();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Submissions&gt; getSubmissionListByAccount(long uid) throws IllegalArgumentException {
+<b class="nc">&nbsp;        Account account = accountService.getAccountById(uid);</b>
+<b class="nc">&nbsp;        return getSubmissionListByAccount(account);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Submissions&gt; getSubmissionListByAccount(Account account){
+<b class="nc">&nbsp;        return account.getSubmissions();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 21:04</div>
+</div>
+</body>
+</html>
