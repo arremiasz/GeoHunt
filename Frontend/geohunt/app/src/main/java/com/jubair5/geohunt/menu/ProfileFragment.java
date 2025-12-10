@@ -2,6 +2,7 @@ package com.jubair5.geohunt.menu;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -13,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -39,6 +41,8 @@ import com.jubair5.geohunt.network.ApiConstants;
 import com.jubair5.geohunt.network.VolleySingleton;
 import com.jubair5.geohunt.reward.powerups.PowerUp;
 import com.jubair5.geohunt.reward.powerups.PowerUpAdapter;
+import com.jubair5.geohunt.reward.powerups.TimeReductionPU;
+import com.jubair5.geohunt.reward.powerups.hintPu;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -115,8 +119,10 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         usernameLabel.setText("@" + username);
 
         setupPlaceRecyclerView();
-        setupPowerUpRecyclerView();
         fetchSubmissions();
+
+        setupPowerUpRecyclerView();
+        getPowerUps();
 
         editButton.setOnClickListener(v -> showEditOptions());
         deleteButton.setOnClickListener(v -> showDeleteConfirmationDialog());
@@ -162,6 +168,9 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
             return;
         }
 
+        /**
+         *
+         *
         String url = ApiConstants.BASE_URL + ApiConstants.GET_POWERUPS_ENDPOINT + "?id=" + userId;
 
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(
@@ -182,10 +191,30 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
                     }
                 },
                 error -> {
-                    Log.e(TAG, "Error fetching places", error);
+                    Log.e(TAG, "Error getting powerUps", error);
                 });
 
         VolleySingleton.getInstance(requireContext()).addToRequestQueue(jsonArrayRequest);
+        */
+        powerUpList.clear();
+        ArrayList<Integer> response = new ArrayList<>();
+        response.add(1);
+        response.add(1);
+
+        for (int i = 0; i < response.size(); i++) {
+            PowerUp currentPowerUp;
+            if(i==0){
+                currentPowerUp = new hintPu();
+                currentPowerUp.setAmount(response.get(i));
+                powerUpList.add(currentPowerUp);
+            }
+            if(i==1){
+                currentPowerUp = new TimeReductionPU();
+                currentPowerUp.setAmount(response.get(i));
+                powerUpList.add(currentPowerUp);
+            }
+        }
+        powerUpAdapter.notifyDataSetChanged();
     }
 
     /**
@@ -501,6 +530,27 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
 
     @Override
     public void onPowerUpClick(PowerUp powerUp) {
+        Dialog powerUpDescription = new Dialog(requireContext(), R.style.DialogStyle);
+        powerUpDescription.setContentView(R.layout.layout_power_up_description);
+
+        TextView title = powerUpDescription.findViewById(R.id.powerUp_title);
+        title.setText(powerUp.getTitle());
+
+        TextView description = powerUpDescription.findViewById(R.id.powerUp_description);
+        description.setText(powerUp.getDescription());
+
+        ImageView imageView = powerUpDescription.findViewById(R.id.powerUp_icon);
+        imageView.setImageResource(powerUp.getImage());
+
+        ImageView btnClose = powerUpDescription.findViewById(R.id.btn_close);
+        btnClose.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                powerUpDescription.dismiss();
+            }
+        });
+
+        powerUpDescription.show();
 
     }
 }

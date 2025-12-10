@@ -23,8 +23,6 @@ import com.jubair5.geohunt.friends.SingleFriendActivity;
 import java.util.List;
 
 public class PowerUpAdapter extends RecyclerView.Adapter<PowerUpAdapter.ViewHolder> {
-
-    private static final String TAG = "FriendsFragment";
     private final Context context;
     private final List<PowerUp> powerUps;
 
@@ -52,9 +50,12 @@ public class PowerUpAdapter extends RecyclerView.Adapter<PowerUpAdapter.ViewHold
 
     @Override
     public void onBindViewHolder(@NonNull PowerUpAdapter.ViewHolder holder, int position) {
-        PowerUp friend = powerUps.get(position);
+        PowerUp currentPowerUp = powerUps.get(position);
 
-        // Name and state
+        holder.title.setText(currentPowerUp.getTitle());
+        holder.powerUpImage.setImageResource(currentPowerUp.getImage());
+        holder.howMany.setText(currentPowerUp.getAmount() + "");
+        holder.itemView.setOnClickListener(v -> listener.onPowerUpClick(currentPowerUp));
 
 
     }
@@ -71,11 +72,16 @@ public class PowerUpAdapter extends RecyclerView.Adapter<PowerUpAdapter.ViewHold
      */
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView powerUpImage;
-        TextView description;
+        TextView title;
         TextView howMany;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
+            powerUpImage = itemView.findViewById(R.id.powerUp_icon_inventory);
+            title = itemView.findViewById(R.id.powerUp_title_inventory);
+            howMany = itemView.findViewById(R.id.amount_text);
+
+
         }
     }
 }

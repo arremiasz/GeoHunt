@@ -6,7 +6,10 @@ package com.jubair5.geohunt.reward.powerups;
  */
 public interface PowerUp {
     void activate();
-    void getPowerUp();
+    int getImage();
+    int getAmount();
+    void setAmount(int amount);
+    String getTitle();
     String getDescription();
 
 }

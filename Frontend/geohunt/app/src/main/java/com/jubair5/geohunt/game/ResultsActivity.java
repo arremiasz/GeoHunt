@@ -1,14 +1,20 @@
 package com.jubair5.geohunt.game;
 
+import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.jubair5.geohunt.R;
+import com.jubair5.geohunt.reward.powerups.PowerUp;
+import com.jubair5.geohunt.reward.powerups.TimeReductionPU;
+import com.jubair5.geohunt.reward.powerups.hintPu;
 
 import java.util.Locale;
 
@@ -26,6 +32,7 @@ public class ResultsActivity extends AppCompatActivity {
     protected TextView timeText, timeUnitLabel;
     protected TextView pointsText, pointsUnitsLabel;
     protected TextView powerUpUnlock;
+    protected ImageView newPowerUp;
     protected Button playAgainButton;
     protected Button goHomeButton;
     protected KonfettiView konfettiView;
@@ -60,6 +67,7 @@ public class ResultsActivity extends AppCompatActivity {
 
 
         powerUpUnlock = findViewById(R.id.unlock_text);
+        newPowerUp = findViewById(R.id.new_PowerUp);
 
         playAgainButton = findViewById(R.id.play_again_button);
         goHomeButton = findViewById(R.id.go_home_button);
@@ -73,6 +81,7 @@ public class ResultsActivity extends AppCompatActivity {
     protected void displayResults() {
         double results = getIntent().getDoubleExtra("results", -1);
         int time = getIntent().getIntExtra("time", -1);
+        getRewards(results,time);
 
 
         if (results != -1) {
@@ -103,9 +112,7 @@ public class ResultsActivity extends AppCompatActivity {
             timeUnitLabel.setText("Error");
         }
 
-        // Points
-        pointsText.setText(getPoints(results,time)+ "");
-        pointsUnitsLabel.setText("points");
+        
 
     }
 
@@ -119,8 +126,22 @@ public class ResultsActivity extends AppCompatActivity {
         return 500;
     }
 
-    private void getRewards(){
+    private void getRewards(double results, int time){
+        pointsText.setText(getPoints(results,time)+ "");
+        pointsUnitsLabel.setText("points");
+        int type = (int) (Math.random()*2);
+        PowerUp powerUp;
 
+        if(type == 0){
+            powerUp = new TimeReductionPU();
+        }
+        else{
+            powerUp = new hintPu();
+        }
+        newPowerUp.setOnClickListener(v -> showDescription(powerUp));
+        
+        
+        
     }
 
     /**
@@ -129,6 +150,30 @@ public class ResultsActivity extends AppCompatActivity {
     protected void setupButtons() {
         playAgainButton.setOnClickListener(v -> onPlayAgainClicked());
         goHomeButton.setOnClickListener(v -> onGoHomeClicked());
+    }
+
+    private void showDescription(PowerUp powerUp) {
+        Dialog powerUpDescription = new Dialog(this, R.style.DialogStyle);
+        powerUpDescription.setContentView(R.layout.layout_power_up_description);
+
+        TextView title = powerUpDescription.findViewById(R.id.powerUp_title);
+        title.setText(powerUp.getTitle());
+
+        TextView description = powerUpDescription.findViewById(R.id.powerUp_description);
+        description.setText(powerUp.getDescription());
+
+        ImageView imageView = powerUpDescription.findViewById(R.id.powerUp_icon);
+        imageView.setImageResource(powerUp.getImage());
+
+        ImageView btnClose = powerUpDescription.findViewById(R.id.btn_close);
+        btnClose.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                powerUpDescription.dismiss();
+            }
+        });
+
+        powerUpDescription.show();
     }
 
     /**

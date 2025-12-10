@@ -26,7 +26,7 @@
             >
 
             <ImageView
-                android:id="@+id/imageView"
+                android:id="@+id/powerUp_icon_inventory"
                 android:layout_width="100dp"
                 android:layout_height="100dp"
                 android:src="@drawable/time_reduction_pu"
@@ -36,7 +36,7 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
-                android:id="@+id/username_label"
+                android:id="@+id/powerUp_title_inventory"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="20sp"
@@ -46,7 +46,7 @@
 
 
             <TextView
-                android:id="@+id/relationship_State"
+                android:id="@+id/amount_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/status"

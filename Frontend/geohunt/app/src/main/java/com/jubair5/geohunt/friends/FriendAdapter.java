@@ -104,6 +104,7 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
             super(itemView);
             friendNameTextView = itemView.findViewById(R.id.username_label);
             friendState = itemView.findViewById(R.id.relationship_State);
+            pfp = itemView.findViewById(R.id.friend_pfp);
         }
     }
 }
