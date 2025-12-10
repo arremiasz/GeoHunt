@@ -42,6 +42,10 @@ public class Challenges {
     private List<Integer> challengeRatings = new ArrayList<>();
 
     public void addRating(int rating){
+        if(challengeRatings == null){
+            challengeRatings = new ArrayList<>();
+        }
         challengeRatings.add(rating);
+
     }
 }
