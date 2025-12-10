@@ -66,6 +66,9 @@
             android:name=".places.AddPlaceActivity"
             android:exported="false" />
         <activity
+            android:name=".friends.SingleFriendActivity"
+            android:exported="false" />
+        <activity
             android:name=".game.GameActivity"
             android:exported="false"
             android:theme="@style/Theme.GeoHunt.NoActionBar" />
