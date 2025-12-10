@@ -199,7 +199,7 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         powerUpList.clear();
         ArrayList<Integer> response = new ArrayList<>();
         response.add(1);
-        response.add(1);
+        response.add(6);
 
         for (int i = 0; i < response.size(); i++) {
             PowerUp currentPowerUp;

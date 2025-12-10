@@ -52,7 +52,7 @@ public class PowerUpAdapter extends RecyclerView.Adapter<PowerUpAdapter.ViewHold
     public void onBindViewHolder(@NonNull PowerUpAdapter.ViewHolder holder, int position) {
         PowerUp currentPowerUp = powerUps.get(position);
 
-        holder.title.setText(currentPowerUp.getTitle());
+        //holder.title.setText(currentPowerUp.getTitle());
         holder.powerUpImage.setImageResource(currentPowerUp.getImage());
         holder.howMany.setText(currentPowerUp.getAmount() + "");
         holder.itemView.setOnClickListener(v -> listener.onPowerUpClick(currentPowerUp));
