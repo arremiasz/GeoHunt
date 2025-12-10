@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/background"
     android:fillViewport="true"
     android:clipToPadding="false"
     android:paddingBottom="200dp">
@@ -24,38 +25,55 @@
             android:orientation="vertical"
             android:visibility="visible">
 
-            <ImageView
-                android:id="@+id/profile_icon"
-                android:layout_width="150dp"
-                android:layout_height="150dp"
-                android:src="@android:drawable/ic_menu_gallery"
-                android:contentDescription="@string/profile_icon"
-                android:layout_marginBottom="10dp"/>
+            <!-- Profile picture with card styling -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="160dp"
+                android:layout_height="160dp"
+                app:cardCornerRadius="80dp"
+                app:cardElevation="8dp"
+                android:layout_marginBottom="16dp">
+                
+                <ImageView
+                    android:id="@+id/profile_icon"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@android:drawable/ic_menu_gallery"
+                    android:scaleType="centerCrop"
+                    android:contentDescription="@string/profile_icon"/>
+            </androidx.cardview.widget.CardView>
 
             <TextView
                 android:id="@+id/username_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="20sp"
-                android:textStyle="bold"/>
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"/>
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/edit_account_button"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/edit_account"
-                android:backgroundTint="#AFAFAF"
-                android:layout_marginTop="30dp"/>
+                android:textColor="@color/primary"
+                app:strokeColor="@color/primary"
+                app:strokeWidth="2dp"
+                app:cornerRadius="20dp"
+                app:icon="@drawable/ic_nav_profile"
+                app:iconTint="@color/primary"
+                android:layout_marginTop="16dp"/>
 
             <TextView
                 android:id="@+id/places_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="start"
-                android:layout_marginTop="30dp"
+                android:layout_marginTop="32dp"
                 android:text="@string/my_places"
                 android:textSize="20sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"/>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/places_recycler_view"
@@ -63,7 +81,7 @@
                 android:layout_height="wrap_content"
                 app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
                 app:spanCount="3"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="12dp"
                 android:nestedScrollingEnabled="false"/>
 
             <TextView
@@ -71,17 +89,18 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="start"
-                android:layout_marginTop="30dp"
+                android:layout_marginTop="32dp"
                 android:text="Statistics"
                 android:textSize="20sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"/>
 
             <!-- Statistics Grid -->
             <GridLayout
                 android:id="@+id/statistics_grid"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="12dp"
                 android:columnCount="2"
                 android:rowCount="3"
                 android:useDefaultMargins="true">
@@ -91,33 +110,33 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1"
-                    android:layout_margin="4dp"
-                    app:cardCornerRadius="12dp"
+                    android:layout_margin="6dp"
+                    app:cardCornerRadius="16dp"
                     app:cardElevation="4dp"
-                    app:cardBackgroundColor="#F5F5F5">
+                    app:cardBackgroundColor="@color/surface">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:gravity="center"
-                        android:padding="16dp">
+                        android:padding="20dp">
 
                         <TextView
                             android:id="@+id/stat_points_value"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="--"
-                            android:textSize="28sp"
+                            android:textSize="32sp"
                             android:textStyle="bold"
-                            android:textColor="#4CAF50"/>
+                            android:textColor="@color/stat_points"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Points"
                             android:textSize="14sp"
-                            android:textColor="#757575"/>
+                            android:textColor="@color/text_secondary"/>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
@@ -126,33 +145,33 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1"
-                    android:layout_margin="4dp"
-                    app:cardCornerRadius="12dp"
+                    android:layout_margin="6dp"
+                    app:cardCornerRadius="16dp"
                     app:cardElevation="4dp"
-                    app:cardBackgroundColor="#F5F5F5">
+                    app:cardBackgroundColor="@color/surface">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:gravity="center"
-                        android:padding="16dp">
+                        android:padding="20dp">
 
                         <TextView
                             android:id="@+id/stat_matches_value"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="--"
-                            android:textSize="28sp"
+                            android:textSize="32sp"
                             android:textStyle="bold"
-                            android:textColor="#2196F3"/>
+                            android:textColor="@color/stat_matches"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Matches"
                             android:textSize="14sp"
-                            android:textColor="#757575"/>
+                            android:textColor="@color/text_secondary"/>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
@@ -161,33 +180,33 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1"
-                    android:layout_margin="4dp"
-                    app:cardCornerRadius="12dp"
+                    android:layout_margin="6dp"
+                    app:cardCornerRadius="16dp"
                     app:cardElevation="4dp"
-                    app:cardBackgroundColor="#F5F5F5">
+                    app:cardBackgroundColor="@color/surface">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:gravity="center"
-                        android:padding="16dp">
+                        android:padding="20dp">
 
                         <TextView
                             android:id="@+id/stat_friends_value"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="--"
-                            android:textSize="28sp"
+                            android:textSize="32sp"
                             android:textStyle="bold"
-                            android:textColor="#9C27B0"/>
+                            android:textColor="@color/stat_friends"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Friends"
                             android:textSize="14sp"
-                            android:textColor="#757575"/>
+                            android:textColor="@color/text_secondary"/>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
@@ -196,33 +215,33 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1"
-                    android:layout_margin="4dp"
-                    app:cardCornerRadius="12dp"
+                    android:layout_margin="6dp"
+                    app:cardCornerRadius="16dp"
                     app:cardElevation="4dp"
-                    app:cardBackgroundColor="#F5F5F5">
+                    app:cardBackgroundColor="@color/surface">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:gravity="center"
-                        android:padding="16dp">
+                        android:padding="20dp">
 
                         <TextView
                             android:id="@+id/stat_items_value"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="--"
-                            android:textSize="28sp"
+                            android:textSize="32sp"
                             android:textStyle="bold"
-                            android:textColor="#FF9800"/>
+                            android:textColor="@color/stat_items"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Items Bought"
                             android:textSize="14sp"
-                            android:textColor="#757575"/>
+                            android:textColor="@color/text_secondary"/>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
@@ -231,33 +250,33 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1"
-                    android:layout_margin="4dp"
-                    app:cardCornerRadius="12dp"
+                    android:layout_margin="6dp"
+                    app:cardCornerRadius="16dp"
                     app:cardElevation="4dp"
-                    app:cardBackgroundColor="#F5F5F5">
+                    app:cardBackgroundColor="@color/surface">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:gravity="center"
-                        android:padding="16dp">
+                        android:padding="20dp">
 
                         <TextView
                             android:id="@+id/stat_places_value"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="--"
-                            android:textSize="28sp"
+                            android:textSize="32sp"
                             android:textStyle="bold"
-                            android:textColor="#00BCD4"/>
+                            android:textColor="@color/stat_places"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Places"
                             android:textSize="14sp"
-                            android:textColor="#757575"/>
+                            android:textColor="@color/text_secondary"/>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
@@ -266,33 +285,33 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1"
-                    android:layout_margin="4dp"
-                    app:cardCornerRadius="12dp"
+                    android:layout_margin="6dp"
+                    app:cardCornerRadius="16dp"
                     app:cardElevation="4dp"
-                    app:cardBackgroundColor="#F5F5F5">
+                    app:cardBackgroundColor="@color/surface">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:gravity="center"
-                        android:padding="16dp">
+                        android:padding="20dp">
 
                         <TextView
                             android:id="@+id/stat_comments_value"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="--"
-                            android:textSize="28sp"
+                            android:textSize="32sp"
                             android:textStyle="bold"
-                            android:textColor="#E91E63"/>
+                            android:textColor="@color/stat_comments"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Comments"
                             android:textSize="14sp"
-                            android:textColor="#757575"/>
+                            android:textColor="@color/text_secondary"/>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
@@ -308,29 +327,48 @@
             android:orientation="vertical"
             android:visibility="gone">
 
-            <ImageView
-                android:id="@+id/edit_profile_image"
+            <!-- Profile picture with card styling -->
+            <androidx.cardview.widget.CardView
                 android:layout_width="120dp"
                 android:layout_height="120dp"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginBottom="16dp"
-                android:src="@android:drawable/ic_menu_gallery"
-                android:contentDescription="@string/profile_icon" />
+                app:cardCornerRadius="60dp"
+                app:cardElevation="6dp"
+                android:layout_marginBottom="12dp">
+                
+                <ImageView
+                    android:id="@+id/edit_profile_image"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@android:drawable/ic_menu_gallery"
+                    android:scaleType="centerCrop"
+                    android:contentDescription="@string/profile_icon" />
+            </androidx.cardview.widget.CardView>
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/change_pfp_button"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:text="Change Picture"
-                android:layout_marginBottom="16dp"/>
+                android:textColor="@color/primary"
+                app:icon="@android:drawable/ic_menu_camera"
+                app:iconTint="@color/primary"
+                android:layout_marginBottom="20dp"/>
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/edit_username_layout"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/hint_username">
+                android:hint="@string/hint_username"
+                app:boxStrokeColor="@color/primary"
+                app:hintTextColor="@color/primary"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusBottomEnd="12dp">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/edit_username"
@@ -344,8 +382,14 @@
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:hint="@string/hint_email">
+                android:layout_marginTop="12dp"
+                android:hint="@string/hint_email"
+                app:boxStrokeColor="@color/primary"
+                app:hintTextColor="@color/primary"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusBottomEnd="12dp">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/edit_email"
@@ -359,9 +403,16 @@
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="12dp"
                 android:hint="@string/new_password_optional"
-                app:endIconMode="password_toggle">
+                app:boxStrokeColor="@color/primary"
+                app:hintTextColor="@color/primary"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:endIconMode="password_toggle"
+                app:endIconTint="@color/text_secondary">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/edit_new_password"
@@ -375,9 +426,16 @@
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="12dp"
                 android:hint="@string/current_password"
-                app:endIconMode="password_toggle">
+                app:boxStrokeColor="@color/primary"
+                app:hintTextColor="@color/primary"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:endIconMode="password_toggle"
+                app:endIconTint="@color/text_secondary">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/edit_current_password"
@@ -391,38 +449,49 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center"
-                android:layout_marginTop="16dp">
+                android:layout_marginTop="20dp">
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/cancel_button"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Cancel"/>
+                    android:text="Cancel"
+                    android:textColor="@color/text_secondary"
+                    app:strokeColor="@color/text_secondary"
+                    app:cornerRadius="12dp"/>
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/save_changes_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
-                    android:text="Save Changes"/>
+                    android:text="Save Changes"
+                    android:backgroundTint="@color/primary"
+                    app:cornerRadius="12dp"/>
             </LinearLayout>
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/logout_button"
-                android:layout_width="wrap_content"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:text="Logout"
-                android:layout_marginTop="16dp"/>
+                android:textColor="@color/text_secondary"
+                app:strokeColor="@color/text_secondary"
+                app:cornerRadius="12dp"
+                android:layout_marginTop="24dp"/>
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/delete_account_button"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:text="@string/delete_account"
-                android:backgroundTint="#FF0000"
-                android:layout_marginTop="16dp" />
+                android:backgroundTint="@color/button_danger"
+                app:cornerRadius="12dp"
+                android:layout_marginTop="12dp" />
 
         </LinearLayout>
     </LinearLayout>

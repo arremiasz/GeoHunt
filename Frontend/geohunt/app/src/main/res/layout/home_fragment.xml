@@ -4,20 +4,32 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/background"
     android:layout_marginTop="80dp"
     tools:context=".menu.HomeFragment">
 
-    <com.google.android.gms.maps.MapView
-        android:id="@+id/map_view_home"
+    <!-- Map container with card styling -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/map_card"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_margin="16dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="6dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHeight_percent="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
 
-    <Button
+        <com.google.android.gms.maps.MapView
+            android:id="@+id/map_view_home"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </androidx.cardview.widget.CardView>
+
+    <!-- Play Button - Primary action with gradient-like styling -->
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/play_button"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -25,11 +37,20 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="16dp"
-        android:text="Play"
+        android:text="@string/go"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:backgroundTint="@color/primary"
+        app:cornerRadius="16dp"
+        app:elevation="6dp"
+        app:icon="@drawable/ic_nav_home"
+        app:iconGravity="textStart"
+        app:iconSize="32dp"
+        app:iconTint="@color/on_primary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/guideline"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/map_view_home" />
+        app:layout_constraintTop_toBottomOf="@+id/map_card" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline"
@@ -38,7 +59,8 @@
         android:orientation="vertical"
         app:layout_constraintGuide_percent="0.5" />
 
-    <Button
+    <!-- Secondary action buttons -->
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/dummy_button_1"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -46,12 +68,18 @@
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="8dp"
         android:text="Dummy 1"
+        android:textColor="@color/text_primary"
+        android:backgroundTint="@color/surface_variant"
+        app:cornerRadius="12dp"
+        app:elevation="4dp"
+        app:strokeColor="@color/card_stroke"
+        app:strokeWidth="1dp"
         app:layout_constraintBottom_toTopOf="@+id/dummy_button_2"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/guideline"
         app:layout_constraintTop_toTopOf="@+id/play_button" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/dummy_button_2"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -59,6 +87,12 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
         android:text="Dummy 2"
+        android:textColor="@color/text_primary"
+        android:backgroundTint="@color/surface_variant"
+        app:cornerRadius="12dp"
+        app:elevation="4dp"
+        app:strokeColor="@color/card_stroke"
+        app:strokeWidth="1dp"
         app:layout_constraintBottom_toBottomOf="@+id/play_button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/guideline"
