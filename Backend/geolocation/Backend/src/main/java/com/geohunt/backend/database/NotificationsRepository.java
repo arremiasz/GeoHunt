@@ -11,5 +11,6 @@ public interface NotificationsRepository extends JpaRepository<Notifications, Lo
     List<Notifications> findAllByTargetId(Long targetId);
     @Transactional
     void deleteAllByTargetId(Long targetId);
+    Notifications getNotificationsByMessage(String message);
 }
 

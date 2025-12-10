@@ -151,7 +151,7 @@ public class SignupFragment extends Fragment {
         final JSONObject requestBody = new JSONObject();
         try {
             requestBody.put("username", username);
-            requestBody.put("pfp", ""); // TODO: implement profile picture upload
+            requestBody.put("pfp", ""); // Picture upload in Profile
             requestBody.put("email", email);
             requestBody.put("password", password);
         } catch (JSONException e) {

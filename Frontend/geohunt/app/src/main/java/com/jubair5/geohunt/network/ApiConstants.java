@@ -6,15 +6,13 @@ package com.jubair5.geohunt.network;
  */
 public final class ApiConstants {
 
-
-
-
     private ApiConstants() {}
 
     // Base URL for all API calls
        public static final String BASE_URL = "http://coms-3090-030.class.las.iastate.edu:8080";
     // Alex Mock Server
 //    public static final String BASE_URL = "https://6bfe1ae1-ae39-462f-910e-7d53b5da9867.mock.pstmn.io";
+//    public static final String BASE_URL = "http://10.0.2.2:3000";
 
     // Nathan Mock Server
 //    public static final String BASE_URL = "https://8ce22578-237f-43d8-bd05-9a8c9cc7d1db.mock.pstmn.io";
@@ -35,6 +33,14 @@ public final class ApiConstants {
     // Location Endpoints
     public static final String GET_GENERATED_LOCATIONS_ENDPOINT = "/geohunt/getLocation";
     public static final String POST_SUBMISSION_ENDPOINT = "/geohunt/submission";
+    public static final String GET_CHALLENGE_BY_ID_ENDPOINT = "/geohunt/getChallengeByID";
+    public static final String RATE_CHALLENGE_ENDPOINT = "/geohunt/rate";
+    public static final String GET_CHALLENGE_COMMENTS_ENDPOINT = "/challenges/";
+
+    // Shop Endpoints
+    public static final String GET_POINTS_ENDPOINT = "/points";
+    public static final String PURCHASE_ITEM_ENDPOINT = "/shop/purchase";
+    public static final String GET_SHOP_ITEMS_ENDPOINT = "/shop/all";
 
     // Friends Endpoints
     public static final String GET_FRIENDS_ENDPOINT= "/friends";

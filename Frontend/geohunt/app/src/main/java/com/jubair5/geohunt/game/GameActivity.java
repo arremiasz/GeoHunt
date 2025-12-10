@@ -153,15 +153,16 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     /**
-     * This method is called when the user clicks the ready button. It stops location updates
+     * This method is called when the user clicks the ready button. It stops
+     * location updates
      * and sends the game parameters to the server.
      */
     protected void readyUp() {
         Log.d(TAG, "Ready button clicked. Beginning ready sequence.");
 
-
         // Get the most current location
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(this, "Location permission is required to start the game.", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -185,7 +186,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     /**
-     * Builds and sends the GET request to the server to get a generated location for the game.
+     * Builds and sends the GET request to the server to get a generated location
+     * for the game.
      */
     protected void sendGameStartRequest() {
         String url = Uri.parse(ApiConstants.BASE_URL + ApiConstants.GET_GENERATED_LOCATIONS_ENDPOINT)
@@ -213,15 +215,16 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                 error -> {
                     Log.e(TAG, "Failed to get game locations.", error);
                     Toast.makeText(this, "Error starting game. Please try again.", Toast.LENGTH_LONG).show();
-                }
-        );
+                });
 
         VolleySingleton.getInstance(this).addToRequestQueue(gameStartRequest);
     }
 
     /**
-     * Starts the main game loop with the data received from the server. Makes the map full screen.
-     * @param id The ID of the target location.
+     * Starts the main game loop with the data received from the server. Makes the
+     * map full screen.
+     *
+     * @param id       The ID of the target location.
      * @param imageUrl The URL of the Street View image for the target.
      */
     protected void startGame(int id, String imageUrl) {
@@ -241,8 +244,10 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     /**
-     * Displays a 3-second countdown overlay and then proceeds to the main game logic.
-     * @param id The ID of the target location.
+     * Displays a 3-second countdown overlay and then proceeds to the main game
+     * logic.
+     *
+     * @param id       The ID of the target location.
      * @param imageUrl The URL of the Street View image for the target.
      */
     protected void startCountdown(int id, String imageUrl) {
@@ -292,6 +297,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     /**
      * Stops the stopwatch and returns the elapsed time.
+     *
      * @return The elapsed time in seconds.
      */
     protected int stopStopwatch() {
@@ -345,7 +351,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             Log.e(TAG, "Failed to create JSON object for submission.", e);
         }
 
-        String url = ApiConstants.BASE_URL + ApiConstants.POST_SUBMISSION_ENDPOINT + "?uid=" + userId + "&cid=" + challengeId;
+        String url = ApiConstants.BASE_URL + ApiConstants.POST_SUBMISSION_ENDPOINT + "?uid=" + userId + "&cid="
+                + challengeId;
 
         StringRequest submissionRequest = new StringRequest(Request.Method.POST, url,
                 response -> {
@@ -354,14 +361,16 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                     Intent intent = new Intent(GameActivity.this, ResultsActivity.class);
                     intent.putExtra("results", Double.parseDouble(response));
                     intent.putExtra("time", time);
+                    intent.putExtra("challengeId", challengeId);
+                    intent.putExtra("guessLat", currentLat);
+                    intent.putExtra("guessLng", currentLng);
                     startActivity(intent);
                     finish();
                 },
                 error -> {
                     Log.e(TAG, "Submission failed.", error);
                     Toast.makeText(this, "Error submitting guess. Please try again.", Toast.LENGTH_LONG).show();
-                })
-        {
+                }) {
             @Override
             public byte[] getBody() {
                 return requestBody.toString().getBytes(StandardCharsets.UTF_8);
@@ -379,6 +388,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     /**
      * Creates a content Uri for a temporary file in the app's cache directory.
+     *
      * @param fileName The name of the file to create.
      * @return The Uri for the temporary image file.
      */
@@ -389,6 +399,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     /**
      * Converts a Bitmap image to a Base64 encoded string.
+     *
      * @param bitmap The bitmap to be converted.
      * @return The Base64 encoded string representation of the bitmap.
      */
@@ -459,6 +470,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     /**
      * Makes the hint container visible and loads the image.
+     *
      * @param imageUrl The URL of the hint image.
      */
     protected void showHint(String imageUrl) {
@@ -540,6 +552,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     /**
      * Snaps the hint box to the nearest corner of the screen.
+     *
      * @param view The hint box view.
      */
     protected void snapToCorner(View view) {
@@ -574,7 +587,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .start();
     }
 
-
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
         this.googleMap = googleMap;
@@ -598,11 +610,13 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     /**
-     * Checks for location permission, and if granted, enables the 'My Location' layer and
+     * Checks for location permission, and if granted, enables the 'My Location'
+     * layer and
      * moves the camera to the user's current position.
      */
     protected void enableMyLocation() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             if (googleMap != null) {
                 googleMap.setMyLocationEnabled(true);
                 fusedLocationProviderClient.getLastLocation().addOnSuccessListener(this, location -> {
@@ -659,8 +673,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
             Log.d(TAG, "Setting dark mode map style.");
             googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.map_style_dark));
-            strokeColor = Color.rgb(0,100, 255);
-            fillColor = Color.argb(34, 0,150, 255);
+            strokeColor = Color.rgb(0, 100, 255);
+            fillColor = Color.argb(34, 0, 150, 255);
         }
     }
 
@@ -692,10 +706,12 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     /**
-     * Calculates a new LatLng based on a starting point, a distance in meters, and a bearing.
-     * @param latLng The starting LatLng.
+     * Calculates a new LatLng based on a starting point, a distance in meters, and
+     * a bearing.
+     *
+     * @param latLng   The starting LatLng.
      * @param distance The distance in meters.
-     * @param bearing The bearing in degrees.
+     * @param bearing  The bearing in degrees.
      * @return The new LatLng.
      */
     protected LatLng getOffsetLatLng(LatLng latLng, double distance, double bearing) {
@@ -710,7 +726,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         return new LatLng(Math.toDegrees(lat2), Math.toDegrees(lon2));
     }
-
 
     @Override
     protected void onResume() {

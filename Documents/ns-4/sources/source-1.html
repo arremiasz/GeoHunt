@@ -1,0 +1,305 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > AccountService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.geohunt.backend.Services</a>
+</div>
+
+<h1>Coverage Summary for Class: AccountService (com.geohunt.backend.Services)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">AccountService</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    94.1%
+  </span>
+  <span class="absValue">
+    (16/17)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (21/42)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    80.6%
+  </span>
+  <span class="absValue">
+    (58/72)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.geohunt.backend.Services;
+&nbsp;
+&nbsp;import com.geohunt.backend.Shop.ShopRepository;
+&nbsp;import com.geohunt.backend.Shop.TransactionsRepository;
+&nbsp;import com.geohunt.backend.Shop.UserInventoryRepository;
+&nbsp;import com.geohunt.backend.database.*;
+&nbsp;import com.geohunt.backend.powerup.Powerup;
+&nbsp;import org.springframework.beans.factory.annotation.Autowired;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;@Service
+<b class="fc">&nbsp;public class AccountService {</b>
+&nbsp;    @Autowired
+&nbsp;    private AccountRepository accountRepository;
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    private FriendsService friendsService;
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    private ChallengesRepository challengeService;
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    private NotificationsRepository notificationsService;
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    private SubmissionsRepository submissionsRepository;
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    private UserInventoryRepository userInventoryRepository;
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    private TransactionsRepository transactionsRepository;
+&nbsp;
+&nbsp;    public long getIdByUsername(String username) {
+<b class="fc">&nbsp;        Account a = getAccountByUsername(username);</b>
+<b class="fc">&nbsp;        return a.getId();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public long createAccount(Account account) {
+<b class="pc">&nbsp;        if(accountRepository.findByUsername(account.getUsername()).isPresent()){</b>
+<b class="nc">&nbsp;            return -1;</b>
+<b class="fc">&nbsp;        } else if(accountRepository.findByEmail(account.getEmail()).isPresent()) {</b>
+<b class="fc">&nbsp;           return -2;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        accountRepository.save(account);</b>
+<b class="fc">&nbsp;        return account.getId();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Account getAccountByUsername(String username) {
+<b class="fc">&nbsp;        if(accountRepository.findByUsername(username).isPresent()) {</b>
+<b class="fc">&nbsp;            return accountRepository.findByUsername(username).get();</b>
+&nbsp;        }
+<b class="fc">&nbsp;        throw new IllegalArgumentException(&quot;Username Incorrect&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Account getAccountById(Long id) {
+<b class="fc">&nbsp;        if(accountRepository.findById(id).isPresent()) {</b>
+<b class="fc">&nbsp;            return accountRepository.findById(id).get();</b>
+&nbsp;        }
+<b class="fc">&nbsp;        throw new IllegalArgumentException(&quot;Account does not exist.&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void giveAccountMoney(Account account, Long amount) {
+<b class="fc">&nbsp;        account.setTotalPoints(account.getTotalPoints() + amount);</b>
+<b class="fc">&nbsp;        accountRepository.save(account);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean deleteFriends(long id) {
+<b class="fc">&nbsp;        return friendsService.deleteFriends(id);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void deleteChallenges(long id) {
+<b class="fc">&nbsp;        challengeService.deleteByCreator_Id(id);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void deleteNotifications(long id) {
+<b class="fc">&nbsp;        notificationsService.deleteAllByTargetId(id);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void deleteSubmissions(long id) {
+<b class="fc">&nbsp;        submissionsRepository.deleteById(id);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void deletePowerups(long id){
+<b class="fc">&nbsp;        Optional&lt;Account&gt; accOpt = accountRepository.findById(id);</b>
+&nbsp;
+<b class="fc">&nbsp;        Account acc = accOpt.get();</b>
+&nbsp;
+<b class="fc">&nbsp;        for(Powerup p : acc.getPowerups()) {</b>
+<b class="fc">&nbsp;            p.getAccounts().remove(acc);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        acc.getPowerups().clear();</b>
+&nbsp;        
+&nbsp;    }
+&nbsp;
+&nbsp;    public void deleteUserInventory(long id) {
+<b class="fc">&nbsp;        Optional&lt;Account&gt; accOpt = accountRepository.findById(id);</b>
+<b class="fc">&nbsp;        Account acc = accOpt.get();</b>
+<b class="fc">&nbsp;        userInventoryRepository.deleteAllByUser(acc);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void deleteTransactions(long id) {
+<b class="fc">&nbsp;        Optional&lt;Account&gt; accOpt = accountRepository.findById(id);</b>
+<b class="fc">&nbsp;        Account acc = accOpt.get();</b>
+<b class="fc">&nbsp;        transactionsRepository.deleteAllByUser(acc);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean deleteAccountByID(Long id) {
+<b class="fc">&nbsp;        if(accountRepository.findById(id).isPresent()) {</b>
+<b class="fc">&nbsp;            deleteFriends(id);</b>
+<b class="fc">&nbsp;            deleteSubmissions(id);</b>
+<b class="fc">&nbsp;            deleteChallenges(id);</b>
+<b class="fc">&nbsp;            deleteNotifications(id);</b>
+<b class="fc">&nbsp;            deletePowerups(id);</b>
+<b class="fc">&nbsp;            deleteUserInventory(id);</b>
+<b class="fc">&nbsp;            deleteTransactions(id);</b>
+<b class="fc">&nbsp;            accountRepository.deleteById(id);</b>
+<b class="fc">&nbsp;            return true;</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean deleteAccountByUsername(String username) {
+<b class="pc">&nbsp;        if(accountRepository.findByUsername(username).isPresent()) {</b>
+<b class="fc">&nbsp;            accountRepository.deleteById(accountRepository.findByUsername(username).get().getId());</b>
+<b class="fc">&nbsp;            return true;</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public ResponseEntity&lt;String&gt; updatedAccount(Long id, Account account) {
+<b class="fc">&nbsp;        Account acc = getAccountById(id);</b>
+<b class="pc">&nbsp;        if (acc == null) {</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND)</b>
+<b class="nc">&nbsp;                    .body(&quot;Account not found with id: &quot; + id);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;
+<b class="pc">&nbsp;        if (account.getUsername() != null &amp;&amp; !account.getUsername().isBlank()) {</b>
+<b class="fc">&nbsp;            Optional&lt;Account&gt; existingUsername = accountRepository.findByUsername(account.getUsername());</b>
+<b class="pc">&nbsp;            if (existingUsername.isPresent() &amp;&amp; existingUsername.get().getId() != id) {</b>
+<b class="fc">&nbsp;                return ResponseEntity.status(HttpStatus.CONFLICT)</b>
+<b class="fc">&nbsp;                        .body(&quot;Username already taken: &quot; + account.getUsername());</b>
+&nbsp;            } else {
+<b class="fc">&nbsp;                acc.setUsername(account.getUsername());</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;
+<b class="pc">&nbsp;        if (account.getPassword() != null &amp;&amp; !account.getPassword().isEmpty()) {</b>
+<b class="nc">&nbsp;            acc.setPassword(account.getPassword());</b>
+&nbsp;        }
+&nbsp;
+&nbsp;
+<b class="pc">&nbsp;        if (account.getEmail() != null &amp;&amp; !account.getEmail().isEmpty()) {</b>
+<b class="nc">&nbsp;            Optional&lt;Account&gt; existingEmail = accountRepository.findByEmail(account.getEmail());</b>
+<b class="nc">&nbsp;            if (existingEmail.isPresent() &amp;&amp; existingEmail.get().getId() != id) {</b>
+<b class="nc">&nbsp;                return ResponseEntity.status(HttpStatus.CONFLICT).body(&quot;Email already in use: &quot; + account.getEmail());</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                acc.setEmail(account.getEmail());</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;
+<b class="pc">&nbsp;        if (account.getPfp() != null &amp;&amp; !account.getPfp().isEmpty()) {</b>
+<b class="nc">&nbsp;            acc.setPfp(account.getPfp());</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        accountRepository.save(acc);</b>
+&nbsp;
+<b class="fc">&nbsp;        return ResponseEntity.ok(&quot;Account updated successfully!&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public ResponseEntity&lt;String&gt; getPfp(long id) {
+<b class="nc">&nbsp;        Optional&lt;Account&gt; accountOptional = accountRepository.findById(id);</b>
+<b class="nc">&nbsp;        if (accountOptional.isPresent()) {</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(accountOptional.get().getPfp());</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 21:04</div>
+</div>
+</body>
+</html>
