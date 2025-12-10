@@ -226,7 +226,7 @@ public class EvanSystemTestCommentsRatings {
 
     @Test
     @Order(5)
-    public void addrating(){
+    public void addRating(){
         // Variables
         long challengeId = challengesIdList.get(0);
         int rating = 4;
@@ -245,8 +245,37 @@ public class EvanSystemTestCommentsRatings {
     }
 
     @Test
-    @Order(5)
-    public void addrating_fail(){
+    @Order(6)
+    public void getRating(){
+        // Variables
+        long challengeId = challengesIdList.get(0);
+        Challenges challenges = challengesRepository.findById(challengeId).get();
+        challenges.addRating(4);
+        challenges.addRating(2);
+        challenges.addRating(3);
+        challengesRepository.save(challenges);
+
+        // Send request and receive response
+        Response response = RestAssured.given().
+                header("Content-Type", "text/plain").
+                header("charset","utf-8").
+                when().
+                get("/geohunt/challenge/" + challengeId + "/rating");
+
+
+        // Check status code
+        int statusCode = response.getStatusCode();
+        assertEquals(200, statusCode);
+
+        // Verify
+        String returnString = response.body().asString();
+        double rating = Double.parseDouble(returnString);
+        assertEquals(3.25, rating);
+    }
+
+    @Test
+    @Order(7)
+    public void addRating_fail(){
         // Variables
         long challengeId = challengesIdList.get(0);
         int rating = 7;
