@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FriendAdapter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.jubair5.geohunt.friends</a> &gt; <span class="el_source">FriendAdapter.java</span></div><h1>FriendAdapter.java</h1><pre class="source lang-java linenums">/**
+ * Adapter class that handles the list of friends and accounts searched
+ * @author Nathan Imig
+ */
+package com.jubair5.geohunt.friends;
+
+
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Base64;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.StringRequest;
+import com.jubair5.geohunt.R;
+import com.jubair5.geohunt.friends.SingleFriendActivity;
+import com.jubair5.geohunt.network.ApiConstants;
+import com.jubair5.geohunt.network.VolleySingleton;
+
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+
+public class FriendAdapter extends RecyclerView.Adapter&lt;FriendAdapter.ViewHolder&gt; {
+
+    private static final String TAG = &quot;FriendsFragment&quot;;
+    private final Context context;
+    private final List&lt;Friend&gt; friends;
+
+    private final OnFriendClickListener listener;
+
+
+    public interface OnFriendClickListener {
+        void onFriendClick(Friend friend);
+    }
+
+<span class="fc" id="L48">    public FriendAdapter(Context context, List&lt;Friend&gt; friends, OnFriendClickListener listener){</span>
+<span class="fc" id="L49">        this.context = context;</span>
+<span class="fc" id="L50">        this.friends = friends;</span>
+<span class="fc" id="L51">        this.listener = listener;</span>
+<span class="fc" id="L52">    }</span>
+
+
+
+    @NonNull
+    @Override
+    public FriendAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+<span class="nc" id="L59">        View view = LayoutInflater.from(context).inflate(R.layout.item_friend, parent, false);</span>
+<span class="nc" id="L60">        return new ViewHolder(view);</span>
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull FriendAdapter.ViewHolder holder, int position) {
+<span class="nc" id="L65">        Friend friend = friends.get(position);</span>
+
+        // Name and state
+<span class="nc" id="L68">        holder.friendNameTextView.setText(friend.getUsername());</span>
+<span class="nc" id="L69">        setStateText(holder, friend);</span>
+<span class="nc" id="L70">        loadProfilePicture(holder, friend);</span>
+<span class="nc" id="L71">        holder.itemView.setOnClickListener(v -&gt; listener.onFriendClick(friend));</span>
+
+<span class="nc" id="L73">    }</span>
+
+
+    /**
+     * Loads the user's profile picture from pfp string.
+     * Falls back to the placeholder icon if no profile picture is available.
+     */
+    private void loadProfilePicture(ViewHolder holder, Friend friend) {
+<span class="nc" id="L81">        String pfp = friend.getPhoto();</span>
+<span class="nc bnc" id="L82" title="All 4 branches missed.">        if (pfp != null &amp;&amp; !pfp.isEmpty()) {</span>
+<span class="nc" id="L83">            byte[] decodedImage = Base64.decode(pfp, Base64.DEFAULT);</span>
+<span class="nc" id="L84">            Bitmap bitmap = BitmapFactory.decodeByteArray(decodedImage, 0, decodedImage.length);</span>
+<span class="nc" id="L85">            holder.pfp.setImageBitmap(bitmap);</span>
+<span class="nc" id="L86">        } else {</span>
+<span class="nc" id="L87">            holder.pfp.setImageResource(android.R.drawable.ic_menu_gallery);</span>
+        }
+<span class="nc" id="L89">    }</span>
+
+    /**
+     *  Sets the current status of relationship to the view of the account
+     * @param holder
+     * @param friend
+     */
+    @SuppressLint(&quot;SetTextI18n&quot;)
+    private void setStateText(ViewHolder holder, Friend friend) {
+<span class="nc bnc" id="L98" title="All 2 branches missed.">        if (friend.getState() == SingleFriendActivity.RECEIVED_REQUEST_STATE) {</span>
+<span class="nc" id="L99">            holder.friendState.setText(&quot;Recieved&quot;);</span>
+        }
+<span class="nc bnc" id="L101" title="All 2 branches missed.">        else if(friend.getState() == SingleFriendActivity.SENT_REQUEST_STATE){</span>
+<span class="nc" id="L102">            holder.friendState.setText(&quot;Pending&quot;);</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">        }else if(friend.getState() == SingleFriendActivity.ARE_FRIENDS_STATE){</span>
+<span class="nc" id="L104">            holder.friendState.setText(&quot;Friends&quot;);</span>
+        }else{
+<span class="nc" id="L106">            holder.friendState.setText(&quot;&quot;);</span>
+        }
+<span class="nc" id="L108">    }</span>
+
+
+    @Override
+    public int getItemCount() {
+<span class="nc" id="L113">        return this.friends.size();</span>
+    }
+
+    /**
+     * ViewHolder class for the adapter.
+     */
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        ImageView pfp;
+        TextView friendNameTextView;
+        TextView friendState;
+
+        public ViewHolder(@NonNull View itemView) {
+<span class="nc" id="L125">            super(itemView);</span>
+<span class="nc" id="L126">            pfp = itemView.findViewById(R.id.friend_pfp);</span>
+<span class="nc" id="L127">            friendNameTextView = itemView.findViewById(R.id.username_label);</span>
+<span class="nc" id="L128">            friendState = itemView.findViewById(R.id.relationship_State);</span>
+<span class="nc" id="L129">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Generated by the Android Gradle plugin 8.13.1</div></body></html>

@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SignupFragment.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.jubair5.geohunt.auth</a> &gt; <span class="el_source">SignupFragment.java</span></div><h1>SignupFragment.java</h1><pre class="source lang-java linenums">package com.jubair5.geohunt.auth;
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Log;
+import android.util.Patterns;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.toolbox.StringRequest;
+import com.google.android.material.textfield.TextInputLayout;
+import com.jubair5.geohunt.R;
+import com.jubair5.geohunt.network.ApiConstants;
+import com.jubair5.geohunt.network.VolleySingleton;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Pattern;
+
+/**
+ * Signup page
+ * @author Alex Remiasz
+ */
+<span class="fc" id="L44">public class SignupFragment extends Fragment {</span>
+
+    private static final String TAG = &quot;SignupFragment&quot;;
+    private static final int MIN_PASSWORD_LENGTH = 6;
+<span class="fc" id="L48">    private static final Pattern PASSWORD_HAS_UPPERCASE = Pattern.compile(&quot;.*[A-Z].*&quot;);</span>
+<span class="fc" id="L49">    private static final Pattern PASSWORD_HAS_DIGIT = Pattern.compile(&quot;.*\\d.*&quot;);</span>
+<span class="fc" id="L50">    private static final Pattern PASSWORD_HAS_SPECIAL_CHAR = Pattern.compile(&quot;.*[^a-zA-Z0-9].*&quot;);</span>
+
+    private static final String SHARED_PREFS_NAME = &quot;GeoHuntPrefs&quot;;
+    private static final String KEY_USER_LOGGED_IN = &quot;isUserLoggedIn&quot;;
+    private static final String KEY_LOGIN_TIMESTAMP = &quot;loginTimestamp&quot;;
+    private static final String KEY_USER_ID = &quot;userId&quot;;
+    private static final String KEY_USER_NAME = &quot;userName&quot;;
+    private static final String KEY_USER_EMAIL = &quot;userEmail&quot;;
+    private static final String KEY_USER_PFP = &quot;userPfp&quot;;
+
+    private TextInputLayout usernameSignupLayout, emailSignupLayout, passwordSignupLayout, confirmPasswordSignupLayout;
+    private EditText usernameEditText, emailEditText, passwordEditText, confirmPasswordEditText;
+    private Button signupButton;
+    private TextView goToLoginTextView;
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+<span class="fc" id="L68">        return inflater.inflate(R.layout.signup_fragment, container, false);</span>
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+<span class="fc" id="L73">        super.onViewCreated(view, savedInstanceState);</span>
+
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">        if (((AppCompatActivity) getActivity()).getSupportActionBar() != null) {</span>
+<span class="fc" id="L76">            ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(&quot;Sign Up&quot;);</span>
+        }
+
+<span class="fc" id="L79">        usernameSignupLayout = view.findViewById(R.id.usernameSignupLayout);</span>
+<span class="fc" id="L80">        emailSignupLayout = view.findViewById(R.id.emailSignupLayout);</span>
+<span class="fc" id="L81">        passwordSignupLayout = view.findViewById(R.id.passwordSignupLayout);</span>
+<span class="fc" id="L82">        confirmPasswordSignupLayout = view.findViewById(R.id.confirmPasswordSignupLayout);</span>
+
+<span class="fc" id="L84">        usernameEditText = view.findViewById(R.id.usernameSignup);</span>
+<span class="fc" id="L85">        emailEditText = view.findViewById(R.id.emailSignup);</span>
+<span class="fc" id="L86">        passwordEditText = view.findViewById(R.id.passwordSignup);</span>
+<span class="fc" id="L87">        confirmPasswordEditText = view.findViewById(R.id.confirmPasswordSignup);</span>
+
+<span class="fc" id="L89">        signupButton = view.findViewById(R.id.signup);</span>
+<span class="fc" id="L90">        goToLoginTextView = view.findViewById(R.id.goToLogin);</span>
+
+<span class="fc" id="L92">        goToLoginTextView.setOnClickListener(v -&gt; {</span>
+<span class="fc" id="L93">            gotoLogin();</span>
+<span class="fc" id="L94">        });</span>
+
+<span class="fc" id="L96">        signupButton.setOnClickListener(v -&gt; {</span>
+<span class="fc" id="L97">            performSignup();</span>
+<span class="fc" id="L98">        });</span>
+
+<span class="fc" id="L100">        usernameEditText.setOnKeyListener((v, keyCode, event) -&gt; {</span>
+<span class="fc" id="L101">            usernameSignupLayout.setError(null);</span>
+<span class="fc" id="L102">            return false;</span>
+        });
+<span class="fc" id="L104">        emailEditText.setOnKeyListener((v, keyCode, event) -&gt; {</span>
+<span class="fc" id="L105">            emailSignupLayout.setError(null);</span>
+<span class="fc" id="L106">            return false;</span>
+        });
+<span class="fc" id="L108">        passwordEditText.setOnKeyListener((v, keyCode, event) -&gt; {</span>
+<span class="fc" id="L109">            passwordSignupLayout.setError(null);</span>
+<span class="fc" id="L110">            return false;</span>
+        });
+<span class="fc" id="L112">        confirmPasswordEditText.setOnKeyListener((v, keyCode, event) -&gt; {</span>
+<span class="fc" id="L113">            confirmPasswordSignupLayout.setError(null);</span>
+<span class="fc" id="L114">            return false;</span>
+        });
+<span class="fc" id="L116">    }</span>
+
+    /**
+     * Navigates back to the login fragment by popping the back stack.
+     */
+    private void gotoLogin() {
+<span class="pc bpc" id="L122" title="1 of 2 branches missed.">        if (getActivity() != null) {</span>
+<span class="fc" id="L123">            FragmentManager fragmentManager = getActivity().getSupportFragmentManager();</span>
+<span class="fc" id="L124">            fragmentManager.beginTransaction()</span>
+<span class="fc" id="L125">                    .replace(R.id.fragment_container_view, new LoginFragment())</span>
+<span class="fc" id="L126">                    .commit();</span>
+        }
+<span class="fc" id="L128">    }</span>
+
+    /**
+     * Validates the signup form inputs and initiates the signup network request if all inputs are valid.
+     * Handles UI updates for errors and successful signup, including saving session data.
+     */
+    private void performSignup() {
+<span class="fc" id="L135">        usernameSignupLayout.setError(null);</span>
+<span class="fc" id="L136">        emailSignupLayout.setError(null);</span>
+<span class="fc" id="L137">        passwordSignupLayout.setError(null);</span>
+<span class="fc" id="L138">        confirmPasswordSignupLayout.setError(null);</span>
+
+<span class="fc" id="L140">        String username = usernameEditText.getText().toString().trim();</span>
+<span class="fc" id="L141">        String email = emailEditText.getText().toString().trim();</span>
+<span class="fc" id="L142">        String password = passwordEditText.getText().toString().trim();</span>
+<span class="fc" id="L143">        String confirmPassword = confirmPasswordEditText.getText().toString().trim();</span>
+
+<span class="fc bfc" id="L145" title="All 8 branches covered.">        if (!validateUsername(username) || !validateEmail(email) || !validatePassword(password) || !validateConfirmPassword(password, confirmPassword)) {</span>
+<span class="fc" id="L146">            return;</span>
+        }
+
+<span class="fc" id="L149">        Log.d(TAG, &quot;All validations passed. Proceeding with signup.&quot;);</span>
+
+<span class="fc" id="L151">        final JSONObject requestBody = new JSONObject();</span>
+        try {
+<span class="fc" id="L153">            requestBody.put(&quot;username&quot;, username);</span>
+<span class="fc" id="L154">            requestBody.put(&quot;pfp&quot;, &quot;&quot;); // Picture upload in Profile</span>
+<span class="fc" id="L155">            requestBody.put(&quot;email&quot;, email);</span>
+<span class="fc" id="L156">            requestBody.put(&quot;password&quot;, password);</span>
+<span class="nc" id="L157">        } catch (JSONException e) {</span>
+<span class="nc" id="L158">            Log.e(TAG, &quot;Error creating JSON request body&quot;, e);</span>
+<span class="nc" id="L159">            Toast.makeText(getContext(), &quot;An unexpected error occurred.&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L160">            return;</span>
+<span class="fc" id="L161">        }</span>
+
+<span class="fc" id="L163">        String signupUrl = ApiConstants.BASE_URL + ApiConstants.SIGNUP_ENDPOINT;</span>
+<span class="fc" id="L164">        StringRequest stringRequest = new StringRequest(</span>
+                Request.Method.POST, signupUrl,
+                response -&gt; {
+<span class="fc" id="L167">                    Log.d(TAG, &quot;Signup successful response: &quot; + response);</span>
+                    try {
+<span class="fc" id="L169">                        JSONObject responseJson = new JSONObject(response);</span>
+<span class="fc" id="L170">                        int userId = responseJson.getInt(&quot;id&quot;);</span>
+<span class="fc" id="L171">                        String responseUsername = usernameEditText.getText().toString().trim();</span>
+<span class="fc" id="L172">                        String responseEmail = emailEditText.getText().toString().trim();</span>
+
+<span class="pc bpc" id="L174" title="1 of 2 branches missed.">                        if (getContext() != null) {</span>
+<span class="fc" id="L175">                            SharedPreferences sharedPreferences = getContext().getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);</span>
+<span class="fc" id="L176">                            SharedPreferences.Editor editor = sharedPreferences.edit();</span>
+<span class="fc" id="L177">                            editor.putBoolean(KEY_USER_LOGGED_IN, true);</span>
+<span class="fc" id="L178">                            editor.putLong(KEY_LOGIN_TIMESTAMP, System.currentTimeMillis());</span>
+<span class="fc" id="L179">                            editor.putInt(KEY_USER_ID, userId);</span>
+<span class="fc" id="L180">                            editor.putString(KEY_USER_NAME, responseUsername);</span>
+<span class="fc" id="L181">                            editor.putString(KEY_USER_EMAIL, responseEmail);</span>
+<span class="fc" id="L182">                            editor.putString(KEY_USER_PFP, &quot;&quot;);</span>
+<span class="fc" id="L183">                            editor.apply();</span>
+<span class="fc" id="L184">                            Log.d(TAG, &quot;User data and session timestamp saved. User ID: &quot; + userId);</span>
+                        }
+
+<span class="fc" id="L187">                        Toast.makeText(getContext(), &quot;Account created successfully!&quot;, Toast.LENGTH_LONG).show();</span>
+
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">                        if (getActivity() != null) {</span>
+<span class="fc" id="L190">                            getActivity().setResult(Activity.RESULT_OK);</span>
+<span class="fc" id="L191">                            getActivity().finish();</span>
+                        }
+
+<span class="nc" id="L194">                    } catch (JSONException e) {</span>
+<span class="nc" id="L195">                        Log.e(TAG, &quot;Error parsing JSON from signup response&quot;, e);</span>
+<span class="nc" id="L196">                        Toast.makeText(getContext(), &quot;Signup successful, but failed to process server response.&quot;, Toast.LENGTH_LONG).show();</span>
+<span class="fc" id="L197">                    }</span>
+<span class="fc" id="L198">                },</span>
+                error -&gt; {
+<span class="nc" id="L200">                    Log.e(TAG, &quot;Signup error: &quot; + error.toString());</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">                    if (error.networkResponse != null) {</span>
+<span class="nc" id="L202">                        Log.e(TAG, &quot;Signup error status code: &quot; + error.networkResponse.statusCode);</span>
+<span class="nc" id="L203">                        String responseBody = &quot;&quot;;</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">                        if(error.networkResponse.data != null) {</span>
+<span class="nc" id="L205">                            responseBody = new String(error.networkResponse.data, StandardCharsets.UTF_8);</span>
+                        }
+<span class="nc" id="L207">                        Log.e(TAG, &quot;Signup error response body: &quot; + responseBody);</span>
+
+<span class="nc bnc" id="L209" title="All 2 branches missed.">                        if (error.networkResponse.statusCode == 400) {</span>
+<span class="nc" id="L210">                            Toast.makeText(getContext(), &quot;Account already exists or invalid input.&quot;, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L211">                            usernameSignupLayout.setError(&quot;This email or username might already be taken.&quot;);</span>
+//                            emailEditText.requestFocus()
+                        } else {
+<span class="nc" id="L214">                            Toast.makeText(getContext(), &quot;Signup failed. Server error: &quot; + error.networkResponse.statusCode, Toast.LENGTH_LONG).show();</span>
+                        }
+<span class="nc" id="L216">                    } else {</span>
+<span class="nc" id="L217">                        Toast.makeText(getContext(), &quot;Signup failed. Check network connection.&quot;, Toast.LENGTH_LONG).show();</span>
+                    }
+<span class="nc" id="L219">                }</span>
+<span class="fc" id="L220">        ) {</span>
+            @Override
+            public byte[] getBody() {
+<span class="fc" id="L223">                return requestBody.toString().getBytes(StandardCharsets.UTF_8);</span>
+            }
+
+            @Override
+            public String getBodyContentType() {
+<span class="fc" id="L228">                return &quot;application/json; charset=utf-8&quot;;</span>
+            }
+
+            @Override
+            public Map&lt;String, String&gt; getHeaders() throws AuthFailureError {
+<span class="pc bpc" id="L233" title="1 of 2 branches missed.">                return super.getHeaders() != null ? super.getHeaders() : new HashMap&lt;&gt;();</span>
+            }
+        };
+
+<span class="pc bpc" id="L237" title="1 of 2 branches missed.">        if (getContext() != null) {</span>
+<span class="fc" id="L238">            VolleySingleton.getInstance(getContext()).addToRequestQueue(stringRequest);</span>
+        }
+<span class="fc" id="L240">    }</span>
+
+    /**
+     * Validates the provided username.
+     * A valid username must not be empty.
+     *
+     * @param username The username string to validate.
+     * @return {@code true} if the username is valid, {@code false} otherwise.
+     */
+    private boolean validateUsername(String username) {
+<span class="fc bfc" id="L250" title="All 2 branches covered.">        if (TextUtils.isEmpty(username)) {</span>
+<span class="fc" id="L251">            usernameSignupLayout.setError(&quot;Username cannot be empty&quot;);</span>
+<span class="fc" id="L252">            usernameEditText.requestFocus();</span>
+<span class="fc" id="L253">            return false;</span>
+        }
+<span class="fc" id="L255">        usernameSignupLayout.setError(null);</span>
+<span class="fc" id="L256">        return true;</span>
+    }
+
+    /**
+     * Validates the provided email address.
+     * A valid email must not be empty and must match the standard email pattern.
+     *
+     * @param email The email string to validate.
+     * @return {@code true} if the email is valid, {@code false} otherwise.
+     */
+    private boolean validateEmail(String email) {
+<span class="fc bfc" id="L267" title="All 2 branches covered.">        if (TextUtils.isEmpty(email)) {</span>
+<span class="fc" id="L268">            emailSignupLayout.setError(&quot;Email cannot be empty&quot;);</span>
+<span class="fc" id="L269">            emailEditText.requestFocus();</span>
+<span class="fc" id="L270">            return false;</span>
+        }
+<span class="fc bfc" id="L272" title="All 2 branches covered.">        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {</span>
+<span class="fc" id="L273">            emailSignupLayout.setError(&quot;Enter a valid email address&quot;);</span>
+<span class="fc" id="L274">            emailEditText.requestFocus();</span>
+<span class="fc" id="L275">            return false;</span>
+        }
+<span class="fc" id="L277">        emailSignupLayout.setError(null);</span>
+<span class="fc" id="L278">        return true;</span>
+    }
+
+    /**
+     * Validates the provided password based on defined criteria:
+     * - Not empty
+     * - Minimum 6 character length
+     * - Contains at least one uppercase letter
+     * - Contains at least one digit
+     * - Contains at least one special character
+     *
+     * @param password The password string to validate.
+     * @return {@code true} if the password meets all criteria, {@code false} otherwise.
+     */
+    private boolean validatePassword(String password) {
+<span class="fc bfc" id="L293" title="All 2 branches covered.">        if (TextUtils.isEmpty(password)) {</span>
+<span class="fc" id="L294">            passwordSignupLayout.setError(&quot;Password cannot be empty&quot;);</span>
+<span class="fc" id="L295">            passwordEditText.requestFocus();</span>
+<span class="fc" id="L296">            return false;</span>
+        }
+<span class="fc bfc" id="L298" title="All 2 branches covered.">        if (password.length() &lt; MIN_PASSWORD_LENGTH) {</span>
+<span class="fc" id="L299">            passwordSignupLayout.setError(&quot;Password must be at least &quot; + MIN_PASSWORD_LENGTH + &quot; characters&quot;);</span>
+<span class="fc" id="L300">            passwordEditText.requestFocus();</span>
+<span class="fc" id="L301">            return false;</span>
+        }
+<span class="fc bfc" id="L303" title="All 2 branches covered.">        if (!PASSWORD_HAS_UPPERCASE.matcher(password).matches()) {</span>
+<span class="fc" id="L304">            passwordSignupLayout.setError(&quot;Password must contain at least one uppercase letter&quot;);</span>
+<span class="fc" id="L305">            passwordEditText.requestFocus();</span>
+<span class="fc" id="L306">            return false;</span>
+        }
+<span class="fc bfc" id="L308" title="All 2 branches covered.">        if (!PASSWORD_HAS_DIGIT.matcher(password).matches()) {</span>
+<span class="fc" id="L309">            passwordSignupLayout.setError(&quot;Password must contain at least one digit&quot;);</span>
+<span class="fc" id="L310">            passwordEditText.requestFocus();</span>
+<span class="fc" id="L311">            return false;</span>
+        }
+<span class="fc bfc" id="L313" title="All 2 branches covered.">        if (!PASSWORD_HAS_SPECIAL_CHAR.matcher(password).matches()) {</span>
+<span class="fc" id="L314">            passwordSignupLayout.setError(&quot;Password must contain at least one special character&quot;);</span>
+<span class="fc" id="L315">            passwordEditText.requestFocus();</span>
+<span class="fc" id="L316">            return false;</span>
+        }
+<span class="fc" id="L318">        passwordSignupLayout.setError(null);</span>
+<span class="fc" id="L319">        return true;</span>
+    }
+
+    /**
+     * Validates that the confirm password field is not empty and matches the original password.
+     *
+     * @param password        The original password string.
+     * @param confirmPassword The confirmation password string.
+     * @return {@code true} if the confirm password is valid and matches, {@code false} otherwise.
+     */
+    private boolean validateConfirmPassword(String password, String confirmPassword) {
+<span class="fc bfc" id="L330" title="All 2 branches covered.">        if (TextUtils.isEmpty(confirmPassword)) {</span>
+<span class="fc" id="L331">            confirmPasswordSignupLayout.setError(&quot;Confirm password cannot be empty&quot;);</span>
+<span class="fc" id="L332">            confirmPasswordEditText.requestFocus();</span>
+<span class="fc" id="L333">            return false;</span>
+        }
+<span class="fc bfc" id="L335" title="All 2 branches covered.">        if (!password.equals(confirmPassword)) {</span>
+<span class="fc" id="L336">            confirmPasswordSignupLayout.setError(&quot;Passwords do not match&quot;);</span>
+<span class="fc" id="L337">            confirmPasswordEditText.requestFocus();</span>
+<span class="fc" id="L338">            return false;</span>
+        }
+<span class="fc" id="L340">        confirmPasswordSignupLayout.setError(null);</span>
+<span class="fc" id="L341">        return true;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Generated by the Android Gradle plugin 8.13.1</div></body></html>
