@@ -46,7 +46,7 @@ public final class ApiConstants {
     public static final String Remove_FRIEND = "/friends/remove";
 
     // PowerUp EndPoints
-    public static final String GET_POWERUPS_ENDPOINT = "";
+    public static final String GET_POWERUPS_ENDPOINT = "powerup/user";
     public static final String RESET_THEMES = "";
     public static final String GET_THEMES_ENDPOINT = "";
     public static final String PURCHASE_THEMES = "";

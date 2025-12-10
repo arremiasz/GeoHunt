@@ -168,10 +168,7 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
             return;
         }
 
-        /**
-         *
-         *
-        String url = ApiConstants.BASE_URL + ApiConstants.GET_POWERUPS_ENDPOINT + "?id=" + userId;
+        String url = ApiConstants.BASE_URL + ApiConstants.GET_POWERUPS_ENDPOINT + "?uid=" + userId;
 
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(
                 Request.Method.GET,
@@ -181,9 +178,20 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
                     Log.d(TAG, "Account Power Ups Response: " + response.toString());
                     try {
                         powerUpList.clear();
+
+
                         for (int i = 0; i < response.length(); i++) {
-                            JSONObject placeObject = response.getJSONObject(i);
-                            placesList.add(new Place(placeObject));
+                            PowerUp currentPowerUp;
+                            if(i==0){
+                                currentPowerUp = new hintPu();
+                                currentPowerUp.setAmount(response.get(i));
+                                powerUpList.add(currentPowerUp);
+                            }
+                            if(i==1){
+                                currentPowerUp = new TimeReductionPU();
+                                currentPowerUp.setAmount(response.get(i));
+                                powerUpList.add(currentPowerUp);
+                            }
                         }
                         powerUpAdapter.notifyDataSetChanged();
                     } catch (JSONException e) {
@@ -195,7 +203,6 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
                 });
 
         VolleySingleton.getInstance(requireContext()).addToRequestQueue(jsonArrayRequest);
-        */
         powerUpList.clear();
         ArrayList<Integer> response = new ArrayList<>();
         response.add(1);
