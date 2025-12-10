@@ -91,11 +91,28 @@ public class EvanSystemTestSubmissions {
         chal2.setCreator(account2);
         challengesRepository.save(chal2);
         challengesIdList.add(chal2.getId());
+
+        // Dummy Submissions
+        Submissions submission1 = new Submissions();
+        submission1.setLongitude(-90.0);
+        submission1.setLatitude(-41.0);
+        submission1.setSubmitter(account1);
+        submission1.setChallenge(chal2);
+        submissionsRepository.save(submission1);
+        submissionsIdList.add(submission1.getId());
+
+        Submissions submission2 = new Submissions();
+        submission2.setLongitude(-90.1);
+        submission2.setLatitude(-41.1);
+        submission2.setSubmitter(account2);
+        submission2.setChallenge(chal2);
+        submissionsRepository.save(submission2);
+        submissionsIdList.add(submission2.getId());
     }
 
     @Test
     @Order(1)
-    public void submission_createSuccess(){
+    public void submission_createSubmission(){
         try {
             // Variables
             Long account1 = accountIdList.get(0);
@@ -131,5 +148,127 @@ public class EvanSystemTestSubmissions {
             e.printStackTrace();
             fail();
         }
+    }
+
+    @Test
+    @Order(2)
+    public void submission_getSubmission(){
+        try {
+            // Variables
+            Long submission1 = submissionsIdList.get(0);
+
+
+            // Send request and receive response
+            Response response = RestAssured.given().
+                    header("Content-Type", "application/json").
+                    header("charset", "utf-8").
+                    when().
+                    get("/geohunt/submission/" + submission1);
+
+
+            // Check status code
+            int statusCode = response.getStatusCode();
+            assertEquals(200, statusCode);
+
+            // Check response body
+            String returnString = response.getBody().asString();
+            JSONObject returnObj = new JSONObject(returnString);
+            assertEquals(submission1, returnObj.getLong("id"));
+        }
+        catch (JSONException e){
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
+    @Order(3)
+    public void submission_listSubmissionsChallenge(){
+        try {
+            // Variables
+            Long challenge1 = challengesIdList.get(1);
+
+
+            // Send request and receive response
+            Response response = RestAssured.given().
+                    header("Content-Type", "application/json").
+                    header("charset", "utf-8").
+                    when().
+                    get("/geohunt/challenge/" + challenge1 + "/submissions");
+
+
+            // Check status code
+            int statusCode = response.getStatusCode();
+            assertEquals(200, statusCode);
+
+            // Check response body
+            String returnString = response.getBody().asString();
+            JSONArray returnArr = new JSONArray(returnString);
+            assertNotNull(returnArr);
+
+        }
+        catch (JSONException e){
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
+    @Order(4)
+    public void submission_updateSubmission(){
+        try {
+            // Variables
+            Long submission1 = submissionsIdList.get(0);
+
+            // Submission
+            String submission = new JSONObject()
+                    .put("longitude", -50)
+                    .put("latitude", 40)
+                    .toString();
+
+
+            // Send request and receive response
+            Response response = RestAssured.given().
+                    header("Content-Type", "application/json").
+                    header("charset", "utf-8").
+                    body(submission).
+                    when().
+                    put("/geohunt/submission/" + submission1);
+
+
+            // Check status code
+            int statusCode = response.getStatusCode();
+            assertEquals(200, statusCode);
+
+            // Check response body
+            String returnString = response.getBody().asString();
+            JSONObject returnObj = new JSONObject(returnString);
+            assertEquals(-50, returnObj.getDouble("longitude"));
+            assertEquals(40, returnObj.getDouble("latitude"));
+        }
+        catch (JSONException e){
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
+    @Order(5)
+    public void submission_deleteSubmission(){
+        // Variables
+        Long submission1 = submissionsIdList.get(0);
+
+
+        // Send request and receive response
+        Response response = RestAssured.given().
+                header("Content-Type", "application/json").
+                header("charset", "utf-8").
+                when().
+                delete("/geohunt/submission/" + submission1);
+
+
+        // Check status code
+        int statusCode = response.getStatusCode();
+        assertEquals(200, statusCode);
     }
 }
