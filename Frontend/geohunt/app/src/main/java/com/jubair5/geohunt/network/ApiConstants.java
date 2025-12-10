@@ -11,7 +11,7 @@ public final class ApiConstants {
 
     // Base URL for all API calls
     public static final String BASE_URL = "http://coms-3090-030.class.las.iastate.edu:8080";
-    // public static final String BASE_URL = "http://10.0.2.2:3000";
+//    public static final String BASE_URL = "http://10.0.2.2:3000";
 
     // Account Endpoints
     public static final String SIGNUP_ENDPOINT = "/signup";
