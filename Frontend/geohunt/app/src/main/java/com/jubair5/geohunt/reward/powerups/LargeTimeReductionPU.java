@@ -2,16 +2,16 @@ package com.jubair5.geohunt.reward.powerups;
 
 import com.jubair5.geohunt.R;
 
-public class TimeReductionPU implements PowerUp{
+public class LargeTimeReductionPU implements PowerUp{
     private String title;
     private String description;
     private int resource;
     private int amount;
 
 
-    public TimeReductionPU(){
-        title = "Time Reduction PowerUp";
-        description = "Reduces the time of the current make by 2 and a half minutes";
+    public LargeTimeReductionPU(){
+        title = "Large Time Reduction PowerUp";
+        description = "Reduces the time of the current make by 5 minutes";
         resource = R.drawable.time_reduction_pu;
         amount = 0;
     }

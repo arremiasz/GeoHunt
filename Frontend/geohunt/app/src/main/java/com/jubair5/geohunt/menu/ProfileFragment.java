@@ -178,18 +178,16 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
                     Log.d(TAG, "Account Power Ups Response: " + response.toString());
                     try {
                         powerUpList.clear();
-
-
                         for (int i = 0; i < response.length(); i++) {
                             PowerUp currentPowerUp;
-                            if(i==0){
+                            if(response.getJSONObject(i).getString("type").equals("LOCATION_Hint_General")){
                                 currentPowerUp = new hintPu();
-                                currentPowerUp.setAmount(response.get(i));
+                                currentPowerUp.setAmount(1);
                                 powerUpList.add(currentPowerUp);
                             }
-                            if(i==1){
+                            if(response.getJSONObject(i).getString("type").equals("MINUS_MINUETS")){
                                 currentPowerUp = new TimeReductionPU();
-                                currentPowerUp.setAmount(response.get(i));
+                                currentPowerUp.setAmount(1);
                                 powerUpList.add(currentPowerUp);
                             }
                         }
@@ -203,25 +201,6 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
                 });
 
         VolleySingleton.getInstance(requireContext()).addToRequestQueue(jsonArrayRequest);
-        powerUpList.clear();
-        ArrayList<Integer> response = new ArrayList<>();
-        response.add(1);
-        response.add(6);
-
-        for (int i = 0; i < response.size(); i++) {
-            PowerUp currentPowerUp;
-            if(i==0){
-                currentPowerUp = new hintPu();
-                currentPowerUp.setAmount(response.get(i));
-                powerUpList.add(currentPowerUp);
-            }
-            if(i==1){
-                currentPowerUp = new TimeReductionPU();
-                currentPowerUp.setAmount(response.get(i));
-                powerUpList.add(currentPowerUp);
-            }
-        }
-        powerUpAdapter.notifyDataSetChanged();
     }
 
     /**
