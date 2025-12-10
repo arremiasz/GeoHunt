@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -38,6 +39,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -73,6 +75,8 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
     protected RecyclerView commentsRecyclerView;
     protected CommentAdapter commentAdapter;
     protected List<Comment> commentsList;
+    protected EditText commentInput;
+    protected Button sendCommentButton;
     protected int challengeId;
     protected double guessLat;
     protected double guessLng;
@@ -111,6 +115,10 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
         galleryRecyclerView = findViewById(R.id.gallery_recycler_view);
         loadMorePhotosButton = findViewById(R.id.load_more_photos_button);
         commentsRecyclerView = findViewById(R.id.comments_recycler_view);
+        commentInput = findViewById(R.id.comment_input);
+        sendCommentButton = findViewById(R.id.send_comment_button);
+
+        sendCommentButton.setOnClickListener(v -> postComment());
 
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
@@ -403,6 +411,57 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
                 error -> Log.e(TAG, "Error fetching comments", error));
 
         VolleySingleton.getInstance(this).addToRequestQueue(commentsRequest);
+    }
+
+    /**
+     * Posts a new comment to the challenge.
+     */
+    protected void postComment() {
+        String commentText = commentInput.getText().toString().trim();
+        if (commentText.isEmpty()) {
+            Toast.makeText(this, "Please enter a comment", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (challengeId == -1) {
+            Toast.makeText(this, "Cannot post comment: invalid challenge", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        SharedPreferences prefs = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
+        int userId = prefs.getInt(KEY_USER_ID, -1);
+        if (userId == -1) {
+            Toast.makeText(this, "Please log in to comment", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String url = ApiConstants.BASE_URL + ApiConstants.POST_COMMENT_ENDPOINT
+                + "?cid=" + challengeId + "&uid=" + userId;
+        Log.d(TAG, "Posting comment to: " + url);
+
+        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
+                response -> {
+                    Log.d(TAG, "Comment posted successfully: " + response);
+                    Toast.makeText(this, "Comment posted!", Toast.LENGTH_SHORT).show();
+                    commentInput.setText("");
+                    fetchComments(); // Refresh comments list
+                },
+                error -> {
+                    Log.e(TAG, "Error posting comment", error);
+                    Toast.makeText(this, "Failed to post comment", Toast.LENGTH_SHORT).show();
+                }) {
+            @Override
+            public byte[] getBody() {
+                return commentText.getBytes(StandardCharsets.UTF_8);
+            }
+
+            @Override
+            public String getBodyContentType() {
+                return "text/plain; charset=utf-8";
+            }
+        };
+
+        VolleySingleton.getInstance(this).addToRequestQueue(postRequest);
     }
 
     /**
