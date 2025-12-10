@@ -15,6 +15,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+
+/**
+ * @author evan juslon
+ */
 @Tag(name = "Login Controller", description = "Login endpoint")
 @RestController
 public class LogInController {
