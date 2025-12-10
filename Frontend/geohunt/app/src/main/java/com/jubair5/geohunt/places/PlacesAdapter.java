@@ -1,7 +1,3 @@
-/**
- * Adapter class that handles the list of places.
- * @author Alex Remiasz
- */
 package com.jubair5.geohunt.places;
 
 import android.content.Context;
@@ -16,6 +12,10 @@ import com.jubair5.geohunt.R;
 
 import java.util.List;
 
+/**
+ * Adapter class that handles the list of places.
+ * @author Alex Remiasz
+ */
 public class PlacesAdapter extends RecyclerView.Adapter<PlacesAdapter.ViewHolder> {
 
     private static final int VIEW_TYPE_ADD = 0;

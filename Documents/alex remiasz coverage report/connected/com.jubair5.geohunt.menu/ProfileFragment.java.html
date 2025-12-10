@@ -1,0 +1,738 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProfileFragment.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.jubair5.geohunt.menu</a> &gt; <span class="el_source">ProfileFragment.java</span></div><h1>ProfileFragment.java</h1><pre class="source lang-java linenums">package com.jubair5.geohunt.menu;
+
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Base64;
+import android.widget.ImageView;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.canhub.cropper.CropImageContract;
+import com.canhub.cropper.CropImageContractOptions;
+import com.canhub.cropper.CropImageOptions;
+
+import java.io.ByteArrayOutputStream;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.google.android.material.textfield.TextInputLayout;
+import com.jubair5.geohunt.LauncherActivity;
+import com.jubair5.geohunt.R;
+import com.jubair5.geohunt.places.AddPlaceActivity;
+import com.jubair5.geohunt.places.Place;
+import com.jubair5.geohunt.places.PlaceDetailActivity;
+import com.jubair5.geohunt.places.PlacesAdapter;
+import com.jubair5.geohunt.network.ApiConstants;
+import com.jubair5.geohunt.network.VolleySingleton;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Profile Page Fragment
+ * Displays user information, places, statistics and account settings.
+ * 
+ * @author Alex Remiasz
+ */
+<span class="fc" id="L63">public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceClickListener {</span>
+
+    private static final String TAG = &quot;ProfileFragment&quot;;
+    private static final String SHARED_PREFS_NAME = &quot;GeoHuntPrefs&quot;;
+    private static final String KEY_USER_NAME = &quot;userName&quot;;
+    private static final String KEY_USER_ID = &quot;userId&quot;;
+    private static final String KEY_USER_EMAIL = &quot;userEmail&quot;;
+    private static final String KEY_USER_PFP = &quot;userPfp&quot;;
+
+    private LinearLayout displayContainer, editContainer;
+    private TextView usernameLabel;
+    private TextView statPointsValue, statMatchesValue, statFriendsValue, statItemsValue, statPlacesValue,
+            statCommentsValue;
+    private TextInputLayout editUsernameLayout, editEmailLayout, editNewPasswordLayout, editCurrentPasswordLayout;
+    private EditText editUsername, editEmail, editNewPassword, editCurrentPassword;
+    private Button editButton, deleteButton, saveChangesButton, cancelButton, logoutButton, changePfpButton;
+    private ImageView profileIcon, editProfileImage;
+    private RecyclerView placesRecyclerView;
+    private PlacesAdapter placesAdapter;
+    private List&lt;Place&gt; placesList;
+
+    private SharedPreferences prefs;
+    private View root;
+<span class="fc" id="L86">    private boolean isPfpChanged = false;</span>
+<span class="fc" id="L87">    private Bitmap newPfpBitmap = null;</span>
+
+<span class="fc" id="L89">    private final ActivityResultLauncher&lt;Intent&gt; activityLauncher = registerForActivityResult(</span>
+            new ActivityResultContracts.StartActivityForResult(),
+            result -&gt; {
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">                if (result.getResultCode() == Activity.RESULT_OK) {</span>
+<span class="fc" id="L93">                    Log.d(TAG, &quot;Returned from an activity with success. Refreshing submissions.&quot;);</span>
+<span class="fc" id="L94">                    fetchSubmissions();</span>
+                }
+<span class="fc" id="L96">            });</span>
+
+<span class="fc" id="L98">    private final ActivityResultLauncher&lt;CropImageContractOptions&gt; cropImage = registerForActivityResult(</span>
+            new CropImageContract(),
+            result -&gt; {
+<span class="nc bnc" id="L101" title="All 2 branches missed.">                if (result.isSuccessful()) {</span>
+<span class="nc" id="L102">                    Bitmap bitmap = BitmapFactory.decodeFile(result.getUriFilePath(requireContext(), true));</span>
+<span class="nc" id="L103">                    editProfileImage.setImageBitmap(bitmap);</span>
+<span class="nc" id="L104">                    newPfpBitmap = bitmap;</span>
+<span class="nc" id="L105">                    isPfpChanged = true;</span>
+<span class="nc" id="L106">                } else {</span>
+<span class="nc" id="L107">                    Log.e(TAG, &quot;Image crop failed&quot;, result.getError());</span>
+<span class="nc" id="L108">                    Toast.makeText(getContext(), &quot;Failed to crop image&quot;, Toast.LENGTH_SHORT).show();</span>
+                }
+<span class="nc" id="L110">            });</span>
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+            @Nullable Bundle savedInstanceState) {
+<span class="fc" id="L116">        root = inflater.inflate(R.layout.profile_fragment, container, false);</span>
+<span class="fc" id="L117">        prefs = requireActivity().getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);</span>
+
+<span class="fc" id="L119">        displayContainer = root.findViewById(R.id.display_container);</span>
+<span class="fc" id="L120">        editContainer = root.findViewById(R.id.edit_container);</span>
+<span class="fc" id="L121">        usernameLabel = root.findViewById(R.id.username_label);</span>
+<span class="fc" id="L122">        profileIcon = root.findViewById(R.id.profile_icon);</span>
+
+<span class="fc" id="L124">        editUsernameLayout = root.findViewById(R.id.edit_username_layout);</span>
+<span class="fc" id="L125">        editUsername = root.findViewById(R.id.edit_username);</span>
+<span class="fc" id="L126">        editEmailLayout = root.findViewById(R.id.edit_email_layout);</span>
+<span class="fc" id="L127">        editEmail = root.findViewById(R.id.edit_email);</span>
+<span class="fc" id="L128">        editNewPasswordLayout = root.findViewById(R.id.edit_new_password_layout);</span>
+<span class="fc" id="L129">        editNewPassword = root.findViewById(R.id.edit_new_password);</span>
+<span class="fc" id="L130">        editCurrentPasswordLayout = root.findViewById(R.id.edit_current_password_layout);</span>
+<span class="fc" id="L131">        editCurrentPassword = root.findViewById(R.id.edit_current_password);</span>
+
+<span class="fc" id="L133">        editProfileImage = root.findViewById(R.id.edit_profile_image);</span>
+<span class="fc" id="L134">        changePfpButton = root.findViewById(R.id.change_pfp_button);</span>
+
+<span class="fc" id="L136">        editButton = root.findViewById(R.id.edit_account_button);</span>
+<span class="fc" id="L137">        deleteButton = root.findViewById(R.id.delete_account_button);</span>
+<span class="fc" id="L138">        saveChangesButton = root.findViewById(R.id.save_changes_button);</span>
+<span class="fc" id="L139">        cancelButton = root.findViewById(R.id.cancel_button);</span>
+<span class="fc" id="L140">        logoutButton = root.findViewById(R.id.logout_button);</span>
+<span class="fc" id="L141">        placesRecyclerView = root.findViewById(R.id.places_recycler_view);</span>
+
+<span class="fc" id="L143">        String username = prefs.getString(KEY_USER_NAME, &quot;User&quot;);</span>
+<span class="fc" id="L144">        usernameLabel.setText(&quot;@&quot; + username);</span>
+
+<span class="fc" id="L146">        loadProfilePicture();</span>
+
+        // Initialize statistics TextViews
+<span class="fc" id="L149">        statPointsValue = root.findViewById(R.id.stat_points_value);</span>
+<span class="fc" id="L150">        statMatchesValue = root.findViewById(R.id.stat_matches_value);</span>
+<span class="fc" id="L151">        statFriendsValue = root.findViewById(R.id.stat_friends_value);</span>
+<span class="fc" id="L152">        statItemsValue = root.findViewById(R.id.stat_items_value);</span>
+<span class="fc" id="L153">        statPlacesValue = root.findViewById(R.id.stat_places_value);</span>
+<span class="fc" id="L154">        statCommentsValue = root.findViewById(R.id.stat_comments_value);</span>
+
+<span class="fc" id="L156">        setupRecyclerView();</span>
+<span class="fc" id="L157">        fetchSubmissions();</span>
+<span class="fc" id="L158">        fetchStatistics();</span>
+
+<span class="fc" id="L160">        editButton.setOnClickListener(v -&gt; showEditOptions());</span>
+<span class="fc" id="L161">        deleteButton.setOnClickListener(v -&gt; showDeleteConfirmationDialog());</span>
+<span class="fc" id="L162">        saveChangesButton.setOnClickListener(v -&gt; updatePreface());</span>
+<span class="pc" id="L163">        cancelButton.setOnClickListener(v -&gt; showDisplayOptions());</span>
+<span class="fc" id="L164">        logoutButton.setOnClickListener(v -&gt; logout());</span>
+<span class="pc" id="L165">        changePfpButton.setOnClickListener(v -&gt; startImageCrop());</span>
+
+<span class="fc" id="L167">        editCurrentPassword.setOnKeyListener((v, keyCode, event) -&gt; {</span>
+<span class="fc" id="L168">            editCurrentPasswordLayout.setError(null);</span>
+<span class="fc" id="L169">            return false;</span>
+        });
+
+<span class="fc" id="L172">        return root;</span>
+    }
+
+    @Override
+    public void onResume() {
+<span class="fc" id="L177">        super.onResume();</span>
+<span class="fc" id="L178">        fetchSubmissions();</span>
+<span class="fc" id="L179">        fetchStatistics();</span>
+<span class="fc" id="L180">    }</span>
+
+    /**
+     * Launches the image cropper activity.
+     * Configures the cropper to allow picking from gallery, sets a 1:1 aspect
+     * ratio,
+     * and fixes the aspect ratio for a square crop.
+     */
+    private void startImageCrop() {
+<span class="nc" id="L189">        CropImageOptions options = new CropImageOptions();</span>
+<span class="nc" id="L190">        options.imageSourceIncludeGallery = true;</span>
+<span class="nc" id="L191">        options.imageSourceIncludeCamera = false;</span>
+<span class="nc" id="L192">        options.aspectRatioX = 1;</span>
+<span class="nc" id="L193">        options.aspectRatioY = 1;</span>
+<span class="nc" id="L194">        options.fixAspectRatio = true;</span>
+<span class="nc" id="L195">        cropImage.launch(new CropImageContractOptions(null, options));</span>
+<span class="nc" id="L196">    }</span>
+
+    /**
+     * Loads the user's profile picture from SharedPreferences and displays it.
+     * Falls back to the placeholder icon if no profile picture is available.
+     */
+    private void loadProfilePicture() {
+<span class="fc" id="L203">        String pfp = prefs.getString(KEY_USER_PFP, &quot;&quot;);</span>
+<span class="pc bpc" id="L204" title="1 of 4 branches missed.">        if (pfp != null &amp;&amp; !pfp.isEmpty()) {</span>
+<span class="fc" id="L205">            byte[] decodedImage = Base64.decode(pfp, Base64.DEFAULT);</span>
+<span class="fc" id="L206">            Bitmap bitmap = BitmapFactory.decodeByteArray(decodedImage, 0, decodedImage.length);</span>
+<span class="fc" id="L207">            profileIcon.setImageBitmap(bitmap);</span>
+<span class="fc" id="L208">        } else {</span>
+<span class="fc" id="L209">            profileIcon.setImageResource(android.R.drawable.ic_menu_gallery);</span>
+        }
+<span class="fc" id="L211">    }</span>
+
+    /**
+     * Sets up the RecyclerView for displaying places.
+     */
+    private void setupRecyclerView() {
+<span class="fc" id="L217">        placesList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L218">        placesAdapter = new PlacesAdapter(getContext(), placesList, this);</span>
+<span class="fc" id="L219">        placesRecyclerView.setAdapter(placesAdapter);</span>
+<span class="fc" id="L220">    }</span>
+
+    /**
+     * Fetches the user's submissions from the server.
+     */
+    private void fetchSubmissions() {
+<span class="fc" id="L226">        int userId = prefs.getInt(KEY_USER_ID, -1);</span>
+<span class="fc bfc" id="L227" title="All 2 branches covered.">        if (userId == -1) {</span>
+<span class="fc" id="L228">            Log.e(TAG, &quot;User ID not found in shared preferences.&quot;);</span>
+<span class="fc" id="L229">            return;</span>
+        }
+
+<span class="fc" id="L232">        String url = ApiConstants.BASE_URL + ApiConstants.GET_SUBMITTED_PLACES_ENDPOINT + &quot;?id=&quot; + userId;</span>
+
+<span class="fc" id="L234">        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null,</span>
+                response -&gt; {
+<span class="fc" id="L236">                    Log.d(TAG, &quot;Custom Location Response: &quot; + response.toString());</span>
+                    try {
+<span class="fc" id="L238">                        placesList.clear();</span>
+<span class="fc bfc" id="L239" title="All 2 branches covered.">                        for (int i = response.length() - 1; i &gt;= 0; i--) {</span>
+<span class="fc" id="L240">                            JSONObject placeObject = response.getJSONObject(i);</span>
+<span class="fc" id="L241">                            placesList.add(new Place(placeObject));</span>
+                        }
+<span class="fc" id="L243">                        placesAdapter.notifyDataSetChanged();</span>
+<span class="nc" id="L244">                    } catch (JSONException e) {</span>
+<span class="nc" id="L245">                        Log.e(TAG, &quot;Error parsing places JSON&quot;, e);</span>
+<span class="fc" id="L246">                    }</span>
+<span class="fc" id="L247">                },</span>
+                error -&gt; {
+<span class="nc" id="L249">                    Log.e(TAG, &quot;Error fetching places&quot;, error);</span>
+<span class="nc" id="L250">                });</span>
+
+<span class="fc" id="L252">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(jsonArrayRequest);</span>
+<span class="fc" id="L253">    }</span>
+
+    /**
+     * Switches the UI to edit mode
+     */
+    private void showEditOptions() {
+<span class="fc" id="L259">        displayContainer.setVisibility(View.GONE);</span>
+<span class="fc" id="L260">        editContainer.setVisibility(View.VISIBLE);</span>
+
+<span class="fc" id="L262">        editUsername.setText(prefs.getString(KEY_USER_NAME, &quot;&quot;));</span>
+<span class="fc" id="L263">        editEmail.setText(prefs.getString(KEY_USER_EMAIL, &quot;&quot;));</span>
+
+<span class="fc" id="L265">        editNewPassword.setText(&quot;&quot;);</span>
+<span class="fc" id="L266">        editCurrentPassword.setText(&quot;&quot;);</span>
+
+        // Reset PFP state
+<span class="fc" id="L269">        isPfpChanged = false;</span>
+<span class="fc" id="L270">        newPfpBitmap = null;</span>
+
+        // Load current profile picture in edit view
+<span class="fc" id="L273">        String pfp = prefs.getString(KEY_USER_PFP, &quot;&quot;);</span>
+<span class="pc bpc" id="L274" title="1 of 4 branches missed.">        if (pfp != null &amp;&amp; !pfp.isEmpty()) {</span>
+<span class="fc" id="L275">            byte[] decodedImage = Base64.decode(pfp, Base64.DEFAULT);</span>
+<span class="fc" id="L276">            Bitmap bitmap = BitmapFactory.decodeByteArray(decodedImage, 0, decodedImage.length);</span>
+<span class="fc" id="L277">            editProfileImage.setImageBitmap(bitmap);</span>
+<span class="fc" id="L278">        } else {</span>
+<span class="fc" id="L279">            editProfileImage.setImageResource(android.R.drawable.ic_menu_gallery);</span>
+        }
+<span class="fc" id="L281">    }</span>
+
+    /**
+     * Switches the UI to display mode
+     */
+    private void showDisplayOptions() {
+<span class="fc" id="L287">        displayContainer.setVisibility(View.VISIBLE);</span>
+<span class="fc" id="L288">        editContainer.setVisibility(View.GONE);</span>
+<span class="fc" id="L289">    }</span>
+
+    /**
+     * Initiates the update process by validating inputs and current password.
+     */
+    private void updatePreface() {
+<span class="fc" id="L295">        editUsernameLayout.setError(null);</span>
+<span class="fc" id="L296">        editEmailLayout.setError(null);</span>
+<span class="fc" id="L297">        editNewPasswordLayout.setError(null);</span>
+<span class="fc" id="L298">        editCurrentPasswordLayout.setError(null);</span>
+
+<span class="fc" id="L300">        String newUsername = editUsername.getText().toString().trim();</span>
+<span class="fc" id="L301">        String newEmail = editEmail.getText().toString().trim();</span>
+<span class="fc" id="L302">        String newPassword = editNewPassword.getText().toString().trim();</span>
+<span class="fc" id="L303">        String currentPassword = editCurrentPassword.getText().toString().trim();</span>
+
+<span class="fc" id="L305">        String currentStoredUsername = prefs.getString(KEY_USER_NAME, &quot;&quot;);</span>
+<span class="fc" id="L306">        String currentStoredEmail = prefs.getString(KEY_USER_EMAIL, &quot;&quot;);</span>
+
+<span class="pc bpc" id="L308" title="2 of 4 branches missed.">        boolean isUserInfoChanged = !newUsername.equals(currentStoredUsername) || !newEmail.equals(currentStoredEmail)</span>
+<span class="pc bnc" id="L309" title="All 2 branches missed.">                || !newPassword.isEmpty();</span>
+
+<span class="pc bpc" id="L311" title="2 of 4 branches missed.">        if (isUserInfoChanged &amp;&amp; TextUtils.isEmpty(currentPassword)) {</span>
+<span class="nc" id="L312">            editCurrentPasswordLayout.setError(&quot;Enter your current password to save changes&quot;);</span>
+<span class="nc" id="L313">            editCurrentPassword.requestFocus();</span>
+<span class="nc" id="L314">            return;</span>
+        }
+
+<span class="pc bpc" id="L317" title="1 of 2 branches missed.">        if (isUserInfoChanged) {</span>
+<span class="fc" id="L318">            validatePasswordAndContinue(newUsername, newEmail, newPassword, currentPassword);</span>
+<span class="nc bnc" id="L319" title="All 2 branches missed.">        } else if (isPfpChanged) {</span>
+<span class="nc" id="L320">            performUpdate(newUsername, newEmail, newPassword);</span>
+        } else {
+<span class="nc" id="L322">            Toast.makeText(getContext(), &quot;No changes to save&quot;, Toast.LENGTH_SHORT).show();</span>
+        }
+<span class="fc" id="L324">    }</span>
+
+    /**
+     * Validates the current password by attempting to log in.
+     * If successful, proceeds with the update.
+     * 
+     * @param newUsername     The new username to set (can be empty to keep
+     *                        unchanged).
+     * @param newEmail        The new email to set (can be empty to keep unchanged).
+     * @param newPassword     The new password to set (can be empty to keep
+     *                        unchanged).
+     * @param currentPassword The current password for validation.
+     */
+    private void validatePasswordAndContinue(String newUsername, String newEmail, String newPassword,
+            String currentPassword) {
+<span class="fc" id="L339">        String currentUsername = prefs.getString(KEY_USER_NAME, &quot;&quot;);</span>
+
+<span class="fc" id="L341">        JSONObject loginBody = new JSONObject();</span>
+        try {
+<span class="fc" id="L343">            loginBody.put(&quot;username&quot;, currentUsername);</span>
+<span class="fc" id="L344">            loginBody.put(&quot;password&quot;, currentPassword);</span>
+<span class="nc" id="L345">        } catch (JSONException e) {</span>
+<span class="nc" id="L346">            Log.e(TAG, &quot;Error creating login JSON for validation&quot;, e);</span>
+<span class="nc" id="L347">            return;</span>
+<span class="fc" id="L348">        }</span>
+
+<span class="fc" id="L350">        StringRequest loginRequest = new StringRequest(Request.Method.POST,</span>
+                ApiConstants.BASE_URL + ApiConstants.LOGIN_ENDPOINT,
+                response -&gt; {
+<span class="fc" id="L353">                    Log.d(TAG, &quot;Password validation successful. Proceeding with update.&quot;);</span>
+<span class="fc" id="L354">                    performUpdate(newUsername, newEmail, newPassword);</span>
+<span class="fc" id="L355">                },</span>
+                error -&gt; {
+<span class="nc" id="L357">                    Log.e(TAG, &quot;Password validation failed&quot;, error);</span>
+<span class="nc" id="L358">                    editCurrentPasswordLayout.setError(&quot;Incorrect password&quot;);</span>
+<span class="nc" id="L359">                    editCurrentPassword.requestFocus();</span>
+<span class="pc" id="L360">                }) {</span>
+            @Override
+            public byte[] getBody() {
+<span class="fc" id="L363">                return loginBody.toString().getBytes(StandardCharsets.UTF_8);</span>
+            }
+
+            @Override
+            public String getBodyContentType() {
+<span class="fc" id="L368">                return &quot;application/json; charset=utf-8&quot;;</span>
+            }
+        };
+
+<span class="fc" id="L372">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(loginRequest);</span>
+<span class="fc" id="L373">    }</span>
+
+    /**
+     * Sends the update request to the server with the new account details.
+     * 
+     * @param newUsername The new username to set (can be empty to keep unchanged).
+     * @param newEmail    The new email to set (can be empty to keep unchanged).
+     * @param newPassword The new password to set (can be empty to keep unchanged).
+     */
+    private void performUpdate(String newUsername, String newEmail, String newPassword) {
+<span class="fc" id="L383">        int userId = prefs.getInt(KEY_USER_ID, -1);</span>
+<span class="pc bpc" id="L384" title="1 of 2 branches missed.">        if (userId == -1) {</span>
+<span class="nc" id="L385">            Toast.makeText(getContext(), &quot;An Error Occurred&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L386">            Log.e(TAG, &quot;User ID not found in shared preferences.&quot;);</span>
+<span class="nc" id="L387">            return;</span>
+        }
+
+<span class="fc" id="L390">        JSONObject requestBody = new JSONObject();</span>
+        try {
+<span class="fc" id="L392">            requestBody.put(&quot;id&quot;, userId);</span>
+<span class="pc bpc" id="L393" title="1 of 2 branches missed.">            if (newUsername.equals(prefs.getString(KEY_USER_NAME, &quot;&quot;))) {</span>
+<span class="fc" id="L394">                newUsername = &quot;&quot;;</span>
+            }
+<span class="pc bpc" id="L396" title="1 of 2 branches missed.">            if (newEmail.equals(prefs.getString(KEY_USER_EMAIL, &quot;&quot;))) {</span>
+<span class="nc" id="L397">                newEmail = &quot;&quot;;</span>
+            }
+<span class="pc bpc" id="L399" title="1 of 2 branches missed.">            if (newPassword.isEmpty()) {</span>
+<span class="fc" id="L400">                newPassword = &quot;&quot;;</span>
+            }
+
+<span class="fc" id="L403">            requestBody.put(&quot;username&quot;, newUsername);</span>
+<span class="fc" id="L404">            requestBody.put(&quot;email&quot;, newEmail);</span>
+
+<span class="pc bpc" id="L406" title="3 of 4 branches missed.">            if (isPfpChanged &amp;&amp; newPfpBitmap != null) {</span>
+<span class="nc" id="L407">                requestBody.put(&quot;pfp&quot;, bitmapToString(newPfpBitmap));</span>
+            } else {
+<span class="fc" id="L409">                requestBody.put(&quot;pfp&quot;, &quot;&quot;);</span>
+            }
+
+<span class="fc" id="L412">            requestBody.put(&quot;password&quot;, newPassword);</span>
+
+<span class="nc" id="L414">        } catch (JSONException e) {</span>
+<span class="nc" id="L415">            Log.e(TAG, &quot;Error creating JSON for update&quot;, e);</span>
+<span class="nc" id="L416">            return;</span>
+<span class="fc" id="L417">        }</span>
+
+<span class="fc" id="L419">        StringRequest updateRequest = getUpdateRequest(newUsername, newEmail, requestBody, userId);</span>
+
+<span class="fc" id="L421">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(updateRequest);</span>
+<span class="fc" id="L422">    }</span>
+
+    /**
+     * Creates a StringRequest for updating the user account.
+     * 
+     * @param newUsername The new username to set (can be empty to keep unchanged).
+     * @param newEmail    The new email to set (can be empty to keep unchanged).
+     * @param requestBody The JSON body containing update details.
+     * @return The configured StringRequest.
+     */
+    private StringRequest getUpdateRequest(String newUsername, String newEmail, JSONObject requestBody, int userId) {
+<span class="fc" id="L433">        String url = ApiConstants.BASE_URL + ApiConstants.UPDATE_ACCOUNT_ENDPOINT + &quot;?id=&quot; + userId;</span>
+<span class="fc" id="L434">        StringRequest updateRequest = new StringRequest(Request.Method.PUT, url,</span>
+                response -&gt; {
+<span class="fc" id="L436">                    Log.d(TAG, &quot;Account updated successfully&quot;);</span>
+<span class="fc" id="L437">                    Toast.makeText(getContext(), &quot;Profile updated!&quot;, Toast.LENGTH_SHORT).show();</span>
+
+<span class="fc" id="L439">                    SharedPreferences.Editor editor = prefs.edit();</span>
+<span class="pc bpc" id="L440" title="1 of 2 branches missed.">                    if (!newUsername.isBlank()) {</span>
+<span class="nc" id="L441">                        editor.putString(KEY_USER_NAME, newUsername);</span>
+<span class="nc" id="L442">                        usernameLabel.setText(&quot;@&quot; + newUsername);</span>
+                    }
+<span class="pc bpc" id="L444" title="1 of 2 branches missed.">                    if (!newEmail.isBlank()) {</span>
+<span class="fc" id="L445">                        editor.putString(KEY_USER_EMAIL, newEmail);</span>
+                    }
+<span class="pc bpc" id="L447" title="3 of 4 branches missed.">                    if (isPfpChanged &amp;&amp; newPfpBitmap != null) {</span>
+<span class="nc" id="L448">                        editor.putString(KEY_USER_PFP, bitmapToString(newPfpBitmap));</span>
+<span class="nc" id="L449">                        profileIcon.setImageBitmap(newPfpBitmap);</span>
+                    }
+<span class="fc" id="L451">                    editor.apply();</span>
+
+<span class="fc" id="L453">                    showDisplayOptions();</span>
+<span class="fc" id="L454">                },</span>
+                error -&gt; {
+<span class="nc" id="L456">                    Log.e(TAG, &quot;Error updating account&quot;, error);</span>
+<span class="nc" id="L457">                    Toast.makeText(getContext(), &quot;Failed to update profile.&quot;, Toast.LENGTH_LONG).show();</span>
+<span class="nc bnc" id="L458" title="All 2 branches missed.">                    if (error.networkResponse != null) {</span>
+<span class="nc" id="L459">                        Log.e(TAG, &quot;Update Profile Error code: &quot; + error.networkResponse.statusCode);</span>
+<span class="nc" id="L460">                        String responseBody = &quot;&quot;;</span>
+<span class="nc bnc" id="L461" title="All 2 branches missed.">                        if (error.networkResponse.data != null) {</span>
+<span class="nc" id="L462">                            responseBody = new String(error.networkResponse.data, StandardCharsets.UTF_8);</span>
+                        }
+<span class="nc" id="L464">                        Log.e(TAG, &quot;Signup error response body: &quot; + responseBody);</span>
+
+<span class="nc bnc" id="L466" title="All 2 branches missed.">                        if (error.networkResponse.statusCode == 409) {</span>
+<span class="nc" id="L467">                            Toast.makeText(getContext(), responseBody, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L468">                            editUsernameLayout.setError(&quot;This email or username might already be taken.&quot;);</span>
+<span class="nc" id="L469">                            editEmailLayout.setError(&quot;This email or username might already be taken.&quot;);</span>
+                        } else {
+<span class="nc" id="L471">                            Toast.makeText(getContext(),</span>
+                                    &quot;Signup failed. Server error: &quot; + error.networkResponse.statusCode,
+<span class="nc" id="L473">                                    Toast.LENGTH_LONG).show();</span>
+                        }
+                    }
+<span class="pc" id="L476">                }) {</span>
+            @Override
+            public byte[] getBody() {
+<span class="fc" id="L479">                return requestBody.toString().getBytes(StandardCharsets.UTF_8);</span>
+            }
+
+            @Override
+            public String getBodyContentType() {
+<span class="fc" id="L484">                return &quot;application/json; charset=utf-8&quot;;</span>
+            }
+        };
+<span class="fc" id="L487">        return updateRequest;</span>
+    }
+
+    /**
+     * Converts a Bitmap image to a Base64 encoded string.
+     * Compress the bitmap to JPEG format with 70% quality before encoding.
+     *
+     * @param bitmap The bitmap to convert.
+     * @return The Base64 encoded string of the image.
+     */
+    private String bitmapToString(Bitmap bitmap) {
+<span class="nc" id="L498">        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();</span>
+<span class="nc" id="L499">        bitmap.compress(Bitmap.CompressFormat.JPEG, 70, byteArrayOutputStream);</span>
+<span class="nc" id="L500">        byte[] byteArray = byteArrayOutputStream.toByteArray();</span>
+<span class="nc" id="L501">        return Base64.encodeToString(byteArray, Base64.DEFAULT);</span>
+    }
+
+    /**
+     * Displays a confirmation dialog before deleting the account.
+     */
+    private void showDeleteConfirmationDialog() {
+<span class="fc" id="L508">        new AlertDialog.Builder(getContext())</span>
+<span class="fc" id="L509">                .setTitle(&quot;Account Deletion Confirmation&quot;)</span>
+<span class="fc" id="L510">                .setMessage(&quot;Are you sure you want to PERMANENTLY delete your account? This action cannot be undone.&quot;)</span>
+<span class="fc" id="L511">                .setNegativeButton(&quot;Cancel&quot;, null)</span>
+<span class="fc" id="L512">                .setPositiveButton(&quot;Yes&quot;, (dialog, which) -&gt; {</span>
+<span class="fc" id="L513">                    int userId = prefs.getInt(KEY_USER_ID, -1);</span>
+<span class="pc bpc" id="L514" title="1 of 2 branches missed.">                    if (userId != -1) {</span>
+<span class="nc" id="L515">                        deleteAccount(userId);</span>
+                    } else {
+<span class="fc" id="L517">                        Toast.makeText(getContext(), &quot;Error: Could not find user ID.&quot;, Toast.LENGTH_SHORT).show();</span>
+                    }
+<span class="fc" id="L519">                })</span>
+<span class="fc" id="L520">                .show();</span>
+<span class="fc" id="L521">    }</span>
+
+    /**
+     * Sends a DELETE request to the server to delete the user account.
+     * On success, clears SharedPreferences and navigates to LauncherActivity.
+     * 
+     * @param userId The ID of the user to delete.
+     */
+    private void deleteAccount(int userId) {
+<span class="nc" id="L530">        String url = ApiConstants.BASE_URL + ApiConstants.DELETE_ACCOUNT_ENDPOINT + &quot;?id=&quot; + userId;</span>
+<span class="nc" id="L531">        StringRequest deleteRequest = new StringRequest(Request.Method.DELETE, url,</span>
+                response -&gt; {
+<span class="nc" id="L533">                    Log.d(TAG, &quot;Account deleted successfully: &quot; + response);</span>
+<span class="nc" id="L534">                    Toast.makeText(getContext(), &quot;Account deleted successfully.&quot;, Toast.LENGTH_SHORT).show();</span>
+
+<span class="nc" id="L536">                    prefs.edit().clear().apply();</span>
+
+<span class="nc bnc" id="L538" title="All 2 branches missed.">                    if (getActivity() != null) {</span>
+<span class="nc" id="L539">                        Intent intent = new Intent(getActivity(), LauncherActivity.class);</span>
+<span class="nc" id="L540">                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);</span>
+<span class="nc" id="L541">                        startActivity(intent);</span>
+<span class="nc" id="L542">                        getActivity().finish();</span>
+                    }
+<span class="nc" id="L544">                },</span>
+                error -&gt; {
+<span class="nc" id="L546">                    Log.e(TAG, &quot;Failed to delete account&quot;, error);</span>
+<span class="nc" id="L547">                    Toast.makeText(getContext(), &quot;Failed to delete account. Please try again.&quot;, Toast.LENGTH_SHORT)</span>
+<span class="nc" id="L548">                            .show();</span>
+<span class="nc" id="L549">                });</span>
+
+<span class="nc" id="L551">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(deleteRequest);</span>
+<span class="nc" id="L552">    }</span>
+
+    /**
+     * Logs out the user by clearing SharedPreferences and navigates to
+     * LauncherActivity.
+     */
+    private void logout() {
+<span class="fc" id="L559">        prefs.edit().clear().apply();</span>
+
+<span class="pc bpc" id="L561" title="1 of 2 branches missed.">        if (getActivity() != null) {</span>
+<span class="fc" id="L562">            Intent intent = new Intent(getActivity(), LauncherActivity.class);</span>
+<span class="fc" id="L563">            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);</span>
+<span class="fc" id="L564">            Log.d(TAG, &quot;Logging out of &quot; + prefs.getString(KEY_USER_NAME, &quot;account&quot;));</span>
+<span class="fc" id="L565">            Toast.makeText(getContext(), &quot;Logging out&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="fc" id="L566">            startActivity(intent);</span>
+<span class="fc" id="L567">            getActivity().finish();</span>
+        }
+<span class="fc" id="L569">    }</span>
+
+    /**
+     * Fetches all statistics for the current user.
+     * Calls individual fetch methods for each statistic.
+     */
+    private void fetchStatistics() {
+<span class="fc" id="L576">        int userId = prefs.getInt(KEY_USER_ID, -1);</span>
+<span class="fc bfc" id="L577" title="All 2 branches covered.">        if (userId == -1) {</span>
+<span class="fc" id="L578">            Log.e(TAG, &quot;User ID not found in shared preferences for statistics.&quot;);</span>
+<span class="fc" id="L579">            return;</span>
+        }
+
+<span class="fc" id="L582">        fetchPoints(userId);</span>
+<span class="fc" id="L583">        fetchMatches(userId);</span>
+<span class="fc" id="L584">        fetchFriends(userId);</span>
+<span class="fc" id="L585">        fetchItemsBought(userId);</span>
+<span class="fc" id="L586">        fetchPlaces(userId);</span>
+<span class="fc" id="L587">        fetchComments(userId);</span>
+<span class="fc" id="L588">    }</span>
+
+    /**
+     * Fetches the user's current points from the server.
+     *
+     * @param userId The ID of the user.
+     */
+    private void fetchPoints(int userId) {
+<span class="fc" id="L596">        String url = ApiConstants.BASE_URL + ApiConstants.GET_POINTS_ENDPOINT + &quot;?id=&quot; + userId;</span>
+
+<span class="fc" id="L598">        StringRequest request = new StringRequest(Request.Method.GET, url,</span>
+                response -&gt; {
+                    try {
+<span class="fc" id="L601">                        int points = Integer.parseInt(response.trim());</span>
+<span class="fc" id="L602">                        statPointsValue.setText(String.valueOf(points));</span>
+<span class="nc" id="L603">                    } catch (NumberFormatException e) {</span>
+<span class="nc" id="L604">                        Log.e(TAG, &quot;Error parsing points response: &quot; + response, e);</span>
+<span class="nc" id="L605">                        statPointsValue.setText(&quot;0&quot;);</span>
+<span class="fc" id="L606">                    }</span>
+<span class="fc" id="L607">                },</span>
+                error -&gt; {
+<span class="nc" id="L609">                    Log.e(TAG, &quot;Error fetching points&quot;, error);</span>
+<span class="nc" id="L610">                    statPointsValue.setText(&quot;0&quot;);</span>
+<span class="nc" id="L611">                });</span>
+
+<span class="fc" id="L613">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);</span>
+<span class="fc" id="L614">    }</span>
+
+    /**
+     * Fetches the number of matches played by the user.
+     *
+     * @param userId The ID of the user.
+     */
+    private void fetchMatches(int userId) {
+<span class="fc" id="L622">        String url = ApiConstants.BASE_URL</span>
+<span class="fc" id="L623">                + ApiConstants.GET_SUBMISSIONS_ENDPOINT.replace(&quot;{uid}&quot;, String.valueOf(userId));</span>
+
+<span class="fc" id="L625">        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,</span>
+                response -&gt; {
+<span class="fc" id="L627">                    statMatchesValue.setText(String.valueOf(response.length()));</span>
+<span class="fc" id="L628">                },</span>
+                error -&gt; {
+<span class="nc" id="L630">                    Log.e(TAG, &quot;Error fetching matches&quot;, error);</span>
+<span class="nc" id="L631">                    statMatchesValue.setText(&quot;0&quot;);</span>
+<span class="nc" id="L632">                });</span>
+
+<span class="fc" id="L634">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);</span>
+<span class="fc" id="L635">    }</span>
+
+    /**
+     * Fetches the number of friends the user has.
+     *
+     * @param userId The ID of the user.
+     */
+    private void fetchFriends(int userId) {
+<span class="fc" id="L643">        String url = ApiConstants.BASE_URL + ApiConstants.GET_FRIENDS_ENDPOINT + &quot;?id=&quot; + userId;</span>
+
+<span class="fc" id="L645">        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,</span>
+                response -&gt; {
+<span class="fc" id="L647">                    statFriendsValue.setText(String.valueOf(response.length()));</span>
+<span class="fc" id="L648">                },</span>
+                error -&gt; {
+<span class="nc" id="L650">                    Log.e(TAG, &quot;Error fetching friends&quot;, error);</span>
+<span class="nc" id="L651">                    statFriendsValue.setText(&quot;0&quot;);</span>
+<span class="nc" id="L652">                });</span>
+
+<span class="fc" id="L654">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);</span>
+<span class="fc" id="L655">    }</span>
+
+    /**
+     * Fetches the number of items bought by the user.
+     *
+     * @param userId The ID of the user.
+     */
+    private void fetchItemsBought(int userId) {
+<span class="fc" id="L663">        String url = ApiConstants.BASE_URL + ApiConstants.GET_SHOP_TRANSACTIONS_ENDPOINT + &quot;?uid=&quot; + userId;</span>
+
+<span class="fc" id="L665">        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,</span>
+                response -&gt; {
+<span class="fc" id="L667">                    statItemsValue.setText(String.valueOf(response.length()));</span>
+<span class="fc" id="L668">                },</span>
+                error -&gt; {
+<span class="nc" id="L670">                    Log.e(TAG, &quot;Error fetching items bought&quot;, error);</span>
+<span class="nc" id="L671">                    statItemsValue.setText(&quot;0&quot;);</span>
+<span class="nc" id="L672">                });</span>
+
+<span class="fc" id="L674">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);</span>
+<span class="fc" id="L675">    }</span>
+
+    /**
+     * Fetches the total number of places available.
+     */
+    private void fetchPlaces(int userId) {
+<span class="fc" id="L681">        String url = ApiConstants.BASE_URL + ApiConstants.GET_SUBMITTED_PLACES_ENDPOINT + &quot;?id=&quot; + userId;</span>
+
+<span class="fc" id="L683">        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,</span>
+                response -&gt; {
+<span class="fc" id="L685">                    statPlacesValue.setText(String.valueOf(response.length()));</span>
+<span class="fc" id="L686">                },</span>
+                error -&gt; {
+<span class="nc" id="L688">                    Log.e(TAG, &quot;Error fetching places&quot;, error);</span>
+<span class="nc" id="L689">                    statPlacesValue.setText(&quot;0&quot;);</span>
+<span class="nc" id="L690">                });</span>
+
+<span class="fc" id="L692">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);</span>
+<span class="fc" id="L693">    }</span>
+
+    /**
+     * Fetches the number of comments made by the user.
+     *
+     * @param userId The ID of the user.
+     */
+    private void fetchComments(int userId) {
+<span class="fc" id="L701">        String url = ApiConstants.BASE_URL</span>
+<span class="fc" id="L702">                + ApiConstants.GET_USER_COMMENTS_ENDPOINT.replace(&quot;{uid}&quot;, String.valueOf(userId));</span>
+
+<span class="fc" id="L704">        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,</span>
+                response -&gt; {
+<span class="fc" id="L706">                    statCommentsValue.setText(String.valueOf(response.length()));</span>
+<span class="fc" id="L707">                },</span>
+                error -&gt; {
+<span class="nc" id="L709">                    Log.e(TAG, &quot;Error fetching comments&quot;, error);</span>
+<span class="nc" id="L710">                    statCommentsValue.setText(&quot;0&quot;);</span>
+<span class="nc" id="L711">                });</span>
+
+<span class="fc" id="L713">        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);</span>
+<span class="fc" id="L714">    }</span>
+
+    @Override
+    public void onAddPlaceClick() {
+<span class="fc" id="L718">        Intent intent = new Intent(getActivity(), AddPlaceActivity.class);</span>
+<span class="fc" id="L719">        activityLauncher.launch(intent);</span>
+<span class="fc" id="L720">    }</span>
+
+    @Override
+    public void onPlaceClick(Place place) {
+<span class="fc" id="L724">        Intent intent = new Intent(getActivity(), PlaceDetailActivity.class);</span>
+<span class="fc" id="L725">        int uid = prefs.getInt(KEY_USER_ID, -1);</span>
+<span class="pc bpc" id="L726" title="1 of 2 branches missed.">        if (uid == -1) {</span>
+<span class="nc" id="L727">            Log.e(TAG, &quot;User ID not found in shared preferences.&quot;);</span>
+<span class="nc" id="L728">            return;</span>
+        }
+<span class="fc" id="L730">        intent.putExtra(&quot;UID&quot;, uid);</span>
+<span class="fc" id="L731">        intent.putExtra(&quot;CID&quot;, place.getId());</span>
+<span class="fc" id="L732">        intent.putExtra(&quot;IMAGE_URL&quot;, place.getPhotoData());</span>
+<span class="fc" id="L733">        intent.putExtra(&quot;LATITUDE&quot;, place.getLatitude());</span>
+<span class="fc" id="L734">        intent.putExtra(&quot;LONGITUDE&quot;, place.getLongitude());</span>
+<span class="fc" id="L735">        activityLauncher.launch(intent);</span>
+<span class="fc" id="L736">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Generated by the Android Gradle plugin 8.13.1</div></body></html>

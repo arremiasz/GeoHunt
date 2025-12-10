@@ -1,0 +1,515 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ResultsActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.jubair5.geohunt.game</a> &gt; <span class="el_source">ResultsActivity.java</span></div><h1>ResultsActivity.java</h1><pre class="source lang-java linenums">package com.jubair5.geohunt.game;
+
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.RatingBar;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
+import com.jubair5.geohunt.R;
+import com.jubair5.geohunt.network.ApiConstants;
+import com.jubair5.geohunt.network.VolleySingleton;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
+import nl.dionsegijn.konfetti.KonfettiView;
+import nl.dionsegijn.konfetti.models.Shape;
+import nl.dionsegijn.konfetti.models.Size;
+
+/**
+ * Page for displaying the results from a game.
+ * 
+ * @author Alex Remiasz
+ */
+<span class="fc" id="L56">public class ResultsActivity extends AppCompatActivity implements OnMapReadyCallback {</span>
+
+    private static final String TAG = &quot;ResultsActivity&quot;;
+    private static final String SHARED_PREFS_NAME = &quot;GeoHuntPrefs&quot;;
+    private static final String KEY_USER_ID = &quot;userId&quot;;
+
+    protected TextView distanceText;
+    protected TextView distanceUnitLabel;
+    protected Button playAgainButton;
+    protected Button goHomeButton;
+    protected KonfettiView konfettiView;
+    protected MapView mapView;
+    protected GoogleMap googleMap;
+    protected RatingBar ratingBar;
+    protected RecyclerView galleryRecyclerView;
+    protected Button loadMorePhotosButton;
+    protected PhotoAdapter photoAdapter;
+    protected List&lt;Photo&gt; allPhotosList;
+    protected List&lt;Photo&gt; displayedPhotosList;
+    protected RecyclerView commentsRecyclerView;
+    protected CommentAdapter commentAdapter;
+    protected List&lt;Comment&gt; commentsList;
+    protected EditText commentInput;
+    protected Button sendCommentButton;
+    protected int challengeId;
+    protected double guessLat;
+    protected double guessLng;
+    protected double targetLat;
+    protected double targetLng;
+<span class="fc" id="L85">    protected boolean targetLocationLoaded = false;</span>
+<span class="fc" id="L86">    protected boolean userHasRated = false;</span>
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="fc" id="L90">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L91">        setContentView(R.layout.results_activity);</span>
+
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">        if (getSupportActionBar() != null) {</span>
+<span class="fc" id="L94">            getSupportActionBar().setTitle(&quot;Results&quot;);</span>
+        }
+
+<span class="fc" id="L97">        setupViews(savedInstanceState);</span>
+<span class="fc" id="L98">        displayResults();</span>
+<span class="fc" id="L99">        setupButtons();</span>
+<span class="fc" id="L100">        startConfetti();</span>
+<span class="fc" id="L101">        fetchChallengeDetails();</span>
+<span class="fc" id="L102">    }</span>
+
+    /**
+     * Initializes the views from the layout file.
+     */
+    protected void setupViews(Bundle savedInstanceState) {
+<span class="fc" id="L108">        distanceText = findViewById(R.id.distance_text);</span>
+<span class="fc" id="L109">        distanceUnitLabel = findViewById(R.id.distance_unit_label);</span>
+<span class="fc" id="L110">        playAgainButton = findViewById(R.id.play_again_button);</span>
+<span class="fc" id="L111">        goHomeButton = findViewById(R.id.go_home_button);</span>
+<span class="fc" id="L112">        konfettiView = findViewById(R.id.konfetti_view);</span>
+<span class="fc" id="L113">        mapView = findViewById(R.id.results_map_view);</span>
+<span class="fc" id="L114">        ratingBar = findViewById(R.id.rating_bar);</span>
+<span class="fc" id="L115">        galleryRecyclerView = findViewById(R.id.gallery_recycler_view);</span>
+<span class="fc" id="L116">        loadMorePhotosButton = findViewById(R.id.load_more_photos_button);</span>
+<span class="fc" id="L117">        commentsRecyclerView = findViewById(R.id.comments_recycler_view);</span>
+<span class="fc" id="L118">        commentInput = findViewById(R.id.comment_input);</span>
+<span class="fc" id="L119">        sendCommentButton = findViewById(R.id.send_comment_button);</span>
+
+<span class="fc" id="L121">        sendCommentButton.setOnClickListener(v -&gt; postComment());</span>
+
+<span class="fc" id="L123">        mapView.onCreate(savedInstanceState);</span>
+<span class="fc" id="L124">        mapView.getMapAsync(this);</span>
+
+<span class="fc" id="L126">        ratingBar.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -&gt; {</span>
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">            if (fromUser) {</span>
+<span class="fc" id="L128">                userHasRated = true;</span>
+<span class="fc" id="L129">                ratingBar.setProgressTintList(ColorStateList.valueOf(Color.parseColor(&quot;#FFD700&quot;))); // Gold</span>
+<span class="fc" id="L130">                submitRating(rating);</span>
+            }
+<span class="fc" id="L132">        });</span>
+
+<span class="fc" id="L134">        allPhotosList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L135">        displayedPhotosList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L136">        photoAdapter = new PhotoAdapter(this, displayedPhotosList);</span>
+<span class="fc" id="L137">        galleryRecyclerView.setLayoutManager(new androidx.recyclerview.widget.GridLayoutManager(this, 2));</span>
+<span class="fc" id="L138">        galleryRecyclerView.setAdapter(photoAdapter);</span>
+
+<span class="pc" id="L140">        loadMorePhotosButton.setOnClickListener(v -&gt; loadMorePhotos());</span>
+
+<span class="fc" id="L142">        commentsList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L143">        commentAdapter = new CommentAdapter(this, commentsList);</span>
+<span class="fc" id="L144">        commentsRecyclerView.setLayoutManager(new LinearLayoutManager(this));</span>
+<span class="fc" id="L145">        commentsRecyclerView.setAdapter(commentAdapter);</span>
+<span class="fc" id="L146">    }</span>
+
+    /**
+     * Parses the results from the intent and updates the UI.
+     */
+    protected void displayResults() {
+<span class="fc" id="L152">        double results = getIntent().getDoubleExtra(&quot;results&quot;, -1);</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">        if (results != -1) {</span>
+<span class="pc bpc" id="L154" title="1 of 2 branches missed.">            if (results &lt;= 0.1) {</span>
+<span class="nc" id="L155">                double distanceInFeet = results * 5280;</span>
+<span class="nc" id="L156">                distanceText.setText(String.format(Locale.getDefault(), &quot;%.0f&quot;, distanceInFeet));</span>
+<span class="nc" id="L157">                distanceUnitLabel.setText(&quot;feet&quot;);</span>
+<span class="nc" id="L158">            } else {</span>
+<span class="fc" id="L159">                distanceText.setText(String.format(Locale.getDefault(), &quot;%.2f&quot;, results));</span>
+<span class="fc" id="L160">                distanceUnitLabel.setText(&quot;miles&quot;);</span>
+            }
+
+<span class="fc" id="L163">            distanceUnitLabel.append(&quot; from target&quot;);</span>
+        } else {
+<span class="nc" id="L165">            distanceText.setText(&quot;?&quot;);</span>
+<span class="nc" id="L166">            distanceUnitLabel.setText(&quot;Error&quot;);</span>
+        }
+
+<span class="fc" id="L169">        challengeId = getIntent().getIntExtra(&quot;challengeId&quot;, -1);</span>
+<span class="fc" id="L170">        guessLat = getIntent().getDoubleExtra(&quot;guessLat&quot;, 0.0);</span>
+<span class="fc" id="L171">        guessLng = getIntent().getDoubleExtra(&quot;guessLng&quot;, 0.0);</span>
+<span class="fc" id="L172">    }</span>
+
+    /**
+     * Sets up the click listeners for the buttons.
+     */
+    protected void setupButtons() {
+<span class="pc" id="L178">        playAgainButton.setOnClickListener(v -&gt; onPlayAgainClicked());</span>
+<span class="fc" id="L179">        goHomeButton.setOnClickListener(v -&gt; onGoHomeClicked());</span>
+<span class="fc" id="L180">    }</span>
+
+    /**
+     * Navigates to the GameActivity when the &quot;Play Again&quot; button is clicked.
+     */
+    protected void onPlayAgainClicked() {
+<span class="nc" id="L186">        Intent intent = new Intent(ResultsActivity.this, GameActivity.class);</span>
+<span class="nc" id="L187">        startActivity(intent);</span>
+<span class="nc" id="L188">        finish();</span>
+<span class="nc" id="L189">    }</span>
+
+    /**
+     * Finishes the activity when the &quot;Go Home&quot; button is clicked.
+     */
+    protected void onGoHomeClicked() {
+<span class="fc" id="L195">        finish();</span>
+<span class="fc" id="L196">    }</span>
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+<span class="fc" id="L200">        this.googleMap = googleMap;</span>
+<span class="fc" id="L201">        updateMap();</span>
+<span class="fc" id="L202">    }</span>
+
+    /**
+     * Updates the map with markers for the target and guess locations, and a line
+     * connecting them.
+     */
+    protected void updateMap() {
+<span class="pc bpc" id="L209" title="1 of 4 branches missed.">        if (googleMap == null || !targetLocationLoaded) {</span>
+<span class="fc" id="L210">            return;</span>
+        }
+
+<span class="fc" id="L213">        LatLng targetLatLng = new LatLng(targetLat, targetLng);</span>
+<span class="fc" id="L214">        LatLng guessLatLng = new LatLng(guessLat, guessLng);</span>
+
+<span class="fc" id="L216">        googleMap.clear();</span>
+
+<span class="fc" id="L218">        googleMap.addMarker(new MarkerOptions()</span>
+<span class="fc" id="L219">                .position(targetLatLng)</span>
+<span class="fc" id="L220">                .title(&quot;Target Location&quot;)</span>
+<span class="fc" id="L221">                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));</span>
+
+<span class="fc" id="L223">        googleMap.addMarker(new MarkerOptions()</span>
+<span class="fc" id="L224">                .position(guessLatLng)</span>
+<span class="fc" id="L225">                .title(&quot;Your Guess&quot;)</span>
+<span class="fc" id="L226">                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));</span>
+
+<span class="fc" id="L228">        googleMap.addPolyline(new PolylineOptions()</span>
+<span class="fc" id="L229">                .add(targetLatLng, guessLatLng)</span>
+<span class="fc" id="L230">                .width(5)</span>
+<span class="fc" id="L231">                .color(Color.RED));</span>
+
+<span class="fc" id="L233">        LatLngBounds.Builder builder = new LatLngBounds.Builder();</span>
+<span class="fc" id="L234">        builder.include(targetLatLng);</span>
+<span class="fc" id="L235">        builder.include(guessLatLng);</span>
+<span class="fc" id="L236">        LatLngBounds bounds = builder.build();</span>
+
+        try {
+<span class="fc" id="L239">            googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100));</span>
+<span class="nc" id="L240">        } catch (Exception e) {</span>
+<span class="nc" id="L241">            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(targetLatLng, 10f));</span>
+<span class="fc" id="L242">        }</span>
+<span class="fc" id="L243">    }</span>
+
+    @Override
+    protected void onResume() {
+<span class="fc" id="L247">        super.onResume();</span>
+<span class="pc bpc" id="L248" title="1 of 2 branches missed.">        if (mapView != null)</span>
+<span class="fc" id="L249">            mapView.onResume();</span>
+<span class="fc" id="L250">    }</span>
+
+    @Override
+    protected void onStart() {
+<span class="fc" id="L254">        super.onStart();</span>
+<span class="pc bpc" id="L255" title="1 of 2 branches missed.">        if (mapView != null)</span>
+<span class="fc" id="L256">            mapView.onStart();</span>
+<span class="fc" id="L257">    }</span>
+
+    @Override
+    protected void onStop() {
+<span class="fc" id="L261">        super.onStop();</span>
+<span class="pc bpc" id="L262" title="1 of 2 branches missed.">        if (mapView != null)</span>
+<span class="fc" id="L263">            mapView.onStop();</span>
+<span class="fc" id="L264">    }</span>
+
+    @Override
+    protected void onPause() {
+<span class="pc bpc" id="L268" title="1 of 2 branches missed.">        if (mapView != null)</span>
+<span class="fc" id="L269">            mapView.onPause();</span>
+<span class="fc" id="L270">        super.onPause();</span>
+<span class="fc" id="L271">    }</span>
+
+    @Override
+    protected void onDestroy() {
+<span class="pc bpc" id="L275" title="1 of 2 branches missed.">        if (mapView != null)</span>
+<span class="fc" id="L276">            mapView.onDestroy();</span>
+<span class="fc" id="L277">        super.onDestroy();</span>
+<span class="fc" id="L278">    }</span>
+
+    @Override
+    public void onLowMemory() {
+<span class="nc" id="L282">        super.onLowMemory();</span>
+<span class="nc bnc" id="L283" title="All 2 branches missed.">        if (mapView != null)</span>
+<span class="nc" id="L284">            mapView.onLowMemory();</span>
+<span class="nc" id="L285">    }</span>
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+<span class="nc" id="L289">        super.onSaveInstanceState(outState);</span>
+<span class="nc bnc" id="L290" title="All 2 branches missed.">        if (mapView != null)</span>
+<span class="nc" id="L291">            mapView.onSaveInstanceState(outState);</span>
+<span class="nc" id="L292">    }</span>
+
+    /**
+     * Fetches the challenge details (target location) and gallery photos.
+     */
+    protected void fetchChallengeDetails() {
+<span class="pc bpc" id="L298" title="1 of 2 branches missed.">        if (challengeId == -1) {</span>
+<span class="nc" id="L299">            Log.e(TAG, &quot;Challenge ID not found in intent.&quot;);</span>
+<span class="nc" id="L300">            return;</span>
+        }
+
+<span class="fc" id="L303">        SharedPreferences prefs = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);</span>
+<span class="fc" id="L304">        int userId = prefs.getInt(KEY_USER_ID, -1);</span>
+
+<span class="fc" id="L306">        String url = ApiConstants.BASE_URL + ApiConstants.GET_CHALLENGE_BY_ID_ENDPOINT + &quot;?id=&quot; + challengeId;</span>
+
+<span class="fc" id="L308">        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null,</span>
+                response -&gt; {
+<span class="fc" id="L310">                    Log.d(TAG, &quot;Response: &quot; + response.toString());</span>
+                    try {
+<span class="fc" id="L312">                        targetLat = response.getDouble(&quot;latitude&quot;);</span>
+<span class="fc" id="L313">                        targetLng = response.getDouble(&quot;longitude&quot;);</span>
+<span class="fc" id="L314">                        targetLocationLoaded = true;</span>
+<span class="fc" id="L315">                        updateMap();</span>
+
+<span class="pc bpc" id="L317" title="1 of 2 branches missed.">                        if (!userHasRated) {</span>
+<span class="fc" id="L318">                            JSONArray ratingsArray = response.optJSONArray(&quot;challengeRatings&quot;);</span>
+<span class="pc bpc" id="L319" title="2 of 4 branches missed.">                            if (ratingsArray != null &amp;&amp; ratingsArray.length() &gt; 0) {</span>
+<span class="nc" id="L320">                                double total = 0;</span>
+<span class="nc bnc" id="L321" title="All 2 branches missed.">                                for (int i = 0; i &lt; ratingsArray.length(); i++) {</span>
+<span class="nc" id="L322">                                    total += ratingsArray.optDouble(i, 0);</span>
+                                }
+<span class="nc" id="L324">                                double avgRating = Math.round(total / ratingsArray.length());</span>
+<span class="nc" id="L325">                                ratingBar.setRating((float) avgRating);</span>
+<span class="nc" id="L326">                            } else {</span>
+<span class="fc" id="L327">                                ratingBar.setRating(0);</span>
+                            }
+<span class="fc" id="L329">                            ratingBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));</span>
+                        }
+<span class="fc" id="L331">                        JSONArray submissions = response.getJSONArray(&quot;submissions&quot;);</span>
+<span class="fc" id="L332">                        allPhotosList.clear();</span>
+<span class="fc bfc" id="L333" title="All 2 branches covered.">                        for (int i = 0; i &lt; submissions.length(); i++) {</span>
+<span class="fc" id="L334">                            JSONObject submission = submissions.getJSONObject(i);</span>
+<span class="fc" id="L335">                            int submissionUserId = submission.optInt(&quot;uid&quot;, -1);</span>
+<span class="pc bpc" id="L336" title="1 of 2 branches missed.">                            if (submissionUserId != userId) {</span>
+<span class="fc" id="L337">                                Photo photo = new Photo(submission);</span>
+<span class="fc" id="L338">                                allPhotosList.add(photo);</span>
+                            }
+                        }
+<span class="fc" id="L341">                        updateDisplayedPhotos();</span>
+<span class="fc" id="L342">                        Log.d(TAG, &quot;Loaded &quot; + allPhotosList.size() + &quot; gallery photos&quot;);</span>
+
+                        // Fetch comments from dedicated endpoint
+<span class="fc" id="L345">                        fetchComments();</span>
+
+<span class="nc" id="L347">                    } catch (JSONException e) {</span>
+<span class="nc" id="L348">                        Log.e(TAG, &quot;Error parsing challenge details JSON&quot;, e);</span>
+<span class="nc" id="L349">                        Toast.makeText(this, &quot;Failed to load results details&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="fc" id="L350">                    }</span>
+<span class="fc" id="L351">                },</span>
+                error -&gt; {
+<span class="nc" id="L353">                    Log.e(TAG, &quot;Error fetching challenge details&quot;, error);</span>
+<span class="nc" id="L354">                    Toast.makeText(this, &quot;Failed to load results details&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L355">                });</span>
+
+<span class="fc" id="L357">        VolleySingleton.getInstance(this).addToRequestQueue(jsonObjectRequest);</span>
+<span class="fc" id="L358">    }</span>
+
+    /**
+     * Submits the user's rating for the challenge.
+     * 
+     * @param rating The rating value (1-5).
+     */
+    protected void submitRating(float rating) {
+<span class="pc bpc" id="L366" title="1 of 2 branches missed.">        if (challengeId == -1)</span>
+<span class="nc" id="L367">            return;</span>
+
+<span class="fc" id="L369">        String url = ApiConstants.BASE_URL + ApiConstants.RATE_CHALLENGE_ENDPOINT + &quot;?cid=&quot; + challengeId + &quot;&amp;rating=&quot;</span>
+                + (int) rating;
+<span class="fc" id="L371">        Log.d(TAG, &quot;Submitting rating: &quot; + url);</span>
+
+<span class="fc" id="L373">        StringRequest ratingRequest = new StringRequest(Request.Method.POST, url,</span>
+                response -&gt; {
+<span class="fc" id="L375">                    Log.d(TAG, &quot;Rating submitted successfully: &quot; + response);</span>
+<span class="fc" id="L376">                    Toast.makeText(this, &quot;Rating submitted!&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="fc" id="L377">                },</span>
+                error -&gt; {
+<span class="nc" id="L379">                    Log.e(TAG, &quot;Error submitting rating&quot;, error);</span>
+<span class="nc" id="L380">                    Toast.makeText(this, &quot;Failed to submit rating&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L381">                });</span>
+
+<span class="fc" id="L383">        VolleySingleton.getInstance(this).addToRequestQueue(ratingRequest);</span>
+<span class="fc" id="L384">    }</span>
+
+    /**
+     * Fetches comments from the dedicated comments endpoint.
+     */
+    protected void fetchComments() {
+<span class="pc bpc" id="L390" title="1 of 2 branches missed.">        if (challengeId == -1)</span>
+<span class="nc" id="L391">            return;</span>
+
+<span class="fc" id="L393">        String url = ApiConstants.BASE_URL + ApiConstants.GET_CHALLENGE_COMMENTS_ENDPOINT + challengeId + &quot;/comments&quot;;</span>
+<span class="fc" id="L394">        Log.d(TAG, &quot;Fetching comments from: &quot; + url);</span>
+
+<span class="fc" id="L396">        JsonArrayRequest commentsRequest = new JsonArrayRequest(Request.Method.GET, url, null,</span>
+                response -&gt; {
+                    try {
+<span class="fc" id="L399">                        commentsList.clear();</span>
+<span class="fc bfc" id="L400" title="All 2 branches covered.">                        for (int i = 0; i &lt; response.length(); i++) {</span>
+<span class="fc" id="L401">                            JSONObject commentObj = response.getJSONObject(i);</span>
+<span class="fc" id="L402">                            Comment comment = new Comment(commentObj);</span>
+<span class="fc" id="L403">                            commentsList.add(comment);</span>
+                        }
+<span class="fc" id="L405">                        commentAdapter.notifyDataSetChanged();</span>
+<span class="fc" id="L406">                        Log.d(TAG, &quot;Loaded &quot; + commentsList.size() + &quot; comments&quot;);</span>
+<span class="nc" id="L407">                    } catch (JSONException e) {</span>
+<span class="nc" id="L408">                        Log.e(TAG, &quot;Error parsing comments JSON&quot;, e);</span>
+<span class="fc" id="L409">                    }</span>
+<span class="fc" id="L410">                },</span>
+<span class="nc" id="L411">                error -&gt; Log.e(TAG, &quot;Error fetching comments&quot;, error));</span>
+
+<span class="fc" id="L413">        VolleySingleton.getInstance(this).addToRequestQueue(commentsRequest);</span>
+<span class="fc" id="L414">    }</span>
+
+    /**
+     * Posts a new comment to the challenge.
+     */
+    protected void postComment() {
+<span class="fc" id="L420">        String commentText = commentInput.getText().toString().trim();</span>
+<span class="pc bpc" id="L421" title="1 of 2 branches missed.">        if (commentText.isEmpty()) {</span>
+<span class="nc" id="L422">            Toast.makeText(this, &quot;Please enter a comment&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L423">            return;</span>
+        }
+
+<span class="pc bpc" id="L426" title="1 of 2 branches missed.">        if (challengeId == -1) {</span>
+<span class="nc" id="L427">            Toast.makeText(this, &quot;Cannot post comment: invalid challenge&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L428">            return;</span>
+        }
+
+<span class="fc" id="L431">        SharedPreferences prefs = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);</span>
+<span class="fc" id="L432">        int userId = prefs.getInt(KEY_USER_ID, -1);</span>
+<span class="pc bpc" id="L433" title="1 of 2 branches missed.">        if (userId == -1) {</span>
+<span class="nc" id="L434">            Toast.makeText(this, &quot;Please log in to comment&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L435">            return;</span>
+        }
+
+<span class="fc" id="L438">        String url = ApiConstants.BASE_URL + ApiConstants.POST_COMMENT_ENDPOINT</span>
+                + &quot;?cid=&quot; + challengeId + &quot;&amp;uid=&quot; + userId;
+<span class="fc" id="L440">        Log.d(TAG, &quot;Posting comment to: &quot; + url);</span>
+
+<span class="fc" id="L442">        StringRequest postRequest = new StringRequest(Request.Method.POST, url,</span>
+                response -&gt; {
+<span class="fc" id="L444">                    Log.d(TAG, &quot;Comment posted successfully: &quot; + response);</span>
+<span class="fc" id="L445">                    Toast.makeText(this, &quot;Comment posted!&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="fc" id="L446">                    commentInput.setText(&quot;&quot;);</span>
+<span class="fc" id="L447">                    fetchComments(); // Refresh comments list</span>
+<span class="fc" id="L448">                },</span>
+                error -&gt; {
+<span class="nc" id="L450">                    Log.e(TAG, &quot;Error posting comment&quot;, error);</span>
+<span class="nc" id="L451">                    Toast.makeText(this, &quot;Failed to post comment&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="pc" id="L452">                }) {</span>
+            @Override
+            public byte[] getBody() {
+<span class="fc" id="L455">                return commentText.getBytes(StandardCharsets.UTF_8);</span>
+            }
+
+            @Override
+            public String getBodyContentType() {
+<span class="fc" id="L460">                return &quot;text/plain; charset=utf-8&quot;;</span>
+            }
+        };
+
+<span class="fc" id="L464">        VolleySingleton.getInstance(this).addToRequestQueue(postRequest);</span>
+<span class="fc" id="L465">    }</span>
+
+    /**
+     * Updates the displayed photos list based on the limit (initial 6).
+     */
+    private void updateDisplayedPhotos() {
+<span class="fc" id="L471">        displayedPhotosList.clear();</span>
+<span class="fc" id="L472">        int limit = 6;</span>
+<span class="pc bpc" id="L473" title="1 of 2 branches missed.">        if (allPhotosList.size() &gt; limit) {</span>
+<span class="nc bnc" id="L474" title="All 2 branches missed.">            for (int i = 0; i &lt; limit; i++) {</span>
+<span class="nc" id="L475">                displayedPhotosList.add(allPhotosList.get(i));</span>
+            }
+<span class="nc" id="L477">            loadMorePhotosButton.setVisibility(View.VISIBLE);</span>
+        } else {
+<span class="fc" id="L479">            displayedPhotosList.addAll(allPhotosList);</span>
+<span class="fc" id="L480">            loadMorePhotosButton.setVisibility(View.GONE);</span>
+        }
+<span class="fc" id="L482">        photoAdapter.notifyDataSetChanged();</span>
+<span class="fc" id="L483">    }</span>
+
+    /**
+     * Loads the rest of the photos into the displayed list.
+     */
+    private void loadMorePhotos() {
+<span class="nc" id="L489">        displayedPhotosList.clear();</span>
+<span class="nc" id="L490">        displayedPhotosList.addAll(allPhotosList);</span>
+<span class="nc" id="L491">        photoAdapter.notifyDataSetChanged();</span>
+<span class="nc" id="L492">        loadMorePhotosButton.setVisibility(View.GONE);</span>
+<span class="nc" id="L493">    }</span>
+
+    /**
+     * Configures and starts the confetti animation.
+     */
+    protected void startConfetti() {
+<span class="fc" id="L499">        konfettiView.build()</span>
+<span class="fc" id="L500">                .addColors(Color.rgb(168, 100, 253),</span>
+<span class="fc" id="L501">                        Color.rgb(41, 205, 255),</span>
+<span class="fc" id="L502">                        Color.rgb(120, 255, 68),</span>
+<span class="fc" id="L503">                        Color.rgb(255, 113, 141),</span>
+<span class="fc" id="L504">                        Color.rgb(253, 255, 106))</span>
+<span class="fc" id="L505">                .setDirection(0.0, 180.0)</span>
+<span class="fc" id="L506">                .setSpeed(1f, 4f)</span>
+<span class="fc" id="L507">                .setFadeOutEnabled(true)</span>
+<span class="fc" id="L508">                .setTimeToLive(3000L)</span>
+<span class="fc" id="L509">                .addShapes(Shape.Square.INSTANCE, Shape.Circle.INSTANCE)</span>
+<span class="fc" id="L510">                .addSizes(new Size(12, 5f))</span>
+<span class="fc" id="L511">                .setPosition(getResources().getDisplayMetrics().widthPixels / 2f, -100)</span>
+<span class="fc" id="L512">                .streamFor(150, 1600L);</span>
+<span class="fc" id="L513">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Generated by the Android Gradle plugin 8.13.1</div></body></html>

@@ -1,13 +1,13 @@
-/**
- * Place Class
- * @author Alex Remiasz
- */
 package com.jubair5.geohunt.places;
 
 import android.util.Base64;
 import android.util.Log;
 import org.json.JSONObject;
 
+/**
+ * Place Class
+ * @author Alex Remiasz
+ */
 public class Place {
     private int id;
     private byte[] photoData;

@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HomeFragment.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.jubair5.geohunt.menu</a> &gt; <span class="el_source">HomeFragment.java</span></div><h1>HomeFragment.java</h1><pre class="source lang-java linenums">package com.jubair5.geohunt.menu;
+
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.res.Configuration;
+import android.location.Location;
+import android.os.Bundle;
+import android.os.Looper;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.Toast;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MapStyleOptions;
+import com.jubair5.geohunt.R;
+import com.jubair5.geohunt.game.GameActivity;
+
+/**
+ * Fragment containing the home screen, with single and multiplayer options
+ * @author Alex Remiasz
+ */
+<span class="fc" id="L42">public class HomeFragment extends Fragment implements OnMapReadyCallback {</span>
+
+    private static final String TAG = &quot;HomeFragment&quot;;
+    private MapView mapView;
+    private GoogleMap googleMap;
+    private FusedLocationProviderClient fusedLocationClient;
+    private LocationCallback locationCallback;
+
+    /**
+     * This method handles the result of the location permission request.
+     */
+<span class="fc" id="L53">    private final ActivityResultLauncher&lt;String&gt; requestLocationPermissionLauncher = registerForActivityResult(</span>
+            new ActivityResultContracts.RequestPermission(),
+            isGranted -&gt; {
+<span class="pc bpc" id="L56" title="1 of 2 branches missed.">                if (isGranted) {</span>
+<span class="fc" id="L57">                    Log.d(TAG, &quot;Location permission granted.&quot;);</span>
+<span class="fc" id="L58">                    enableMyLocation();</span>
+                } else {
+<span class="nc" id="L60">                    Log.w(TAG, &quot;Location permission denied.&quot;);</span>
+<span class="nc" id="L61">                    Toast.makeText(getContext(), &quot;Location permission is required to show your position on the map.&quot;, Toast.LENGTH_LONG).show();</span>
+                }
+<span class="fc" id="L63">            });</span>
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+<span class="fc" id="L68">        View view = inflater.inflate(R.layout.home_fragment, container, false);</span>
+
+<span class="fc" id="L70">        mapView = view.findViewById(R.id.map_view_home);</span>
+<span class="fc" id="L71">        Button playButton = view.findViewById(R.id.play_button);</span>
+<span class="fc" id="L72">        mapView.onCreate(savedInstanceState);</span>
+<span class="fc" id="L73">        mapView.getMapAsync(this);</span>
+
+<span class="fc" id="L75">        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());</span>
+
+<span class="fc" id="L77">        playButton.setOnClickListener(v -&gt; {</span>
+<span class="fc" id="L78">            Intent intent = new Intent(getActivity(), GameActivity.class);</span>
+<span class="fc" id="L79">            startActivity(intent);</span>
+<span class="fc" id="L80">        });</span>
+
+<span class="fc" id="L82">        return view;</span>
+    }
+
+    /**
+     * This method is called when the map is ready to be used.
+     * @param googleMap The GoogleMap object.
+     */
+    @Override
+    public void onMapReady(@NonNull GoogleMap googleMap) {
+<span class="fc" id="L91">        this.googleMap = googleMap;</span>
+<span class="fc" id="L92">        enableMyLocation();</span>
+<span class="fc" id="L93">        setMapStyle();</span>
+<span class="fc" id="L94">    }</span>
+
+    /**
+     * Sets the map style based on the current system theme (dark or light).
+     */
+    private void setMapStyle() {
+<span class="fc" id="L100">        int nightModeFlags = getResources().getConfiguration().uiMode &amp; Configuration.UI_MODE_NIGHT_MASK;</span>
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">        if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {</span>
+<span class="nc" id="L102">            Log.d(TAG, &quot;Setting dark mode map style.&quot;);</span>
+<span class="nc" id="L103">            googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(requireContext(), R.raw.map_style_dark));</span>
+        }
+<span class="fc" id="L105">    }</span>
+
+    /**
+     * Checks for location permission, and if granted, enables the 'My Location' layer and
+     * moves the camera to the user's current position.
+     */
+    private void enableMyLocation() {
+<span class="fc bfc" id="L112" title="All 2 branches covered.">        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {</span>
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">            if (googleMap != null) {</span>
+<span class="fc" id="L114">                googleMap.setMyLocationEnabled(true);</span>
+                // Get initial location to center the map
+<span class="fc" id="L116">                fusedLocationClient.getLastLocation().addOnSuccessListener(requireActivity(), location -&gt; {</span>
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">                    if (location != null) {</span>
+<span class="fc" id="L118">                        LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());</span>
+<span class="fc" id="L119">                        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 16f));</span>
+<span class="fc" id="L120">                    } else {</span>
+<span class="nc" id="L121">                        Log.w(TAG, &quot;FusedLocationProvider returned null location for initial position.&quot;);</span>
+                    }
+<span class="fc" id="L123">                });</span>
+                // Start continuous location updates
+<span class="fc" id="L125">                startLocationUpdates();</span>
+            }
+        } else {
+            // Request the permission.
+<span class="fc" id="L129">            requestLocationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);</span>
+        }
+<span class="fc" id="L131">    }</span>
+
+    /**
+     * Configures and starts continuous location updates.
+     */
+    private void startLocationUpdates() {
+<span class="fc" id="L137">        LocationRequest locationRequest = LocationRequest.create();</span>
+<span class="fc" id="L138">        locationRequest.setInterval(5000); // 10 seconds</span>
+<span class="fc" id="L139">        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);</span>
+
+<span class="fc" id="L141">        locationCallback = new LocationCallback() {</span>
+            @Override
+            public void onLocationResult(@NonNull LocationResult locationResult) {
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">                if (locationResult.getLastLocation() != null) {</span>
+<span class="fc" id="L145">                    Location location = locationResult.getLastLocation();</span>
+<span class="fc" id="L146">                    LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());</span>
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">                    if (googleMap != null) {</span>
+<span class="fc" id="L148">                        googleMap.animateCamera(CameraUpdateFactory.newLatLng(currentLatLng));</span>
+                    }
+                }
+<span class="fc" id="L151">            }</span>
+        };
+
+<span class="pc bpc" id="L154" title="1 of 2 branches missed.">        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {</span>
+<span class="nc" id="L155">            return; // Should not happen as this is called after permission check</span>
+        }
+<span class="fc" id="L157">        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());</span>
+<span class="fc" id="L158">    }</span>
+
+
+    @Override
+    public void onResume() {
+<span class="fc" id="L163">        super.onResume();</span>
+<span class="fc" id="L164">        mapView.onResume();</span>
+<span class="fc" id="L165">    }</span>
+
+    @Override
+    public void onStart() {
+<span class="fc" id="L169">        super.onStart();</span>
+<span class="fc" id="L170">        mapView.onStart();</span>
+<span class="fc" id="L171">    }</span>
+
+    @Override
+    public void onStop() {
+<span class="fc" id="L175">        super.onStop();</span>
+<span class="fc" id="L176">        mapView.onStop();</span>
+<span class="fc" id="L177">    }</span>
+
+    @Override
+    public void onPause() {
+<span class="fc" id="L181">        super.onPause();</span>
+<span class="fc" id="L182">        mapView.onPause();</span>
+        // Stop location updates to save battery
+<span class="pc bpc" id="L184" title="1 of 4 branches missed.">        if (fusedLocationClient != null &amp;&amp; locationCallback != null) {</span>
+<span class="fc" id="L185">            fusedLocationClient.removeLocationUpdates(locationCallback);</span>
+        }
+<span class="fc" id="L187">    }</span>
+
+    @Override
+    public void onDestroy() {
+<span class="fc" id="L191">        super.onDestroy();</span>
+<span class="fc" id="L192">        mapView.onDestroy();</span>
+<span class="fc" id="L193">    }</span>
+
+    @Override
+    public void onLowMemory() {
+<span class="nc" id="L197">        super.onLowMemory();</span>
+<span class="nc" id="L198">        mapView.onLowMemory();</span>
+<span class="nc" id="L199">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Generated by the Android Gradle plugin 8.13.1</div></body></html>

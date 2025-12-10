@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SingleFriendActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.jubair5.geohunt.friends</a> &gt; <span class="el_source">SingleFriendActivity.java</span></div><h1>SingleFriendActivity.java</h1><pre class="source lang-java linenums">/**
+ * Activity used to display another account so that you can view stats or friend them
+ * @author Nathan Imig
+ */
+package com.jubair5.geohunt.friends;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.Bundle;
+import android.util.Base64;
+import android.util.Log;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.jubair5.geohunt.R;
+import com.jubair5.geohunt.network.ApiConstants;
+import com.jubair5.geohunt.network.VolleySingleton;
+
+import java.nio.charset.StandardCharsets;
+
+<span class="nc" id="L30">public class SingleFriendActivity extends AppCompatActivity {</span>
+
+    private static final String TAG = &quot;SingleFriendActivity&quot;;
+    public static final int NOT_FRIENDS_STATE = 0;
+    public static final int RECEIVED_REQUEST_STATE = 1;
+    public static final int  SENT_REQUEST_STATE = 2;
+    public static final int ARE_FRIENDS_STATE = 3;
+    private static final String SHARED_PREFS_NAME = &quot;GeoHuntPrefs&quot;;
+    private static final String KEY_USER_NAME = &quot;userName&quot;;
+    private static final String KEY_USER_ID = &quot;userId&quot;;
+
+
+    private int userId;
+    private int friendID;
+    private String friendUsername;
+    private SharedPreferences prefs;
+    private TextView nameText;
+    private ImageView profilePic;
+    private Button friendRequestButton;
+    private Button rejectRemoveButton;
+    private int state;
+
+    public void onCreate(Bundle savedInstancesState){
+<span class="nc" id="L53">        super.onCreate(savedInstancesState);</span>
+<span class="nc" id="L54">        setContentView(R.layout.single_friend);</span>
+<span class="nc" id="L55">        prefs = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);</span>
+
+<span class="nc" id="L57">        friendUsername = getIntent().getStringExtra(&quot;USERNAME&quot;);</span>
+
+<span class="nc bnc" id="L59" title="All 2 branches missed.">        if (getSupportActionBar() != null) {</span>
+<span class="nc" id="L60">            getSupportActionBar().setTitle(friendUsername);</span>
+        }
+
+
+<span class="nc" id="L64">        nameText = findViewById(R.id.friendName);</span>
+<span class="nc" id="L65">        profilePic = findViewById(R.id.friendProfileImage);</span>
+<span class="nc" id="L66">        friendRequestButton = findViewById(R.id.friendRequestButton);</span>
+<span class="nc" id="L67">        rejectRemoveButton = findViewById(R.id.rejectRemoveButton);</span>
+
+<span class="nc" id="L69">        userId = prefs.getInt(KEY_USER_ID, -1);</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        if (userId == -1) {</span>
+<span class="nc" id="L71">            Log.e(TAG, &quot;User ID not found in shared preferences.&quot;);</span>
+<span class="nc" id="L72">            return;</span>
+        }
+
+<span class="nc" id="L75">        friendID = getIntent().getIntExtra(&quot;FID&quot;, 0);</span>
+<span class="nc" id="L76">        state = getIntent().getIntExtra(&quot;STATE&quot;, 0);</span>
+
+<span class="nc" id="L78">        getFriendProfile();</span>
+<span class="nc" id="L79">        setState();</span>
+
+<span class="nc" id="L81">        friendRequestButton.setOnClickListener(V-&gt; mainButtonClicked());</span>
+<span class="nc" id="L82">        rejectRemoveButton.setOnClickListener(V-&gt; secondaryButtonClicked());</span>
+
+
+<span class="nc" id="L85">    }</span>
+
+
+    /**
+     * Sets up main button based on relationship state
+     */
+    private void mainButtonClicked() {
+<span class="nc bnc" id="L92" title="All 2 branches missed.">        if(state == NOT_FRIENDS_STATE){</span>
+<span class="nc" id="L93">            sendFriendRequest();</span>
+        }
+<span class="nc bnc" id="L95" title="All 2 branches missed.">        else if (state == RECEIVED_REQUEST_STATE) {</span>
+<span class="nc" id="L96">            accpetFriendRequest();;</span>
+        }
+<span class="nc bnc" id="L98" title="All 2 branches missed.">        else if (state == ARE_FRIENDS_STATE) {</span>
+<span class="nc" id="L99">            challengeFriend();</span>
+        }
+<span class="nc" id="L101">        setState();</span>
+<span class="nc" id="L102">    }</span>
+
+    /**
+     * Sets up second button based on relationship if needed
+     */
+    private void secondaryButtonClicked() {
+<span class="nc bnc" id="L108" title="All 2 branches missed.">        if (state == RECEIVED_REQUEST_STATE) {</span>
+<span class="nc" id="L109">            rejectFriend();</span>
+        }
+<span class="nc bnc" id="L111" title="All 2 branches missed.">        else if (state == ARE_FRIENDS_STATE) {</span>
+<span class="nc" id="L112">            removeFriend();;</span>
+        }
+<span class="nc" id="L114">        setState();</span>
+<span class="nc" id="L115">    }</span>
+
+
+    /**
+     * Sends a Friend Request to from your account to the currently viewed one
+     */
+    private void sendFriendRequest() {
+<span class="nc" id="L122">        String friendsURL = ApiConstants.BASE_URL + ApiConstants.Send_Friend_Request_ENDPOINT + &quot;?primaryId=&quot; + userId + &quot;&amp;targetId=&quot; + friendID;</span>
+
+<span class="nc" id="L124">        StringRequest sendRequest = new StringRequest(</span>
+                Request.Method.POST,
+                friendsURL,
+                response -&gt; {
+<span class="nc" id="L128">                    Log.d(TAG, &quot;Request Sent&quot;);</span>
+
+<span class="nc" id="L130">                    state = SENT_REQUEST_STATE;</span>
+
+<span class="nc" id="L132">                },</span>
+                volleyError -&gt; {
+<span class="nc" id="L134">                    Log.e(TAG, &quot;Error Sending Request&quot; + volleyError.toString());</span>
+<span class="nc" id="L135">                    String responseBody = &quot;&quot;;</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">                    if(volleyError.networkResponse.data != null) {</span>
+<span class="nc" id="L137">                        responseBody = new String(volleyError.networkResponse.data, StandardCharsets.UTF_8);</span>
+                    }
+<span class="nc" id="L139">                    Log.e(TAG, &quot;Accepting friends error response body: &quot; + responseBody);</span>
+<span class="nc" id="L140">                }</span>
+        );
+<span class="nc" id="L142">        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(sendRequest);</span>
+<span class="nc" id="L143">    }</span>
+
+    /**
+     * Accepts their friend request if they sent on to you
+     */
+    private void accpetFriendRequest() {
+<span class="nc" id="L149">        String friendsURL = ApiConstants.BASE_URL + ApiConstants.Accept_Friend_Request_ENDPOINT + &quot;?primaryId=&quot; + userId + &quot;&amp;targetId=&quot; + friendID ;</span>
+
+<span class="nc" id="L151">        StringRequest acceptRequest = new StringRequest(</span>
+                Request.Method.PUT,
+                friendsURL,
+                response -&gt; {
+<span class="nc" id="L155">                    Log.d(TAG, &quot;Response: &quot;+ response.toString());</span>
+<span class="nc" id="L156">                    state = ARE_FRIENDS_STATE;</span>
+
+<span class="nc" id="L158">                },</span>
+                volleyError -&gt; {
+<span class="nc" id="L160">                    Log.e(TAG, &quot;Error accepting request&quot; + volleyError.toString());</span>
+<span class="nc" id="L161">                    String responseBody = &quot;&quot;;</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">                    if(volleyError.networkResponse.data != null) {</span>
+<span class="nc" id="L163">                        responseBody = new String(volleyError.networkResponse.data, StandardCharsets.UTF_8);</span>
+                    }
+<span class="nc" id="L165">                    Log.e(TAG, &quot;Accepting friends error response body: &quot; + responseBody);</span>
+<span class="nc" id="L166">                }</span>
+        );
+<span class="nc" id="L168">        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(acceptRequest);</span>
+<span class="nc" id="L169">    }</span>
+
+    /**
+     * Rejects their friend request if they sent on to you
+     */
+    private void rejectFriend() {
+
+<span class="nc" id="L176">        String friendsURL = ApiConstants.BASE_URL + ApiConstants.Reject_Friend_Request_ENDPOINT + &quot;?primaryId=&quot; + userId + &quot;&amp;targetId=&quot; + friendID ;</span>
+
+<span class="nc" id="L178">        StringRequest rejectRequest = new StringRequest(</span>
+                Request.Method.DELETE,
+                friendsURL,
+                response -&gt; {
+<span class="nc" id="L182">                    Log.d(TAG, &quot;Response: &quot; + response.toString());</span>
+<span class="nc" id="L183">                    state = NOT_FRIENDS_STATE;</span>
+
+<span class="nc" id="L185">                },</span>
+                volleyError -&gt; {
+<span class="nc" id="L187">                    Log.e(TAG, &quot;Error removing friends&quot; + volleyError.toString());</span>
+<span class="nc" id="L188">                    String responseBody = &quot;&quot;;</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">                    if(volleyError.networkResponse.data != null) {</span>
+<span class="nc" id="L190">                        responseBody = new String(volleyError.networkResponse.data, StandardCharsets.UTF_8);</span>
+                    }
+<span class="nc" id="L192">                    Log.e(TAG, &quot;Accepting friends error response body: &quot; + responseBody);</span>
+<span class="nc" id="L193">                }</span>
+        );
+<span class="nc" id="L195">        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(rejectRequest);</span>
+<span class="nc" id="L196">    }</span>
+
+    /**
+     * Challenges a Friend and sends request to multiplayer lobby
+     */
+    private void challengeFriend() {
+<span class="nc" id="L202">    }</span>
+
+    /**
+     * Removes a friend
+     */
+    private void removeFriend() {
+<span class="nc" id="L208">        String friendsURL = ApiConstants.BASE_URL + ApiConstants.Remove_FRIEND + &quot;?primaryId=&quot; + userId + &quot;&amp;targetId=&quot; + friendID ;</span>
+
+<span class="nc" id="L210">        StringRequest removeRequest = new StringRequest(</span>
+                Request.Method.DELETE,
+                friendsURL,
+                response -&gt; {
+<span class="nc" id="L214">                    Log.d(TAG, &quot;Response: &quot;+ response);</span>
+<span class="nc" id="L215">                    state = NOT_FRIENDS_STATE;</span>
+
+<span class="nc" id="L217">                },</span>
+                volleyError -&gt; {
+<span class="nc" id="L219">                    Log.e(TAG, &quot;Error removing friends &quot; + volleyError.toString());</span>
+<span class="nc" id="L220">                    String responseBody = &quot;&quot;;</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">                    if(volleyError.networkResponse.data != null) {</span>
+<span class="nc" id="L222">                        responseBody = new String(volleyError.networkResponse.data, StandardCharsets.UTF_8);</span>
+                    }
+<span class="nc" id="L224">                    Log.e(TAG, &quot;Accepting friends error response body: &quot; + responseBody);</span>
+<span class="nc" id="L225">                }</span>
+        );
+<span class="nc" id="L227">        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(removeRequest);</span>
+<span class="nc" id="L228">    }</span>
+
+    /**
+     * Sets the state of relationship
+     * Help when a button is clicked to change relationship
+     */
+    private void setState() {
+<span class="nc bnc" id="L235" title="All 2 branches missed.">        if(state == NOT_FRIENDS_STATE){</span>
+<span class="nc" id="L236">            friendRequestButton.setText(&quot;Send Request&quot;);</span>
+<span class="nc" id="L237">            rejectRemoveButton.setVisibility(TextView.INVISIBLE);</span>
+        }
+<span class="nc bnc" id="L239" title="All 2 branches missed.">        else if (state == RECEIVED_REQUEST_STATE) {</span>
+<span class="nc" id="L240">            friendRequestButton.setText(&quot;Accept&quot;);</span>
+<span class="nc" id="L241">            rejectRemoveButton.setVisibility(TextView.VISIBLE);</span>
+<span class="nc" id="L242">            rejectRemoveButton.setText(&quot;Reject&quot;);</span>
+        }
+<span class="nc bnc" id="L244" title="All 2 branches missed.">        else if (state == SENT_REQUEST_STATE) {</span>
+<span class="nc" id="L245">            friendRequestButton.setText(&quot;Pending&quot;);</span>
+<span class="nc" id="L246">            rejectRemoveButton.setVisibility(TextView.INVISIBLE);</span>
+        }
+<span class="nc bnc" id="L248" title="All 2 branches missed.">        else if (state == ARE_FRIENDS_STATE) {</span>
+<span class="nc" id="L249">            friendRequestButton.setText(&quot;Challenge&quot;);</span>
+<span class="nc" id="L250">            rejectRemoveButton.setVisibility(TextView.VISIBLE);</span>
+<span class="nc" id="L251">            rejectRemoveButton.setText(&quot;Remove Friend&quot;);</span>
+        }
+<span class="nc" id="L253">    }</span>
+
+    /**
+     * Gets all the information from the account
+     */
+    private void getFriendProfile() {
+<span class="nc" id="L259">        nameText.setText(friendUsername);</span>
+
+<span class="nc" id="L261">        String searchURL = ApiConstants.BASE_URL + ApiConstants.GET_ACCOUNT_BY_USERNAME_ENDPOINT + &quot;?name=&quot; + friendUsername;</span>
+
+<span class="nc" id="L263">        JsonObjectRequest jsonObjReq = new JsonObjectRequest(</span>
+                Request.Method.GET,
+                searchURL,
+                null,
+                response -&gt; {
+<span class="nc" id="L268">                    Log.d(TAG, &quot;Account Search Response: &quot;+ response.toString());</span>
+
+<span class="nc" id="L270">                    String pfp = response.optString(&quot;pfp&quot;);</span>
+<span class="nc bnc" id="L271" title="All 4 branches missed.">                    if (pfp != null &amp;&amp; !pfp.isEmpty()) {</span>
+<span class="nc" id="L272">                        byte[] decodedImage = Base64.decode(pfp, Base64.DEFAULT);</span>
+<span class="nc" id="L273">                        Bitmap bitmap = BitmapFactory.decodeByteArray(decodedImage, 0, decodedImage.length);</span>
+<span class="nc" id="L274">                        profilePic.setImageBitmap(bitmap);</span>
+<span class="nc" id="L275">                    } else {</span>
+<span class="nc" id="L276">                        profilePic.setImageResource(android.R.drawable.ic_menu_gallery);</span>
+                    }
+                    // Stats later on
+<span class="nc" id="L279">                },</span>
+                volleyError -&gt; {
+<span class="nc" id="L281">                    Log.e(TAG, &quot;Error getting friends&quot; + volleyError.toString());</span>
+<span class="nc" id="L282">                    String responseBody = &quot;&quot;;</span>
+<span class="nc bnc" id="L283" title="All 2 branches missed.">                    if(volleyError.networkResponse.data != null) {</span>
+<span class="nc" id="L284">                        responseBody = new String(volleyError.networkResponse.data, StandardCharsets.UTF_8);</span>
+                    }
+<span class="nc" id="L286">                    Log.e(TAG, &quot;Accepting friends error response body: &quot; + responseBody);</span>
+<span class="nc" id="L287">                }</span>
+        );
+<span class="nc" id="L289">        VolleySingleton.getInstance(this).addToRequestQueue(jsonObjReq);</span>
+<span class="nc" id="L290">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Generated by the Android Gradle plugin 8.13.1</div></body></html>

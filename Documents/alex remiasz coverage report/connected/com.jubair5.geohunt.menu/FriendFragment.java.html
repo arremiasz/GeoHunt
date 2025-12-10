@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FriendFragment.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.jubair5.geohunt.menu</a> &gt; <span class="el_source">FriendFragment.java</span></div><h1>FriendFragment.java</h1><pre class="source lang-java linenums">package com.jubair5.geohunt.menu;
+
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.SearchView;
+import android.widget.Toast;
+
+import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.jubair5.geohunt.R;
+import com.jubair5.geohunt.friends.Friend;
+import com.jubair5.geohunt.friends.FriendAdapter;
+import com.jubair5.geohunt.friends.SingleFriendActivity;
+import com.jubair5.geohunt.network.ApiConstants;
+import com.jubair5.geohunt.network.VolleySingleton;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Fragment used to find and see current friends and requests
+ * @author Nathan Imig
+ */
+<span class="fc" id="L43">public class FriendFragment extends Fragment implements FriendAdapter.OnFriendClickListener {</span>
+
+
+    private static final String TAG = &quot;FriendsFragment&quot;;
+    private static final String SHARED_PREFS_NAME = &quot;GeoHuntPrefs&quot;;
+    private static final String KEY_USER_NAME = &quot;userName&quot;;
+    private static final String KEY_USER_ID = &quot;userId&quot;;
+
+    private SearchView searchBar;
+
+
+    // Set up for the actual list
+    private List&lt;Integer&gt; friendsId;
+    private List&lt;Integer&gt; friendsReceivedId;
+    private List&lt;Integer&gt; friendsSentId;
+    private RecyclerView friendsRecycleViewer;
+    private FriendAdapter startingFriendAdapter;
+    private FriendAdapter searchFriendAdapter;
+    private List&lt;Friend&gt; friendList;
+    private List&lt;Friend&gt; searchList;
+    private SharedPreferences prefs;
+    private View root;
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+<span class="fc" id="L69">        root = inflater.inflate(R.layout.friends_fragment, container, false);</span>
+<span class="fc" id="L70">        prefs = requireActivity().getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);</span>
+
+
+        // Set up Ui elements
+<span class="fc" id="L74">        searchBar = root.findViewById(R.id.friend_search_bar);</span>
+<span class="fc" id="L75">        friendsRecycleViewer = root.findViewById(R.id.friends_recycler_view);</span>
+
+<span class="fc" id="L77">        friendList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L78">        searchList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L79">        friendsId = new ArrayList&lt;Integer&gt;();</span>
+<span class="fc" id="L80">        friendsReceivedId = new ArrayList&lt;Integer&gt;();</span>
+<span class="fc" id="L81">        friendsSentId = new ArrayList&lt;Integer&gt;();</span>
+
+
+
+<span class="fc" id="L85">        searchFriendAdapter = new  FriendAdapter(getContext(), searchList, this);</span>
+<span class="fc" id="L86">        startingFriendAdapter = new FriendAdapter(getContext(), friendList, this);</span>
+<span class="fc" id="L87">        friendsRecycleViewer.setAdapter(startingFriendAdapter);</span>
+<span class="fc" id="L88">        friendsRecycleViewer.setLayoutManager(new LinearLayoutManager((getContext())));</span>
+<span class="fc" id="L89">        getStartingFriends();</span>
+
+        // All use of search bar
+<span class="fc" id="L92">        searchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {</span>
+            @Override
+            public boolean onQueryTextChange(String newText) {
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">                if(!(friendsRecycleViewer.getAdapter().equals(startingFriendAdapter))){</span>
+<span class="nc" id="L96">                    friendsRecycleViewer.setAdapter(startingFriendAdapter);</span>
+                }
+<span class="fc" id="L98">                return false;</span>
+            }
+
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+<span class="nc bnc" id="L103" title="All 2 branches missed.">                if(!(query.equals(prefs.getString(KEY_USER_NAME, &quot;&quot;)))){</span>
+<span class="nc" id="L104">                    friendsRecycleViewer.setAdapter(searchFriendAdapter);</span>
+<span class="nc" id="L105">                    searchForAccount(query);</span>
+                }
+<span class="nc" id="L107">                return true;</span>
+            }
+        }
+        );
+
+
+<span class="fc" id="L113">        return root;</span>
+    }
+
+    /**
+     * Used to update the friends list
+     */
+    @Override
+    public void onResume(){
+<span class="fc" id="L121">        super.onResume();</span>
+<span class="fc" id="L122">        getStartingFriends();</span>
+<span class="fc" id="L123">        searchBar.setQuery(&quot;&quot;, false);</span>
+<span class="fc" id="L124">        searchBar.clearFocus();</span>
+
+<span class="fc" id="L126">    }</span>
+
+    /**
+     * gets the account based off of its name and displays it
+     * @param name
+     */
+    private void searchForAccount(String name){
+<span class="nc" id="L133">        String searchURL = ApiConstants.BASE_URL + ApiConstants.GET_ACCOUNT_BY_USERNAME_ENDPOINT + &quot;?name=&quot; + name;</span>
+
+<span class="nc" id="L135">        JsonObjectRequest jsonObjReq = new JsonObjectRequest(</span>
+                Request.Method.GET,
+                searchURL,
+                null,
+                response -&gt; {
+<span class="nc" id="L140">                    Log.d(TAG, &quot;Account Search Response: &quot;+ response.toString());</span>
+
+                    // Display Friends
+<span class="nc" id="L143">                    searchList.clear();</span>
+<span class="nc" id="L144">                    Friend account =  new Friend(response);</span>
+<span class="nc" id="L145">                    int accountId = account.getId();</span>
+<span class="nc" id="L146">                    setAccountState(accountId, account);</span>
+<span class="nc" id="L147">                    searchList.add(account);</span>
+<span class="nc" id="L148">                    searchFriendAdapter.notifyDataSetChanged();</span>
+<span class="nc" id="L149">                },</span>
+                volleyError -&gt; {
+<span class="nc" id="L151">                    Log.e(TAG, &quot;Error getting friends&quot; + volleyError.toString());</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">                    if (volleyError.networkResponse != null) {</span>
+<span class="nc" id="L153">                        Log.e(TAG, &quot;Friends error status code: &quot; + volleyError.networkResponse.statusCode);</span>
+<span class="nc" id="L154">                        String responseBody = &quot;&quot;;</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">                        if(volleyError.networkResponse.data != null) {</span>
+<span class="nc" id="L156">                            responseBody = new String(volleyError.networkResponse.data, StandardCharsets.UTF_8);</span>
+                        }
+<span class="nc" id="L158">                        Log.e(TAG, &quot;Friends error response body: &quot; + responseBody);</span>
+
+<span class="nc bnc" id="L160" title="All 2 branches missed.">                        if (volleyError.networkResponse.statusCode == 404) {</span>
+<span class="nc" id="L161">                            friendList.clear();</span>
+<span class="nc" id="L162">                            startingFriendAdapter.notifyDataSetChanged();</span>
+<span class="nc" id="L163">                            Toast.makeText(getContext(), &quot;No account found&quot;, Toast.LENGTH_LONG).show();</span>
+                        } else {
+<span class="nc" id="L165">                            Toast.makeText(getContext(), &quot;Finding Account failed. Server error: &quot; + volleyError.networkResponse.statusCode, Toast.LENGTH_LONG).show();</span>
+                        }
+<span class="nc" id="L167">                    } else {</span>
+<span class="nc" id="L168">                        Toast.makeText(getContext(), &quot;Getting account failed. Check network connection.&quot;, Toast.LENGTH_LONG).show();</span>
+                    }
+<span class="nc" id="L170">                }</span>
+        );
+<span class="nc" id="L172">        VolleySingleton.getInstance(getContext()).addToRequestQueue(jsonObjReq);</span>
+<span class="nc" id="L173">    }</span>
+
+    /**
+     * When searching an account, sets the state of their relationship
+     * @param accountId
+     * @param account
+     */
+    private void setAccountState(int accountId, Friend account) {
+<span class="nc bnc" id="L181" title="All 2 branches missed.">        if(friendsId.contains(accountId)){</span>
+<span class="nc" id="L182">            account.setState(3);</span>
+
+<span class="nc bnc" id="L184" title="All 2 branches missed.">        } else if (friendsReceivedId.contains(accountId)) {</span>
+<span class="nc" id="L185">            account.setState(1);</span>
+
+<span class="nc bnc" id="L187" title="All 2 branches missed.">        } else if (friendsSentId.contains(accountId)) {</span>
+<span class="nc" id="L188">            account.setState(2);</span>
+
+        } else {
+<span class="nc" id="L191">            account.setState(0);</span>
+
+        }
+<span class="nc" id="L194">    }</span>
+
+
+    /**
+     * Get accounts current friends and their requests
+     */
+    private void getStartingFriends(){
+<span class="fc" id="L201">        Log.e(TAG, &quot;Made it into the function&quot;);</span>
+<span class="fc" id="L202">        int userId = prefs.getInt(KEY_USER_ID, -1);</span>
+<span class="fc bfc" id="L203" title="All 2 branches covered.">        if (userId == -1) {</span>
+<span class="fc" id="L204">            Log.e(TAG, &quot;User ID not found in shared preferences.&quot;);</span>
+<span class="fc" id="L205">            return;</span>
+        }
+
+
+        // Friends
+<span class="fc" id="L210">        String friendsURL = ApiConstants.BASE_URL + ApiConstants.GET_FRIENDS_ENDPOINT + &quot;?id=&quot; + userId;</span>
+
+<span class="fc" id="L212">        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(</span>
+                Request.Method.GET,
+                friendsURL,
+                null,
+                response -&gt; {
+                    try{
+<span class="fc" id="L218">                        Log.d(TAG, &quot;Friends Response: &quot;+ response.toString());</span>
+
+<span class="fc" id="L220">                        friendList.clear();</span>
+<span class="fc bfc" id="L221" title="All 2 branches covered.">                        for (int i = 0; i &lt; response.length(); i++) {</span>
+<span class="fc" id="L222">                            JSONObject friendJson = response.getJSONObject(i);</span>
+<span class="fc" id="L223">                            friendJson.put(&quot;state&quot;, SingleFriendActivity.ARE_FRIENDS_STATE);</span>
+<span class="fc" id="L224">                            friendsId.add(friendJson.getInt(&quot;id&quot;));</span>
+<span class="fc" id="L225">                            friendList.add(new Friend(friendJson));</span>
+                        }
+<span class="nc" id="L227">                    } catch (JSONException e) {</span>
+<span class="nc" id="L228">                        Log.e(TAG, &quot;Error parsing Friends Json&quot;, e);</span>
+<span class="fc" id="L229">                    }</span>
+
+<span class="fc" id="L231">                },</span>
+                VolleyError -&gt; {
+<span class="nc" id="L233">                    Log.e(TAG, &quot;Error getting Friends&quot;, VolleyError);</span>
+<span class="nc" id="L234">                }</span>
+        );
+<span class="fc" id="L236">        VolleySingleton.getInstance(getContext()).addToRequestQueue(jsonArrayRequest);</span>
+
+        // People who sent you a request
+<span class="fc" id="L239">        friendsURL = ApiConstants.BASE_URL + ApiConstants.GET_Received_FRIENDS_ENDPOINT + &quot;?id=&quot; + userId;</span>
+<span class="fc" id="L240">        jsonArrayRequest = new JsonArrayRequest(</span>
+                Request.Method.GET,
+                friendsURL,
+                null,
+                response -&gt; {
+                    try{
+<span class="fc" id="L246">                        Log.d(TAG, &quot;People who sent you Response: &quot;+ response.toString());</span>
+<span class="pc bpc" id="L247" title="1 of 2 branches missed.">                        for (int i = 0; i &lt; response.length(); i++) {</span>
+<span class="nc" id="L248">                            JSONObject friendJson = response.getJSONObject(i);</span>
+<span class="nc" id="L249">                            friendJson.put(&quot;state&quot;, SingleFriendActivity.RECEIVED_REQUEST_STATE);</span>
+<span class="nc" id="L250">                            friendsReceivedId.add(friendJson.getInt(&quot;id&quot;));</span>
+<span class="nc" id="L251">                            friendList.add(new Friend(friendJson));</span>
+                        }
+<span class="nc" id="L253">                    } catch (JSONException e) {</span>
+<span class="nc" id="L254">                        Log.e(TAG, &quot;Error parsing Friends Json&quot;, e);</span>
+<span class="fc" id="L255">                    }</span>
+
+<span class="fc" id="L257">                },</span>
+                volleyError -&gt; {
+<span class="nc" id="L259">                    Log.e(TAG, &quot;Error getting Friends&quot;, volleyError);</span>
+<span class="nc" id="L260">                    String responseBody = &quot;&quot;;</span>
+<span class="nc bnc" id="L261" title="All 2 branches missed.">                    if(volleyError.networkResponse.data != null) {</span>
+<span class="nc" id="L262">                        responseBody = new String(volleyError.networkResponse.data, StandardCharsets.UTF_8);</span>
+                    }
+<span class="nc" id="L264">                    Log.e(TAG, &quot;Accepting friends error response body: &quot; + responseBody);</span>
+<span class="nc" id="L265">                }</span>
+        );
+<span class="fc" id="L267">        VolleySingleton.getInstance(getContext()).addToRequestQueue(jsonArrayRequest);</span>
+
+        // People you sent a friend request to
+<span class="fc" id="L270">        friendsURL = ApiConstants.BASE_URL + ApiConstants.GET_SENT_FRIENDS_ENDPOINT + &quot;?id=&quot; + userId;</span>
+<span class="fc" id="L271">        jsonArrayRequest = new JsonArrayRequest(</span>
+                Request.Method.GET,
+                friendsURL,
+                null,
+                response -&gt; {
+                    try{
+<span class="fc" id="L277">                        Log.d(TAG, &quot;People you sent Response: &quot;+ response.toString());</span>
+
+<span class="pc bpc" id="L279" title="1 of 2 branches missed.">                        for (int i = 0; i &lt; response.length(); i++) {</span>
+<span class="nc" id="L280">                            JSONObject friendJson = response.getJSONObject(i);</span>
+<span class="nc" id="L281">                            friendJson.put(&quot;state&quot;, SingleFriendActivity.SENT_REQUEST_STATE);</span>
+<span class="nc" id="L282">                            friendsSentId.add(friendJson.getInt(&quot;id&quot;));</span>
+
+<span class="nc" id="L284">                            friendList.add(new Friend(friendJson));</span>
+                        }
+<span class="nc" id="L286">                    } catch (JSONException e) {</span>
+<span class="nc" id="L287">                        Log.e(TAG, &quot;Error parsing Friends Json&quot;, e);</span>
+<span class="fc" id="L288">                    }</span>
+
+<span class="fc" id="L290">                },</span>
+                volleyError -&gt; {
+<span class="nc" id="L292">                    Log.e(TAG, &quot;Error getting Friends&quot;, volleyError);</span>
+<span class="nc" id="L293">                    String responseBody = &quot;&quot;;</span>
+<span class="nc bnc" id="L294" title="All 2 branches missed.">                    if(volleyError.networkResponse.data != null) {</span>
+<span class="nc" id="L295">                        responseBody = new String(volleyError.networkResponse.data, StandardCharsets.UTF_8);</span>
+                    }
+<span class="nc" id="L297">                    Log.e(TAG, &quot;Accepting friends error response body: &quot; + responseBody);</span>
+
+<span class="nc" id="L299">                }</span>
+        );
+<span class="fc" id="L301">        VolleySingleton.getInstance(getContext()).addToRequestQueue(jsonArrayRequest);</span>
+
+<span class="fc" id="L303">        startingFriendAdapter.notifyDataSetChanged();</span>
+<span class="fc" id="L304">    }</span>
+
+
+    /**
+     * Goes to an activity displaying the friend
+     * @param friend
+     */
+    @Override
+    public void onFriendClick(Friend friend) {
+<span class="nc" id="L313">        Intent intent = new Intent(getActivity(), SingleFriendActivity.class);</span>
+<span class="nc" id="L314">        int uid = prefs.getInt(KEY_USER_ID, -1);</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">        if (uid == -1) {</span>
+<span class="nc" id="L316">            Log.e(TAG, &quot;User ID not found in shared preferences.&quot;);</span>
+<span class="nc" id="L317">            return;</span>
+        }
+<span class="nc" id="L319">        intent.putExtra(&quot;FID&quot;, friend.getId());</span>
+<span class="nc" id="L320">        intent.putExtra(&quot;USERNAME&quot;, friend.getUsername());</span>
+<span class="nc" id="L321">        intent.putExtra(&quot;STATE&quot;, friend.getState());</span>
+<span class="nc" id="L322">        startActivity(intent);</span>
+<span class="nc" id="L323">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Generated by the Android Gradle plugin 8.13.1</div></body></html>

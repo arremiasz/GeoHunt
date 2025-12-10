@@ -1,25 +1,37 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+    <!-- Dark mode theme -->
     <style name="Theme.GeoHunt" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
-        <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/purple_200</item>
-        <item name="colorPrimaryVariant">@color/purple_700</item>
-        <item name="colorOnPrimary">@color/white</item>
-        <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/teal_200</item>
-        <item name="colorSecondaryVariant">@color/teal_200</item>
+        <!-- Primary brand color - Lighter green for dark mode -->
+        <item name="colorPrimary">@color/primary_light</item>
+        <item name="colorPrimaryVariant">@color/primary</item>
+        <item name="colorOnPrimary">@color/black</item>
+        
+        <!-- Secondary brand color - Amber Gold -->
+        <item name="colorSecondary">@color/secondary_light</item>
+        <item name="colorSecondaryVariant">@color/secondary</item>
         <item name="colorOnSecondary">@color/black</item>
+        
+        <!-- Dark mode background -->
+        <item name="android:colorBackground">#FF121212</item>
+        <item name="colorSurface">#FF1E1E1E</item>
+        <item name="colorOnSurface">@color/white</item>
+        
+        <!-- Error color -->
+        <item name="colorError">@color/error</item>
+        <item name="colorOnError">@color/white</item>
 
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <!-- Status bar color -->
+        <item name="android:statusBarColor">@color/primary_dark</item>
         <item name="android:windowLightStatusBar">false</item>
-        <!-- Customize your theme here. -->
-        <item name="actionBarStyle">@style/Widget.App.ActionBar</item>
+        
+        <!-- ActionBar styling -->
+        <item name="actionBarStyle">@style/Widget.GeoHunt.ActionBar.Dark</item>
     </style>
 
-    <!-- ActionBar Theme -->
-    <style name="Widget.App.ActionBar" parent="Widget.MaterialComponents.ActionBar.Primary">
-        <item name="background">@color/purple_700</item>
+    <!-- ActionBar Theme for Dark Mode -->
+    <style name="Widget.GeoHunt.ActionBar.Dark" parent="Widget.MaterialComponents.ActionBar.Primary">
+        <item name="background">@color/primary_dark</item>
+        <item name="titleTextColor">@color/white</item>
     </style>
 
 </resources>

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PlaceDetailActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.jubair5.geohunt.places</a> &gt; <span class="el_source">PlaceDetailActivity.java</span></div><h1>PlaceDetailActivity.java</h1><pre class="source lang-java linenums">/**
+ * Activity for displaying details of a place.
+ * @author Alex Remiasz
+ */
+package com.jubair5.geohunt.places;
+
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.os.Bundle;
+import android.util.Log;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.StringRequest;
+import com.bumptech.glide.Glide;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.jubair5.geohunt.R;
+import com.jubair5.geohunt.network.ApiConstants;
+import com.jubair5.geohunt.network.VolleySingleton;
+
+<span class="fc" id="L32">public class PlaceDetailActivity extends AppCompatActivity implements OnMapReadyCallback {</span>
+
+    private static final String TAG = &quot;PlaceDetailActivity&quot;;
+    private MapView mapView;
+    private GoogleMap googleMap;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="fc" id="L40">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L41">        setContentView(R.layout.place_detail_activity);</span>
+
+<span class="pc bpc" id="L43" title="1 of 2 branches missed.">        if (getSupportActionBar() != null) {</span>
+<span class="fc" id="L44">            getSupportActionBar().setTitle(&quot;My Place&quot;);</span>
+        }
+
+<span class="fc" id="L47">        ImageView imageView = findViewById(R.id.place_image_detail);</span>
+<span class="fc" id="L48">        TextView latitudeText = findViewById(R.id.latitude_text);</span>
+<span class="fc" id="L49">        TextView longitudeText = findViewById(R.id.longitude_text);</span>
+<span class="fc" id="L50">        Button deleteButton = findViewById(R.id.delete_button);</span>
+<span class="fc" id="L51">        mapView = findViewById(R.id.map_view);</span>
+
+<span class="fc" id="L53">        byte[] imageUrl = getIntent().getByteArrayExtra(&quot;IMAGE_URL&quot;);</span>
+<span class="fc" id="L54">        double latitude = getIntent().getDoubleExtra(&quot;LATITUDE&quot;, 0);</span>
+<span class="fc" id="L55">        double longitude = getIntent().getDoubleExtra(&quot;LONGITUDE&quot;, 0);</span>
+
+<span class="fc" id="L57">        Glide.with(this).load(imageUrl).into(imageView);</span>
+<span class="fc" id="L58">        latitudeText.setText(&quot;Latitude: &quot; + latitude);</span>
+<span class="fc" id="L59">        longitudeText.setText(&quot;Longitude: &quot; + longitude);</span>
+
+<span class="fc" id="L61">        deleteButton.setOnClickListener(v -&gt; showDeleteConfirmationDialog());</span>
+
+<span class="fc" id="L63">        mapView.onCreate(savedInstanceState);</span>
+<span class="fc" id="L64">        mapView.getMapAsync(this);</span>
+
+<span class="fc" id="L66">        Log.d(TAG, &quot;Viewing Challenge with ID: &quot; + getIntent().getIntExtra(&quot;CID&quot;, -1));</span>
+<span class="fc" id="L67">    }</span>
+
+    /**
+     * Shows a confirmation dialog before deleting the place.
+     */
+    private void showDeleteConfirmationDialog() {
+<span class="fc" id="L73">        new AlertDialog.Builder(this)</span>
+<span class="fc" id="L74">                .setTitle(&quot;Delete Place&quot;)</span>
+<span class="fc" id="L75">                .setMessage(&quot;Are you sure you want to delete this place?&quot;)</span>
+<span class="fc" id="L76">                .setPositiveButton(&quot;Delete&quot;, (dialog, which) -&gt; deletePlace())</span>
+<span class="fc" id="L77">                .setNegativeButton(&quot;Cancel&quot;, null)</span>
+<span class="fc" id="L78">                .show();</span>
+<span class="fc" id="L79">    }</span>
+
+    /**
+     * Creates and sends a DELETE request to the server to delete the current place.
+     */
+    private void deletePlace() {
+<span class="fc" id="L85">        int cid = getIntent().getIntExtra(&quot;CID&quot;, -1);</span>
+<span class="fc" id="L86">        int uid = getIntent().getIntExtra(&quot;UID&quot;, -1);</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">        if (cid == -1) {</span>
+<span class="nc" id="L88">            Toast.makeText(this, &quot;Error: Place ID not found!&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L89">            return;</span>
+<span class="pc bpc" id="L90" title="1 of 2 branches missed.">        } else if (uid == -1) {</span>
+<span class="nc" id="L91">            Toast.makeText(this, &quot;Error: User ID not found!&quot;, Toast.LENGTH_SHORT).show();</span>
+        }
+
+<span class="fc" id="L94">        String url = ApiConstants.BASE_URL + ApiConstants.DEL_SUBMITTED_PLACE_ENDPOINT + &quot;?userId=&quot; + uid + &quot;&amp;chalId=&quot; + cid;</span>
+
+<span class="fc" id="L96">        StringRequest deleteRequest = new StringRequest(Request.Method.DELETE, url,</span>
+                response -&gt; {
+<span class="fc" id="L98">                    Log.d(&quot;PlaceDetailActivity&quot;, &quot;Delete successful: &quot; + response);</span>
+<span class="fc" id="L99">                    Toast.makeText(this, &quot;Place deleted!&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="fc" id="L100">                    setResult(Activity.RESULT_OK);</span>
+<span class="fc" id="L101">                    finish();</span>
+<span class="fc" id="L102">                },</span>
+                error -&gt; {
+<span class="nc" id="L104">                    Log.e(&quot;PlaceDetailActivity&quot;, &quot;Failed to delete place&quot;, error);</span>
+<span class="nc" id="L105">                    Toast.makeText(this, &quot;Failed to delete place. Please try again.&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L106">                });</span>
+
+<span class="fc" id="L108">        VolleySingleton.getInstance(this).addToRequestQueue(deleteRequest);</span>
+<span class="fc" id="L109">    }</span>
+
+    @Override
+    public void onMapReady(@NonNull GoogleMap googleMap) {
+<span class="fc" id="L113">        this.googleMap = googleMap;</span>
+<span class="fc" id="L114">        double latitude = getIntent().getDoubleExtra(&quot;LATITUDE&quot;, 0);</span>
+<span class="fc" id="L115">        double longitude = getIntent().getDoubleExtra(&quot;LONGITUDE&quot;, 0);</span>
+<span class="fc" id="L116">        LatLng location = new LatLng(latitude, longitude);</span>
+<span class="fc" id="L117">        googleMap.addMarker(new MarkerOptions().position(location).title(getIntent().getStringExtra(&quot;NAME&quot;)));</span>
+<span class="fc" id="L118">        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15f));</span>
+<span class="fc" id="L119">    }</span>
+
+    @Override
+    protected void onResume() {
+<span class="fc" id="L123">        super.onResume();</span>
+<span class="fc" id="L124">        mapView.onResume();</span>
+<span class="fc" id="L125">    }</span>
+
+    @Override
+    protected void onPause() {
+<span class="fc" id="L129">        super.onPause();</span>
+<span class="fc" id="L130">        mapView.onPause();</span>
+<span class="fc" id="L131">    }</span>
+
+    @Override
+    protected void onDestroy() {
+<span class="fc" id="L135">        super.onDestroy();</span>
+<span class="fc" id="L136">        mapView.onDestroy();</span>
+<span class="fc" id="L137">    }</span>
+
+    @Override
+    public void onLowMemory() {
+<span class="nc" id="L141">        super.onLowMemory();</span>
+<span class="nc" id="L142">        mapView.onLowMemory();</span>
+<span class="nc" id="L143">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Generated by the Android Gradle plugin 8.13.1</div></body></html>

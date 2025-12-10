@@ -1,13 +1,13 @@
-/**
- * Photo Class - Represents a submission photo from the gallery
- * @author Alex Remiasz
- */
 package com.jubair5.geohunt.game;
 
 import android.util.Base64;
 import android.util.Log;
 import org.json.JSONObject;
 
+/**
+ * Photo Class - Represents a submission photo from the gallery
+ * @author Alex Remiasz
+ */
 public class Photo {
     private String photoUrl;
     private byte[] photoData;

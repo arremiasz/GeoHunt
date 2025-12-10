@@ -5,6 +5,7 @@ import org.json.JSONObject;
 
 /**
  * Model class representing an item in the shop.
+ * @author Alex Remiasz
  */
 public class ShopItem {
     private int id;
