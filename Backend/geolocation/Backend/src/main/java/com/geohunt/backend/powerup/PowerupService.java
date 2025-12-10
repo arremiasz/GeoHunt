@@ -414,4 +414,15 @@ public class PowerupService {
         Powerup p = powerup.get();
         return p.getAccounts();
     }
+
+    public ResponseEntity getDistanceFromChallenge(long chalid, Location location){
+        Optional<Challenges> chal = challengesRepository.findById(chalid);
+        if(chal.isEmpty()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Challenge not found");
+        }
+        Challenges c = chal.get();
+        Location end = new Location(c.getLatitude(), c.getLongitude());
+        double distanceMiles = location.distanceMiles(end);
+        return ResponseEntity.status(HttpStatus.OK).body(distanceMiles);
+    }
 }
