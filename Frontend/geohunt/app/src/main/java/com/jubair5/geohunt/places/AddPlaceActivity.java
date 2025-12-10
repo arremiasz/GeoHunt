@@ -1,7 +1,3 @@
-/**
- * Activity for adding places
- * @author Alex Remiasz
- */
 package com.jubair5.geohunt.places;
 
 import android.Manifest;
@@ -48,6 +44,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Activity for adding places
+ * @author Alex Remiasz
+ */
 public class AddPlaceActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private static final String TAG = "AddPlaceActivity";

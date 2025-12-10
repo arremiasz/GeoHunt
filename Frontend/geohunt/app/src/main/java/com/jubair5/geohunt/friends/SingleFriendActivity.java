@@ -1,7 +1,3 @@
-/**
- * Activity used to display another account so that you can view stats or friend them
- * @author Nathan Imig
- */
 package com.jubair5.geohunt.friends;
 
 import android.content.Context;
@@ -27,6 +23,10 @@ import com.jubair5.geohunt.network.VolleySingleton;
 
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Activity used to display another account so that you can view stats or friend them
+ * @author Nathan Imig
+ */
 public class SingleFriendActivity extends AppCompatActivity {
 
     private static final String TAG = "SingleFriendActivity";

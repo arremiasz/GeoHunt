@@ -1,7 +1,3 @@
-/**
- * Adapter class that handles the shop display
- * @author Alex Remiasz
- */
 package com.jubair5.geohunt.shop;
 
 import android.view.LayoutInflater;
@@ -18,7 +14,8 @@ import com.jubair5.geohunt.R;
 import java.util.List;
 
 /**
- * Adapter for displaying shop items in a RecyclerView.
+ * Adapter class that handles the shop display
+ * @author Alex Remiasz
  */
 public class ShopAdapter extends RecyclerView.Adapter<ShopAdapter.ShopViewHolder> {
 

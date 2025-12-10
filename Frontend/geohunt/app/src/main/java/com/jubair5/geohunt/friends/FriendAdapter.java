@@ -1,7 +1,3 @@
-/**
- * Adapter class that handles the list of friends and accounts searched
- * @author Nathan Imig
- */
 package com.jubair5.geohunt.friends;
 
 
@@ -25,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.android.volley.Request;
 import com.android.volley.toolbox.StringRequest;
 import com.jubair5.geohunt.R;
+import com.jubair5.geohunt.friends.Friend;
 import com.jubair5.geohunt.friends.SingleFriendActivity;
 import com.jubair5.geohunt.network.ApiConstants;
 import com.jubair5.geohunt.network.VolleySingleton;
@@ -32,6 +29,10 @@ import com.jubair5.geohunt.network.VolleySingleton;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+/**
+ * Adapter class that handles the list of friends and accounts searched
+ * @author Nathan Imig
+ */
 public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder> {
 
     private static final String TAG = "FriendsFragment";
