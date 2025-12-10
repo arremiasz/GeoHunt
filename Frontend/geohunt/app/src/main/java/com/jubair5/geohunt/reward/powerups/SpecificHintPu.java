@@ -2,17 +2,17 @@ package com.jubair5.geohunt.reward.powerups;
 
 import com.jubair5.geohunt.R;
 
-public class hintPu implements PowerUp{
+public class SpecificHintPu implements PowerUp{
     private String title;
     private String description;
     private int resource;
     private int amount;
 
 
-    public hintPu(){
-        this.title = "Hint PowerUp";
-        this.description = "Gives Distance Away from the current Location";
-        this.resource = R.drawable.hint_pu;
+    public SpecificHintPu(){
+        this.title = "Specific Hint PowerUp";
+        this.description = "Points an Arrow in the direction of the location for a limited amount of time";
+        this.resource = R.drawable.specific_hint_pu;
         this.amount = 0;
     }
 

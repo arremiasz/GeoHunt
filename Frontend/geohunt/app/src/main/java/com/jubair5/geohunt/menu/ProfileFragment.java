@@ -31,9 +31,6 @@ import android.util.Base64;
 import android.widget.ImageView;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.canhub.cropper.CropImageContract;
-import com.canhub.cropper.CropImageContractOptions;
-import com.canhub.cropper.CropImageOptions;
 
 import java.io.ByteArrayOutputStream;
 
@@ -49,8 +46,10 @@ import com.jubair5.geohunt.places.PlaceDetailActivity;
 import com.jubair5.geohunt.places.PlacesAdapter;
 import com.jubair5.geohunt.network.ApiConstants;
 import com.jubair5.geohunt.network.VolleySingleton;
+import com.jubair5.geohunt.reward.powerups.LargeTimeReductionPU;
 import com.jubair5.geohunt.reward.powerups.PowerUp;
 import com.jubair5.geohunt.reward.powerups.PowerUpAdapter;
+import com.jubair5.geohunt.reward.powerups.SpecificHintPu;
 import com.jubair5.geohunt.reward.powerups.TimeReductionPU;
 import com.jubair5.geohunt.reward.powerups.hintPu;
 
@@ -103,19 +102,7 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
                 }
             });
 
-    private final ActivityResultLauncher<CropImageContractOptions> cropImage = registerForActivityResult(
-            new CropImageContract(),
-            result -> {
-                if (result.isSuccessful()) {
-                    Bitmap bitmap = BitmapFactory.decodeFile(result.getUriFilePath(requireContext(), true));
-                    editProfileImage.setImageBitmap(bitmap);
-                    newPfpBitmap = bitmap;
-                    isPfpChanged = true;
-                } else {
-                    Log.e(TAG, "Image crop failed", result.getError());
-                    Toast.makeText(getContext(), "Failed to crop image", Toast.LENGTH_SHORT).show();
-                }
-            });
+
 
     @Nullable
     @Override
@@ -165,7 +152,6 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         saveChangesButton.setOnClickListener(v -> updatePreface());
         cancelButton.setOnClickListener(v -> showDisplayOptions());
         logoutButton.setOnClickListener(v -> logout());
-        changePfpButton.setOnClickListener(v -> startImageCrop());
 
         editCurrentPassword.setOnKeyListener((v, keyCode, event) -> {
             editCurrentPasswordLayout.setError(null);
@@ -175,21 +161,7 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
         return root;
     }
 
-    /**
-     * Launches the image cropper activity.
-     * Configures the cropper to allow picking from gallery, sets a 1:1 aspect
-     * ratio,
-     * and fixes the aspect ratio for a square crop.
-     */
-    private void startImageCrop() {
-        CropImageOptions options = new CropImageOptions();
-        options.imageSourceIncludeGallery = true;
-        options.imageSourceIncludeCamera = false;
-        options.aspectRatioX = 1;
-        options.aspectRatioY = 1;
-        options.fixAspectRatio = true;
-        cropImage.launch(new CropImageContractOptions(null, options));
-    }
+
 
     /**
      * Loads the user's profile picture from SharedPreferences and displays it.
@@ -248,13 +220,23 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
                         powerUpList.clear();
                         for (int i = 0; i < response.length(); i++) {
                             PowerUp currentPowerUp;
-                            if(response.getJSONObject(i).getString("type").equals("LOCATION_Hint_General")){
+                            if(response.getJSONObject(i).getString("type").equals("LOCATION_HINT_GENERAL")){
                                 currentPowerUp = new hintPu();
                                 currentPowerUp.setAmount(1);
                                 powerUpList.add(currentPowerUp);
                             }
-                            if(response.getJSONObject(i).getString("type").equals("MINUS_MINUETS")){
+                            else if(response.getJSONObject(i).getString("type").equals("LOCATION_HINT_SPECIFIC")){
+                                currentPowerUp = new SpecificHintPu();
+                                currentPowerUp.setAmount(1);
+                                powerUpList.add(currentPowerUp);
+                            }
+                            else if(response.getJSONObject(i).getString("type").equals("MINUS_MINUETS")){
                                 currentPowerUp = new TimeReductionPU();
+                                currentPowerUp.setAmount(1);
+                                powerUpList.add(currentPowerUp);
+                            }
+                            else if(response.getJSONObject(i).getString("type").equals("MINUS_MORE_MINUETS")){
+                                currentPowerUp = new LargeTimeReductionPU();
                                 currentPowerUp.setAmount(1);
                                 powerUpList.add(currentPowerUp);
                             }

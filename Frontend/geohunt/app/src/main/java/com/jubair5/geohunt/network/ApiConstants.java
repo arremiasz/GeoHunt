@@ -6,6 +6,8 @@ package com.jubair5.geohunt.network;
  */
 public final class ApiConstants {
 
+
+
     private ApiConstants() {}
 
     // Base URL for all API calls
@@ -53,6 +55,7 @@ public final class ApiConstants {
 
     // PowerUp EndPoints
     public static final String GET_POWERUPS_ENDPOINT = "powerup/user";
+    public static final String GET_REWARDS = "";
     public static final String RESET_THEMES = "";
     public static final String GET_THEMES_ENDPOINT = "";
     public static final String PURCHASE_THEMES = "";

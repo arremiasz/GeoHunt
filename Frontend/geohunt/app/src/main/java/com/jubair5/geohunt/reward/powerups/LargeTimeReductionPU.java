@@ -12,7 +12,7 @@ public class LargeTimeReductionPU implements PowerUp{
     public LargeTimeReductionPU(){
         title = "Large Time Reduction PowerUp";
         description = "Reduces the time of the current make by 5 minutes";
-        resource = R.drawable.time_reduction_pu;
+        resource = R.drawable.large_time_reduction;
         amount = 0;
     }
 

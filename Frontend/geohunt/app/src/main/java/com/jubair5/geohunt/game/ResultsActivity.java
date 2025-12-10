@@ -17,6 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -36,7 +37,9 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.jubair5.geohunt.R;
 import com.jubair5.geohunt.network.ApiConstants;
 import com.jubair5.geohunt.network.VolleySingleton;
+import com.jubair5.geohunt.reward.powerups.LargeTimeReductionPU;
 import com.jubair5.geohunt.reward.powerups.PowerUp;
+import com.jubair5.geohunt.reward.powerups.SpecificHintPu;
 import com.jubair5.geohunt.reward.powerups.TimeReductionPU;
 import com.jubair5.geohunt.reward.powerups.hintPu;
 
@@ -147,7 +150,7 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
         allPhotosList = new ArrayList<>();
         displayedPhotosList = new ArrayList<>();
         photoAdapter = new PhotoAdapter(this, displayedPhotosList);
-        galleryRecyclerView.setLayoutManager(new androidx.recyclerview.widget.GridLayoutManager(this, 2));
+        galleryRecyclerView.setLayoutManager(new GridLayoutManager(this, 2));
         galleryRecyclerView.setAdapter(photoAdapter);
 
         loadMorePhotosButton.setOnClickListener(v -> loadMorePhotos());
@@ -204,29 +207,60 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
 
     }
 
+
+
     /**
      * Returns an amount of currency based off of results and time
      * @param results
      * @param time
      * @return amount of currency
      */
-    private int getPoints(double results, int time) {
-        return 500;
-    }
-
     private void getRewards(double results, int time){
-        pointsText.setText(getPoints(results,time)+ "");
-        pointsUnitsLabel.setText("points");
-        int type = (int) (Math.random()*2);
-        PowerUp powerUp;
+        SharedPreferences prefs = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
+        int userId = prefs.getInt(KEY_USER_ID, -1);
+        if (userId == -1) {
+            Log.e(TAG, "User ID not found in shared preferences.");
+            return;
+        }
 
-        if(type == 0){
-            powerUp = new TimeReductionPU();
-        }
-        else{
-            powerUp = new hintPu();
-        }
-        newPowerUp.setOnClickListener(v -> showDescription(powerUp));
+        // Update
+        String url = ApiConstants.BASE_URL + ApiConstants.GET_REWARDS + "?uid=" + userId;
+
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+                    Log.d(TAG, "Account Power Ups Response: " + response.toString());
+                    try {
+                        pointsText.setText(response.getJSONObject(0).optString("points"));
+                        pointsUnitsLabel.setText("points");
+                        int type = response.getJSONObject(1).optInt("id");
+                        PowerUp powerUp;
+
+                        if(type == 1){
+                            powerUp = new hintPu();
+                        }
+                        else if(type == 2){
+                            powerUp = new SpecificHintPu();
+                        }
+                        else if(type == 3){
+                            powerUp = new TimeReductionPU();
+                        }
+                        else if(type == 4){
+                            powerUp = new LargeTimeReductionPU();
+                        } else {
+                            powerUp = null;
+                        }
+                        newPowerUp.setOnClickListener(v -> showDescription(powerUp));
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Error parsing power ups JSON", e);
+                    }},
+                error -> {
+                        Log.e(TAG, "Error getting rewards", error);
+                    });
+
+            VolleySingleton.getInstance(this).addToRequestQueue(jsonArrayRequest);
 
 
 
