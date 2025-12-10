@@ -4,6 +4,9 @@ package com.geohunt.backend.util;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * @author evan juslon
+ */
 @Getter
 @Setter
 public class Location {
@@ -55,6 +58,14 @@ public class Location {
 
     private double degreesToRadians(double angleDegrees){
         return angleDegrees * (Math.PI/180);
+    }
+
+    public double latToMeters(){  //ONLY FOR METERS!!!!!
+        return latitude * 111000.0;
+    }
+
+    public double lonToMeters(){ //ONLY FOR METERS!!!!
+        return longitude * (111000.0 * Math.cos(Math.toRadians(latitude)));
     }
 
 }

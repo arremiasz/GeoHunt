@@ -2,7 +2,6 @@ package com.jubair5.geohunt.network;
 
 /**
  * A final class to hold all global API constants for the application.
- * 
  * @author Alex Remiasz
  */
 public final class ApiConstants {
@@ -33,5 +32,10 @@ public final class ApiConstants {
     public static final String GET_CHALLENGE_BY_ID_ENDPOINT = "/geohunt/getChallengeByID";
     public static final String RATE_CHALLENGE_ENDPOINT = "/geohunt/rate";
     public static final String GET_COMMENTS_ENDPOINT = "/challenges/";
+
+    // Shop Endpoints
+    public static final String GET_POINTS_ENDPOINT = "/points";
+    public static final String PURCHASE_ITEM_ENDPOINT = "/shop/purchase";
+    public static final String GET_SHOP_ITEMS_ENDPOINT = "/shop/all";
 
 }

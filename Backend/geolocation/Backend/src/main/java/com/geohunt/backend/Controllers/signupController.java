@@ -1,5 +1,7 @@
 package com.geohunt.backend.Controllers;
 
+import com.geohunt.backend.Shop.UserInventory;
+import com.geohunt.backend.Shop.UserInventoryRepository;
 import com.geohunt.backend.database.Account;
 import com.geohunt.backend.Services.AccountService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 
 
 @Tag(name = "Accounts Management", description = "Operations related to new and existing accounts")
@@ -23,6 +26,9 @@ public class signupController {
     @Autowired
     private AccountService accountService;
 
+    @Autowired
+    private UserInventoryRepository userInventoryRepository;
+
     @Operation(summary = "Create a new account")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Account created successfully",
@@ -31,7 +37,7 @@ public class signupController {
                     content = @Content)
     })
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
-            description = "Account object containing username, email, and password",
+            description = "Account object containing username, email, and password. pfp can be optional as a byte string.",
             required = true,
             content = @Content(schema = @Schema(implementation = Account.class)))
     @PostMapping(value = "/signup")
@@ -142,6 +148,147 @@ public class signupController {
             return accountService.updatedAccount(id, account);
         } catch(IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/account/getPfp")
+    public ResponseEntity<String> getPfp(@RequestParam long id) {
+        return accountService.getPfp(id);
+    }
+
+    @Operation(
+            summary = "Get a user's total points",
+            description = """
+                Retrieves the total point balance stored on the user's account.
+                Points are used for purchasing shop items such as decorations,
+                cosmetics, and powerups.
+                """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Successfully retrieved user points.",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    value = "4120"
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Account not found.",
+                    content = @Content
+            )
+    })
+    @GetMapping("/points")
+    public ResponseEntity getPoints(
+            @Parameter(description = "User ID", required = true)
+            @RequestParam long id
+    ) {
+        try {
+            Account acc = accountService.getAccountById(id);
+            return ResponseEntity.ok(acc.getTotalPoints());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
+
+    @Operation(
+            summary = "Add points to a user's account",
+            description = """
+                Adds points to a user's account. 
+                Points added here can be used in the shop.
+                """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Points successfully added.",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    value = "\"Points added successfully.\""
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Account not found.",
+                    content = @Content
+            )
+    })
+    @PutMapping("/addPoints")
+    public ResponseEntity addPoints(
+            @Parameter(description = "User ID") @RequestParam long id,
+            @Parameter(description = "Amount of points to add") @RequestParam long amount
+    ) {
+        try {
+            Account acc = accountService.getAccountById(id);
+            accountService.giveAccountMoney(acc, amount);
+            return ResponseEntity.ok("Points added successfully.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(404).body("Account not found.");
+        }
+    }
+
+
+
+    @Operation(
+            summary = "Get a user's inventory (cosmetics, decorations, powerups)",
+            description = """
+                Returns all items the user owns from the shop system.  
+                Includes equipped state, quantity, acquisition date, and item metadata.
+                """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Successfully retrieved user inventory.",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = UserInventory.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                    [
+                                      {
+                                        "id": 12,
+                                        "equipped": true,
+                                        "quantity": 1,
+                                        "acquiredAt": "2025-01-03T22:14:55.123+00:00",
+                                        "shopItem": {
+                                          "id": 4,
+                                          "name": "Golden Crown",
+                                          "description": "A rare cosmetic",
+                                          "image": "base64string",
+                                          "itemType": "DECORATION",
+                                          "price": 2500
+                                        }
+                                      }
+                                    ]
+                                    """
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Account not found.",
+                    content = @Content
+            )
+    })
+    @GetMapping("/inventory")
+    public ResponseEntity getInventory(
+            @Parameter(description = "User ID", required = true)
+            @RequestParam long id
+    ) {
+        try {
+            Account acc = accountService.getAccountById(id);
+            List<UserInventory> inv = userInventoryRepository.findAllByUser(acc);
+            return ResponseEntity.ok(inv);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(404).body("Account not found.");
         }
     }
 }
