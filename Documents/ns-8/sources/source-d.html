@@ -5,7 +5,7 @@
 <html id="htmlId">
 <head>
   <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
-  <title>Coverage Report > Notifications</title>
+  <title>Coverage Report > ChallengesRepository</title>
   <style type="text/css">
     @import "../../css/coverage.css";
     @import "../../css/idea.min.css";
@@ -22,22 +22,16 @@ Current scope:     <a href="../../index.html">all classes</a>
     <a href="../index.html">com.geohunt.backend.database</a>
 </div>
 
-<h1>Coverage Summary for Class: Notifications (com.geohunt.backend.database)</h1>
+<h1>Coverage Summary for Class: ChallengesRepository (com.geohunt.backend.database)</h1>
 
 <table class="coverageStats">
-
 <tr>
   <th class="name">Class</th>
 </tr>
-  <tr>
-    <td class="name">Notifications$HibernateInstantiator</td>
-  </tr>
-  <tr>
-    <td class="name">Notifications$HibernateProxy</td>
-  </tr>
 <tr>
-  <td class="name"><strong>Total</strong></td>
+  <td class="name">ChallengesRepository</td>
 </tr>
+
 </table>
 
 <br/>
@@ -47,32 +41,22 @@ Current scope:     <a href="../../index.html">all classes</a>
 <pre>
 <code class="sourceCode" id="sourceCode">&nbsp;package com.geohunt.backend.database;
 &nbsp;
-&nbsp;import com.fasterxml.jackson.annotation.JsonBackReference;
-&nbsp;import jakarta.persistence.*;
-&nbsp;import lombok.Getter;
-&nbsp;import lombok.NoArgsConstructor;
-&nbsp;import lombok.Setter;
+&nbsp;import jakarta.transaction.Transactional;
+&nbsp;import org.springframework.data.jpa.repository.JpaRepository;
+&nbsp;import org.springframework.stereotype.Repository;
 &nbsp;
-&nbsp;import java.time.LocalDate;
-&nbsp;import java.time.LocalDateTime;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
 &nbsp;
-&nbsp;@Entity
-&nbsp;@Getter
-&nbsp;@Setter
-&nbsp;@NoArgsConstructor
-&nbsp;public class Notifications {
-&nbsp;    @GeneratedValue(strategy= GenerationType.IDENTITY)
-&nbsp;    private @Id long id;
-&nbsp;
-&nbsp;    private String message;
-&nbsp;    private boolean readStatus = false;
-&nbsp;    private LocalDateTime sentAt;
-&nbsp;
-&nbsp;    @ManyToOne(fetch = FetchType.LAZY)
-&nbsp;    @JoinColumn(name=&quot;account_id&quot;)
-&nbsp;    @JsonBackReference(&quot;account-notifications&quot;)
-&nbsp;    private Account target;
-&nbsp;
+&nbsp;@Repository
+&nbsp;public interface ChallengesRepository extends JpaRepository&lt;Challenges, Long&gt; {
+&nbsp;    List&lt;Challenges&gt; findByCreator_Id(Long accountId);
+&nbsp;    Optional&lt;Challenges&gt; findById(long id);
+&nbsp;    List&lt;Challenges&gt; getChallengesByCreator(Account account);
+&nbsp;    Optional&lt;Challenges&gt; findByLatitudeAndLongitude(double latitude, double longitude);
+&nbsp;    Optional&lt;Challenges&gt; findByStreetviewurl(String streetviewurl);
+&nbsp;    @Transactional
+&nbsp;    void deleteByCreator_Id(Long accountId);
 &nbsp;}
 </code>
 </pre>
@@ -97,7 +81,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2025-12-09 20:59</div>
+    <div style="float:right;">generated on 2025-12-09 21:04</div>
 </div>
 </body>
 </html>

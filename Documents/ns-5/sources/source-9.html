@@ -5,7 +5,7 @@
 <html id="htmlId">
 <head>
   <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
-  <title>Coverage Report > UserInventory</title>
+  <title>Coverage Report > TransactionsRepository</title>
   <style type="text/css">
     @import "../../css/coverage.css";
     @import "../../css/idea.min.css";
@@ -22,22 +22,16 @@ Current scope:     <a href="../../index.html">all classes</a>
     <a href="../index.html">com.geohunt.backend.Shop</a>
 </div>
 
-<h1>Coverage Summary for Class: UserInventory (com.geohunt.backend.Shop)</h1>
+<h1>Coverage Summary for Class: TransactionsRepository (com.geohunt.backend.Shop)</h1>
 
 <table class="coverageStats">
-
 <tr>
   <th class="name">Class</th>
 </tr>
-  <tr>
-    <td class="name">UserInventory$HibernateInstantiator</td>
-  </tr>
-  <tr>
-    <td class="name">UserInventory$HibernateProxy</td>
-  </tr>
 <tr>
-  <td class="name"><strong>Total</strong></td>
+  <td class="name">TransactionsRepository</td>
 </tr>
+
 </table>
 
 <br/>
@@ -47,35 +41,22 @@ Current scope:     <a href="../../index.html">all classes</a>
 <pre>
 <code class="sourceCode" id="sourceCode">&nbsp;package com.geohunt.backend.Shop;
 &nbsp;
-&nbsp;import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 &nbsp;import com.geohunt.backend.database.Account;
-&nbsp;import jakarta.persistence.*;
-&nbsp;import lombok.Getter;
-&nbsp;import lombok.NoArgsConstructor;
-&nbsp;import lombok.Setter;
+&nbsp;import jakarta.transaction.Transactional;
+&nbsp;import org.springframework.data.jpa.repository.JpaRepository;
+&nbsp;import org.springframework.stereotype.Repository;
 &nbsp;
-&nbsp;import java.util.Date;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
 &nbsp;
-&nbsp;@Entity
-&nbsp;@Getter
-&nbsp;@Setter
-&nbsp;@NoArgsConstructor
-&nbsp;@JsonIgnoreProperties({&quot;userInventoryEntries&quot;, &quot;transactions&quot;})
-&nbsp;public class UserInventory {
-&nbsp;    @GeneratedValue(strategy = GenerationType.IDENTITY)
-&nbsp;    private @Id long id;
-&nbsp;
-&nbsp;    @ManyToOne
-&nbsp;    @JoinColumn(name=&quot;user_id&quot;)
-&nbsp;    private Account user;
-&nbsp;
-&nbsp;    @ManyToOne
-&nbsp;    @JoinColumn(name=&quot;shop_id&quot;)
-&nbsp;    private Shop shopItem;
-&nbsp;
-&nbsp;    private int quantity;
-&nbsp;    private boolean equipped;
-&nbsp;    private Date acquiredAt;
+&nbsp;@Repository
+&nbsp;public interface TransactionsRepository extends JpaRepository&lt;Transactions, Long&gt; {
+&nbsp;    Optional&lt;Transactions&gt; findById(Long id);
+&nbsp;    List&lt;Transactions&gt; findByUser(Account user);
+&nbsp;    @Transactional
+&nbsp;    void deleteAllByUser(Account user);
+&nbsp;    @Transactional
+&nbsp;    void deleteAllByShopItem(Shop shopItem);
 &nbsp;}
 </code>
 </pre>
@@ -100,7 +81,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2025-12-09 20:59</div>
+    <div style="float:right;">generated on 2025-12-09 21:04</div>
 </div>
 </body>
 </html>

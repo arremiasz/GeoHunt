@@ -5,7 +5,7 @@
 <html id="htmlId">
 <head>
   <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
-  <title>Coverage Report > TransactionDTO</title>
+  <title>Coverage Report > ShopResponseDTO</title>
   <style type="text/css">
     @import "../../css/coverage.css";
     @import "../../css/idea.min.css";
@@ -22,14 +22,14 @@ Current scope:     <a href="../../index.html">all classes</a>
     <a href="../index.html">com.geohunt.backend.Shop.DTOs</a>
 </div>
 
-<h1>Coverage Summary for Class: TransactionDTO (com.geohunt.backend.Shop.DTOs)</h1>
+<h1>Coverage Summary for Class: ShopResponseDTO (com.geohunt.backend.Shop.DTOs)</h1>
 
 <table class="coverageStats">
 <tr>
   <th class="name">Class</th>
 </tr>
 <tr>
-  <td class="name">TransactionDTO</td>
+  <td class="name">ShopResponseDTO</td>
 </tr>
 
 </table>
@@ -42,17 +42,12 @@ Current scope:     <a href="../../index.html">all classes</a>
 <code class="sourceCode" id="sourceCode">&nbsp;package com.geohunt.backend.Shop.DTOs;
 &nbsp;
 &nbsp;import com.geohunt.backend.Shop.Shop;
-&nbsp;import com.geohunt.backend.database.Account;
 &nbsp;import lombok.Data;
 &nbsp;
-&nbsp;import java.util.Date;
-&nbsp;
 &nbsp;@Data
-&nbsp;public class TransactionDTO {
-&nbsp;    private Shop ShopItem;
-&nbsp;    private Account user;
-&nbsp;    private Date date;
-&nbsp;    private long price;
+&nbsp;public class ShopResponseDTO {
+&nbsp;    private Shop shop;
+&nbsp;    private String message;
 &nbsp;}
 </code>
 </pre>
@@ -77,7 +72,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2025-12-09 20:59</div>
+    <div style="float:right;">generated on 2025-12-09 21:04</div>
 </div>
 </body>
 </html>

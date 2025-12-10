@@ -5,7 +5,7 @@
 <html id="htmlId">
 <head>
   <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
-  <title>Coverage Report > NotificationsRepository</title>
+  <title>Coverage Report > SubmissionsRepository</title>
   <style type="text/css">
     @import "../../css/coverage.css";
     @import "../../css/idea.min.css";
@@ -22,14 +22,14 @@ Current scope:     <a href="../../index.html">all classes</a>
     <a href="../index.html">com.geohunt.backend.database</a>
 </div>
 
-<h1>Coverage Summary for Class: NotificationsRepository (com.geohunt.backend.database)</h1>
+<h1>Coverage Summary for Class: SubmissionsRepository (com.geohunt.backend.database)</h1>
 
 <table class="coverageStats">
 <tr>
   <th class="name">Class</th>
 </tr>
 <tr>
-  <td class="name">NotificationsRepository</td>
+  <td class="name">SubmissionsRepository</td>
 </tr>
 
 </table>
@@ -47,14 +47,17 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;
 &nbsp;import java.util.List;
 &nbsp;
+&nbsp;/**
+&nbsp; * @author evan juslon
+&nbsp; */
 &nbsp;@Repository
-&nbsp;public interface NotificationsRepository extends JpaRepository&lt;Notifications, Long&gt; {
-&nbsp;    List&lt;Notifications&gt; findAllByTargetId(Long targetId);
+&nbsp;public interface SubmissionsRepository extends JpaRepository&lt;Submissions, Long&gt; {
+&nbsp;    List&lt;Submissions&gt; findBySubmitter_Id(Long accountId);
 &nbsp;    @Transactional
-&nbsp;    void deleteAllByTargetId(Long targetId);
-&nbsp;    Notifications getNotificationsByMessage(String message);
+&nbsp;    void deleteBySubmitter_Id(Long id);
+&nbsp;    @Transactional
+&nbsp;    void deleteByChallenge_Id(Long challengeId);
 &nbsp;}
-&nbsp;
 </code>
 </pre>
 </div>
@@ -78,7 +81,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2025-12-09 20:59</div>
+    <div style="float:right;">generated on 2025-12-09 21:04</div>
 </div>
 </body>
 </html>

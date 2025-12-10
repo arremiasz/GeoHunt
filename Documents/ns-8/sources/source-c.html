@@ -5,7 +5,7 @@
 <html id="htmlId">
 <head>
   <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
-  <title>Coverage Report > AccountRepository</title>
+  <title>Coverage Report > NotificationsRepository</title>
   <style type="text/css">
     @import "../../css/coverage.css";
     @import "../../css/idea.min.css";
@@ -22,14 +22,14 @@ Current scope:     <a href="../../index.html">all classes</a>
     <a href="../index.html">com.geohunt.backend.database</a>
 </div>
 
-<h1>Coverage Summary for Class: AccountRepository (com.geohunt.backend.database)</h1>
+<h1>Coverage Summary for Class: NotificationsRepository (com.geohunt.backend.database)</h1>
 
 <table class="coverageStats">
 <tr>
   <th class="name">Class</th>
 </tr>
 <tr>
-  <td class="name">AccountRepository</td>
+  <td class="name">NotificationsRepository</td>
 </tr>
 
 </table>
@@ -41,19 +41,20 @@ Current scope:     <a href="../../index.html">all classes</a>
 <pre>
 <code class="sourceCode" id="sourceCode">&nbsp;package com.geohunt.backend.database;
 &nbsp;
+&nbsp;import jakarta.transaction.Transactional;
 &nbsp;import org.springframework.data.jpa.repository.JpaRepository;
 &nbsp;import org.springframework.stereotype.Repository;
 &nbsp;
-&nbsp;import java.util.Optional;
+&nbsp;import java.util.List;
 &nbsp;
 &nbsp;@Repository
-&nbsp;public interface AccountRepository extends JpaRepository&lt;Account, Long&gt; {
-&nbsp;
-&nbsp;    Optional&lt;Account&gt; findByUsername(String username);
-&nbsp;
-&nbsp;    Optional&lt;Account&gt; findByEmail(String email);
-&nbsp;
+&nbsp;public interface NotificationsRepository extends JpaRepository&lt;Notifications, Long&gt; {
+&nbsp;    List&lt;Notifications&gt; findAllByTargetId(Long targetId);
+&nbsp;    @Transactional
+&nbsp;    void deleteAllByTargetId(Long targetId);
+&nbsp;    Notifications getNotificationsByMessage(String message);
 &nbsp;}
+&nbsp;
 </code>
 </pre>
 </div>
@@ -77,7 +78,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2025-12-09 20:59</div>
+    <div style="float:right;">generated on 2025-12-09 21:04</div>
 </div>
 </body>
 </html>

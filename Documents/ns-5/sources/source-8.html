@@ -5,7 +5,7 @@
 <html id="htmlId">
 <head>
   <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
-  <title>Coverage Report > Transactions</title>
+  <title>Coverage Report > UserInventory</title>
   <style type="text/css">
     @import "../../css/coverage.css";
     @import "../../css/idea.min.css";
@@ -22,7 +22,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     <a href="../index.html">com.geohunt.backend.Shop</a>
 </div>
 
-<h1>Coverage Summary for Class: Transactions (com.geohunt.backend.Shop)</h1>
+<h1>Coverage Summary for Class: UserInventory (com.geohunt.backend.Shop)</h1>
 
 <table class="coverageStats">
 
@@ -30,10 +30,10 @@ Current scope:     <a href="../../index.html">all classes</a>
   <th class="name">Class</th>
 </tr>
   <tr>
-    <td class="name">Transactions$HibernateInstantiator</td>
+    <td class="name">UserInventory$HibernateInstantiator</td>
   </tr>
   <tr>
-    <td class="name">Transactions$HibernateProxy</td>
+    <td class="name">UserInventory$HibernateProxy</td>
   </tr>
 <tr>
   <td class="name"><strong>Total</strong></td>
@@ -47,7 +47,6 @@ Current scope:     <a href="../../index.html">all classes</a>
 <pre>
 <code class="sourceCode" id="sourceCode">&nbsp;package com.geohunt.backend.Shop;
 &nbsp;
-&nbsp;import com.fasterxml.jackson.annotation.JsonBackReference;
 &nbsp;import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 &nbsp;import com.geohunt.backend.database.Account;
 &nbsp;import jakarta.persistence.*;
@@ -61,29 +60,22 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;@Getter
 &nbsp;@Setter
 &nbsp;@NoArgsConstructor
-&nbsp;public class Transactions {
-&nbsp;
-&nbsp;    @Id
+&nbsp;@JsonIgnoreProperties({&quot;userInventoryEntries&quot;, &quot;transactions&quot;})
+&nbsp;public class UserInventory {
 &nbsp;    @GeneratedValue(strategy = GenerationType.IDENTITY)
-&nbsp;    private long transactionid;
-&nbsp;
-&nbsp;    @ManyToOne
-&nbsp;    @JoinColumn(name=&quot;shop_id&quot;)
-&nbsp;    @JsonBackReference(&quot;transactions-shop&quot;)
-&nbsp;    private Shop shopItem;
+&nbsp;    private @Id long id;
 &nbsp;
 &nbsp;    @ManyToOne
 &nbsp;    @JoinColumn(name=&quot;user_id&quot;)
-&nbsp;    @JsonBackReference(&quot;transactions-user&quot;)
-&nbsp;    @JsonIgnoreProperties({
-&nbsp;            &quot;password&quot;,
-&nbsp;            &quot;usersInventory&quot;,
-&nbsp;            &quot;transactions&quot;
-&nbsp;    })
 &nbsp;    private Account user;
 &nbsp;
-&nbsp;    private Date date;
-&nbsp;    private long price;
+&nbsp;    @ManyToOne
+&nbsp;    @JoinColumn(name=&quot;shop_id&quot;)
+&nbsp;    private Shop shopItem;
+&nbsp;
+&nbsp;    private int quantity;
+&nbsp;    private boolean equipped;
+&nbsp;    private Date acquiredAt;
 &nbsp;}
 </code>
 </pre>
@@ -108,7 +100,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2025-12-09 20:59</div>
+    <div style="float:right;">generated on 2025-12-09 21:04</div>
 </div>
 </body>
 </html>
