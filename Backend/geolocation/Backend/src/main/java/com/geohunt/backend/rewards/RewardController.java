@@ -8,6 +8,11 @@ import com.geohunt.backend.database.Submissions;
 import com.geohunt.backend.database.SubmissionsService;
 import com.geohunt.backend.images.Image;
 import com.geohunt.backend.images.ImageService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +31,11 @@ public class RewardController {
 
     // Game Endpoints
 
+    @Operation(summary = "Grade submission and receive reward")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Receive Reward", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Couldn't find user or submission", content = @Content)
+    })
     @GetMapping("/gradesubmission")
     public ResponseEntity<Reward> gradeSubmission(@RequestParam long sid, @RequestParam long uid){
         try{
@@ -45,6 +55,11 @@ public class RewardController {
         }
     }
 
+    @Operation(summary = "Get user inventory")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Receive list of items in user inventory", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Couldn't find user", content = @Content)
+    })
     @GetMapping("/account/{id}/inventory")
     public ResponseEntity<List<Reward>> getUserInventory(@PathVariable long id){
         if(accountRepository.findById(id).isEmpty()){
@@ -55,6 +70,11 @@ public class RewardController {
         return ResponseEntity.ok(userInventory);
     }
 
+    @Operation(summary = "Get user inventory, specifically customizations")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Receive list of items in user inventory", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Couldn't find user", content = @Content)
+    })
     @GetMapping("/account/{id}/inventory/customizations")
     public ResponseEntity<List<Customization>> getUserCustomizations(@PathVariable long id){
         if(accountRepository.findById(id).isEmpty()){
@@ -66,6 +86,11 @@ public class RewardController {
         return ResponseEntity.ok(customizationList);
     }
 
+    @Operation(summary = "Get specific reward by id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Get reward object", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Couldn't find reward object", content = @Content)
+    })
     @GetMapping("/rewards/{id}")
     public ResponseEntity<Reward> getReward(@PathVariable long id){
         Reward reward = rewardService.getReward(id);
