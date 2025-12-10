@@ -1405,5 +1405,72 @@ public class ArjavTriSystemTest {
         shopRepository.deleteById(item.getId());
     }
 
+    @Test
+    @Transactional
+    @Order(63)
+    void testAddItem() {
+        Shop shop = new Shop();
+        shop.setName("Test Item");
+        shop.setDescription("Test Description");
+        shop.setItemType(SHOP_ITEM_TYPE.DECORATION);
+        shop.setPrice(100);
+        shop.setImage("test_image");
+
+        ResponseEntity<Shop> response = shopService.addItem(shop);
+
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("Test Item", response.getBody().getName());
+
+        long itemId = response.getBody().getId();
+
+        shopRepository.deleteById(itemId);
+    }
+
+    @Test
+    @Transactional
+    @Order(64)
+    void testGetAllItems() {
+        Shop s1 = new Shop();
+        s1.setName("Decor1");
+        s1.setDescription("Decoration");
+        s1.setItemType(SHOP_ITEM_TYPE.DECORATION);
+        s1.setPrice(10);
+        s1.setImage("img");
+        shopRepository.save(s1);
+
+        Shop s2 = new Shop();
+        s2.setName("Profile1");
+        s2.setDescription("Profile Item");
+        s2.setItemType(SHOP_ITEM_TYPE.PROFILE_CUSTOMIZATION);
+        s2.setPrice(15);
+        s2.setImage("img");
+        shopRepository.save(s2);
+
+        Shop s3 = new Shop();
+        s3.setName("Other1");
+        s3.setDescription("Other");
+        s3.setItemType(SHOP_ITEM_TYPE.OTHER);
+        s3.setPrice(5);
+        s3.setImage("img");
+        shopRepository.save(s3);
+
+        ResponseEntity<Map<SHOP_ITEM_TYPE, List<Shop>>> response = shopService.getAllItems();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        Map<SHOP_ITEM_TYPE, List<Shop>> result = response.getBody();
+
+        assertTrue(result.containsKey(SHOP_ITEM_TYPE.DECORATION));
+        assertTrue(result.containsKey(SHOP_ITEM_TYPE.PROFILE_CUSTOMIZATION));
+        assertTrue(result.containsKey(SHOP_ITEM_TYPE.OTHER));
+
+        shopRepository.deleteById(s1.getId());
+        shopRepository.deleteById(s2.getId());
+        shopRepository.deleteById(s3.getId());
+    }
+
+
+
 }
 

@@ -21,7 +21,6 @@ public class NotificationsService {
     @Autowired
     private AccountRepository accountRepository;
 
-    // Create and store a new notification by username
     public void sendNotificationToUser(String username, String message) {
         Optional<Account> target = accountRepository.findByUsername(username);
         if (target.isPresent()) {
@@ -32,17 +31,14 @@ public class NotificationsService {
         }
     }
 
-    // Get all notifications for a user ID
     public List<Notifications> getMyNotifs(Long targetId) {
         return notificationsRepository.findAllByTargetId(targetId);
     }
 
-    // Delete a single notification by its ID
     public void deleteNotification(Long notifId) {
         notificationsRepository.deleteById(notifId);
     }
 
-    // Optionally mark notification as read
     public void markAsRead(Long notifId) {
         notificationsRepository.findById(notifId).ifPresent(notif -> {
             notif.setReadStatus(true);
