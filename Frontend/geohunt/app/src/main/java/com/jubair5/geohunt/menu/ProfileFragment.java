@@ -36,6 +36,7 @@ import java.io.ByteArrayOutputStream;
 
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.google.android.material.textfield.TextInputLayout;
 import com.jubair5.geohunt.LauncherActivity;
@@ -71,6 +72,8 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
 
     private LinearLayout displayContainer, editContainer;
     private TextView usernameLabel;
+    private TextView statPointsValue, statMatchesValue, statFriendsValue, statItemsValue, statPlacesValue,
+            statCommentsValue;
     private TextInputLayout editUsernameLayout, editEmailLayout, editNewPasswordLayout, editCurrentPasswordLayout;
     private EditText editUsername, editEmail, editNewPassword, editCurrentPassword;
     private Button editButton, deleteButton, saveChangesButton, cancelButton, logoutButton, changePfpButton;
@@ -143,8 +146,17 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
 
         loadProfilePicture();
 
+        // Initialize statistics TextViews
+        statPointsValue = root.findViewById(R.id.stat_points_value);
+        statMatchesValue = root.findViewById(R.id.stat_matches_value);
+        statFriendsValue = root.findViewById(R.id.stat_friends_value);
+        statItemsValue = root.findViewById(R.id.stat_items_value);
+        statPlacesValue = root.findViewById(R.id.stat_places_value);
+        statCommentsValue = root.findViewById(R.id.stat_comments_value);
+
         setupRecyclerView();
         fetchSubmissions();
+        fetchStatistics();
 
         editButton.setOnClickListener(v -> showEditOptions());
         deleteButton.setOnClickListener(v -> showDeleteConfirmationDialog());
@@ -548,6 +560,151 @@ public class ProfileFragment extends Fragment implements PlacesAdapter.OnPlaceCl
             startActivity(intent);
             getActivity().finish();
         }
+    }
+
+    /**
+     * Fetches all statistics for the current user.
+     * Calls individual fetch methods for each statistic.
+     */
+    private void fetchStatistics() {
+        int userId = prefs.getInt(KEY_USER_ID, -1);
+        if (userId == -1) {
+            Log.e(TAG, "User ID not found in shared preferences for statistics.");
+            return;
+        }
+
+        fetchPoints(userId);
+        fetchMatches(userId);
+        fetchFriends(userId);
+        fetchItemsBought(userId);
+        fetchPlaces();
+        fetchComments(userId);
+    }
+
+    /**
+     * Fetches the user's current points from the server.
+     *
+     * @param userId The ID of the user.
+     */
+    private void fetchPoints(int userId) {
+        String url = ApiConstants.BASE_URL + ApiConstants.GET_POINTS_ENDPOINT + "?id=" + userId;
+
+        StringRequest request = new StringRequest(Request.Method.GET, url,
+                response -> {
+                    try {
+                        int points = Integer.parseInt(response.trim());
+                        statPointsValue.setText(String.valueOf(points));
+                    } catch (NumberFormatException e) {
+                        Log.e(TAG, "Error parsing points response: " + response, e);
+                        statPointsValue.setText("0");
+                    }
+                },
+                error -> {
+                    Log.e(TAG, "Error fetching points", error);
+                    statPointsValue.setText("0");
+                });
+
+        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);
+    }
+
+    /**
+     * Fetches the number of matches played by the user.
+     *
+     * @param userId The ID of the user.
+     */
+    private void fetchMatches(int userId) {
+        String url = ApiConstants.BASE_URL
+                + ApiConstants.GET_SUBMISSIONS_ENDPOINT.replace("{uid}", String.valueOf(userId));
+
+        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
+                response -> {
+                    statMatchesValue.setText(String.valueOf(response.length()));
+                },
+                error -> {
+                    Log.e(TAG, "Error fetching matches", error);
+                    statMatchesValue.setText("0");
+                });
+
+        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);
+    }
+
+    /**
+     * Fetches the number of friends the user has.
+     *
+     * @param userId The ID of the user.
+     */
+    private void fetchFriends(int userId) {
+        String url = ApiConstants.BASE_URL + ApiConstants.GET_FRIENDS_ENDPOINT + "?id=" + userId;
+
+        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
+                response -> {
+                    statFriendsValue.setText(String.valueOf(response.length()));
+                },
+                error -> {
+                    Log.e(TAG, "Error fetching friends", error);
+                    statFriendsValue.setText("0");
+                });
+
+        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);
+    }
+
+    /**
+     * Fetches the number of items bought by the user.
+     *
+     * @param userId The ID of the user.
+     */
+    private void fetchItemsBought(int userId) {
+        String url = ApiConstants.BASE_URL + ApiConstants.GET_SHOP_TRANSACTIONS_ENDPOINT + "?uid=" + userId;
+
+        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
+                response -> {
+                    statItemsValue.setText(String.valueOf(response.length()));
+                },
+                error -> {
+                    Log.e(TAG, "Error fetching items bought", error);
+                    statItemsValue.setText("0");
+                });
+
+        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);
+    }
+
+    /**
+     * Fetches the total number of places available.
+     */
+    private void fetchPlaces() {
+        String url = ApiConstants.BASE_URL + ApiConstants.GET_SUBMITTED_PLACES_ENDPOINT;
+
+        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
+                response -> {
+                    statPlacesValue.setText(String.valueOf(response.length()));
+                },
+                error -> {
+                    Log.e(TAG, "Error fetching places", error);
+                    statPlacesValue.setText("0");
+                });
+
+        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);
+    }
+
+    /**
+     * Fetches the number of comments made by the user.
+     *
+     * @param userId The ID of the user.
+     */
+    private void fetchComments(int userId) {
+        String url = ApiConstants.BASE_URL
+                + ApiConstants.GET_COMMENTS_ENDPOINT.replace("{uid}", String.valueOf(userId));
+
+        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
+                response -> {
+                    statCommentsValue.setText(String.valueOf(response.length()));
+                },
+                error -> {
+                    Log.e(TAG, "Error fetching comments", error);
+                    statCommentsValue.setText("0");
+                });
+
+        VolleySingleton.getInstance(requireContext()).addToRequestQueue(request);
     }
 
     @Override
