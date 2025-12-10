@@ -61,10 +61,6 @@ public class EvanSystemTestCommentsRatings {
         accountIdList = new ArrayList<>();
         challengesIdList = new ArrayList<>();
 
-        accountRepository.deleteAll();
-        challengesRepository.deleteAll();
-        commentRepository.deleteAll();
-
         // Dummy Accounts
         Account account1 = new Account();
         account1.setUsername("test1");
