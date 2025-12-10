@@ -11,9 +11,8 @@ public final class ApiConstants {
     }
 
     // Base URL for all API calls
-    // public static final String BASE_URL =
-    // "http://coms-3090-030.class.las.iastate.edu:8080";
-    public static final String BASE_URL = "http://10.0.2.2:3000";
+    public static final String BASE_URL = "http://coms-3090-030.class.las.iastate.edu:8080";
+    // public static final String BASE_URL = "http://10.0.2.2:3000";
 
     // Account Endpoints
     public static final String SIGNUP_ENDPOINT = "/signup";
@@ -33,5 +32,6 @@ public final class ApiConstants {
     public static final String POST_SUBMISSION_ENDPOINT = "/geohunt/submission";
     public static final String GET_CHALLENGE_BY_ID_ENDPOINT = "/geohunt/getChallengeByID";
     public static final String RATE_CHALLENGE_ENDPOINT = "/geohunt/rate";
+    public static final String GET_COMMENTS_ENDPOINT = "/challenges/";
 
 }

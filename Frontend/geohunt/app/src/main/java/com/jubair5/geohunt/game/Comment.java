@@ -4,6 +4,7 @@ import android.util.Log;
 
 import org.json.JSONObject;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -17,16 +18,23 @@ public class Comment {
 
     private int uid;
     private String comment;
-    private long timestamp;
+    private String timestamp;
     private String username;
     private String profilePhotoUrl;
 
     public Comment(JSONObject json) {
-        this.uid = json.optInt("uid");
+        this.uid = json.optInt("id");
         this.comment = json.optString("comment");
-        this.timestamp = json.optLong("timestamp");
-        this.username = "Loading...";
-        this.profilePhotoUrl = "";
+        this.timestamp = json.optString("timeStamp");
+
+        JSONObject author = json.optJSONObject("author");
+        if (author != null) {
+            this.username = author.optString("username", "Unknown");
+            this.profilePhotoUrl = author.optString("pfp", "");
+        } else {
+            this.username = "Unknown";
+            this.profilePhotoUrl = "";
+        }
     }
 
     public int getUid() {
@@ -38,10 +46,17 @@ public class Comment {
     }
 
     public String getFormattedTimestamp() {
-        // Assuming timestamp is in milliseconds
-        Date date = new Date(timestamp);
-        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
-        return sdf.format(date);
+        try {
+            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+            SimpleDateFormat outputFormat = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
+            Date date = inputFormat.parse(timestamp);
+            if (date != null) {
+                return outputFormat.format(date);
+            }
+        } catch (ParseException e) {
+            Log.e("Comment", "Error parsing timestamp: " + timestamp, e);
+        }
+        return timestamp; 
     }
 
     public String getUsername() {

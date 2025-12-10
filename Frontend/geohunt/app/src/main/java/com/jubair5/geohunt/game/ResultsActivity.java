@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.bumptech.glide.Glide;
@@ -298,7 +299,7 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
         SharedPreferences prefs = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
         int userId = prefs.getInt(KEY_USER_ID, -1);
 
-        String url = ApiConstants.BASE_URL + ApiConstants.GET_CHALLENGE_BY_ID_ENDPOINT + "?cid=" + challengeId;
+        String url = ApiConstants.BASE_URL + ApiConstants.GET_CHALLENGE_BY_ID_ENDPOINT + "?id=" + challengeId;
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null,
                 response -> {
@@ -327,17 +328,8 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
                         updateDisplayedPhotos();
                         Log.d(TAG, "Loaded " + allPhotosList.size() + " gallery photos");
 
-                        JSONArray commentsArray = response.optJSONArray("comments");
-                        if (commentsArray != null) {
-                            commentsList.clear();
-                            for (int i = 0; i < commentsArray.length(); i++) {
-                                JSONObject commentObj = commentsArray.getJSONObject(i);
-                                Comment comment = new Comment(commentObj);
-                                commentsList.add(comment);
-                                fetchUserDetailsForComment(comment);
-                            }
-                            commentAdapter.notifyDataSetChanged();
-                        }
+                        // Fetch comments from dedicated endpoint
+                        fetchComments();
 
                     } catch (JSONException e) {
                         Log.e(TAG, "Error parsing challenge details JSON", e);
@@ -379,6 +371,36 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
     }
 
     /**
+     * Fetches comments from the dedicated comments endpoint.
+     */
+    protected void fetchComments() {
+        if (challengeId == -1)
+            return;
+
+        String url = ApiConstants.BASE_URL + ApiConstants.GET_COMMENTS_ENDPOINT + challengeId + "/comments";
+        Log.d(TAG, "Fetching comments from: " + url);
+
+        JsonArrayRequest commentsRequest = new JsonArrayRequest(Request.Method.GET, url, null,
+                response -> {
+                    try {
+                        commentsList.clear();
+                        for (int i = 0; i < response.length(); i++) {
+                            JSONObject commentObj = response.getJSONObject(i);
+                            Comment comment = new Comment(commentObj);
+                            commentsList.add(comment);
+                        }
+                        commentAdapter.notifyDataSetChanged();
+                        Log.d(TAG, "Loaded " + commentsList.size() + " comments");
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Error parsing comments JSON", e);
+                    }
+                },
+                error -> Log.e(TAG, "Error fetching comments", error));
+
+        VolleySingleton.getInstance(this).addToRequestQueue(commentsRequest);
+    }
+
+    /**
      * Updates the displayed photos list based on the limit (initial 6).
      */
     private void updateDisplayedPhotos() {
@@ -404,29 +426,6 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
         displayedPhotosList.addAll(allPhotosList);
         photoAdapter.notifyDataSetChanged();
         loadMorePhotosButton.setVisibility(View.GONE);
-    }
-
-    /**
-     * Fetches user details (username, profile photo) for a comment.
-     */
-    private void fetchUserDetailsForComment(Comment comment) {
-        String url = ApiConstants.BASE_URL + ApiConstants.GET_ACCOUNT_BY_ID_ENDPOINT + "?id=" + comment.getUid();
-
-        JsonObjectRequest userRequest = new JsonObjectRequest(Request.Method.GET, url, null,
-                response -> {
-                    try {
-                        String username = response.getString("username");
-                        String profilePhoto = response.optString("pfp", "");
-                        comment.setUsername(username);
-                        comment.setProfilePhotoUrl(profilePhoto);
-                        commentAdapter.notifyDataSetChanged();
-                    } catch (JSONException e) {
-                        Log.e(TAG, "Error parsing user details for comment", e);
-                    }
-                },
-                error -> Log.e(TAG, "Error fetching user details for comment", error));
-
-        VolleySingleton.getInstance(this).addToRequestQueue(userRequest);
     }
 
     /**
