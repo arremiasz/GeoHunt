@@ -26,7 +26,7 @@
                     >
 
                         <ImageView
-                            android:id="@+id/imageView"
+                            android:id="@+id/friend_pfp"
                             android:layout_width="100dp"
                             android:layout_height="100dp"
                             android:padding="10dp"
@@ -43,7 +43,7 @@
                             android:layout_marginTop="15dp"
                             android:textSize="25sp"
                             android:text="@string/hint_username"
-                            app:layout_constraintStart_toEndOf="@+id/imageView"
+                            app:layout_constraintStart_toEndOf="@+id/friend_pfp"
                             app:layout_constraintTop_toTopOf="parent" />
 
 

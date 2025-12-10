@@ -49,7 +49,6 @@ public class FriendFragment extends Fragment implements FriendAdapter.OnFriendCl
     private static final String KEY_USER_ID = "userId";
 
     private SearchView searchBar;
-    private Button searchButton;
 
 
     // Set up for the actual list

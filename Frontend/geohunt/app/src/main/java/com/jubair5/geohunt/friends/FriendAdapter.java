@@ -123,6 +123,7 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
+            pfp = itemView.findViewById(R.id.friend_pfp);
             friendNameTextView = itemView.findViewById(R.id.username_label);
             friendState = itemView.findViewById(R.id.relationship_State);
         }
