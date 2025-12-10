@@ -56,7 +56,7 @@ public class Comment {
         } catch (ParseException e) {
             Log.e("Comment", "Error parsing timestamp: " + timestamp, e);
         }
-        return timestamp; 
+        return timestamp;
     }
 
     public String getUsername() {

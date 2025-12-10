@@ -311,8 +311,17 @@ public class ResultsActivity extends AppCompatActivity implements OnMapReadyCall
                         updateMap();
 
                         if (!userHasRated) {
-                            double rating = response.optDouble("rating", 0.0);
-                            ratingBar.setRating((float) rating);
+                            JSONArray ratingsArray = response.optJSONArray("challengeRatings");
+                            if (ratingsArray != null && ratingsArray.length() > 0) {
+                                double total = 0;
+                                for (int i = 0; i < ratingsArray.length(); i++) {
+                                    total += ratingsArray.optDouble(i, 0);
+                                }
+                                double avgRating = Math.round(total / ratingsArray.length());
+                                ratingBar.setRating((float) avgRating);
+                            } else {
+                                ratingBar.setRating(0);
+                            }
                             ratingBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
                         }
                         JSONArray submissions = response.getJSONArray("submissions");
